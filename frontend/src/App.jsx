@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Frame, TitleBar } from '@react95/core'
+import { Notepad } from '@react95/icons'
 
 function App() {
   const [items, setItems] = useState([])
@@ -13,14 +14,15 @@ function App() {
   }, [])
 
   return (
-    <Frame w="500px" h="300px" bgColor="$material" boxShadow="$out" padding="$3">
+    <Frame w="500px" bgColor="$material" boxShadow="$out" padding="$3">
       <TitleBar
         title="Collection Manager"
         onClick={() => minimized && setMinimized(false)}
+        icon={<Notepad variant="16x16_4"/>}
       >
         <TitleBar.OptionsBox>
           <TitleBar.Help />
-          <TitleBar.Minimize onClick={() => setMinimized(true)} />
+          <TitleBar.Minimize onClick={() => setMinimized(true)}/>
           <TitleBar.Maximize />
           <TitleBar.Close />
         </TitleBar.OptionsBox>
