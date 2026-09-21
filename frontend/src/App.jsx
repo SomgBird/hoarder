@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Frame, TitleBar } from '@react95/core'
 import { Notepad } from '@react95/icons'
+import Separator from './compotents/Separator'
 
 function App() {
   const [items, setItems] = useState([])
@@ -50,6 +51,8 @@ function App() {
           ))}
         </Frame>
       )}
+    
+    <Separator />
     </Frame>
   )
 }
