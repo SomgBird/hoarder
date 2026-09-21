@@ -10,3 +10,23 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+.win95-raised {
+  background-color: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+}
+
+.win95-sunken {
+  background-color: #ffffff;
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+}
+
+.dos-cursor {
+  animation: dos-blink 1s steps(1) infinite;
+}
+
+@keyframes dos-blink {
+  50% { opacity: 0; }
+}

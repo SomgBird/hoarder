@@ -4,6 +4,7 @@ from sqlmodel import Session, select
 from db import create_db_and_tables, get_session
 from models import Item
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
 
 
 
@@ -23,9 +24,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/items")
-def list_items(session: Session = Depends(get_session)):
-    return session.exec(select(Item)).all()
+def list_items(search: Optional[str] = None, session: Session = Depends(get_session)):
+    query = select(Item)
+    if search:
+        query = query.where(Item.title.contains(search))
+    return session.exec(query).all()
 
 @app.post("/items")
 def create_item(item: Item, session: Session = Depends(get_session)):

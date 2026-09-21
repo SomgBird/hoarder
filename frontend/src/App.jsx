@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import { Frame, TitleBar } from '@react95/core'
 import { Notepad } from '@react95/icons'
 import ExplorerWindow from './components/Explorer/ExplorerWindow'
+import DosPanel from './components/DosPanel/DosPanel'
 
 function App() {
   const [items, setItems] = useState([])
   const [minimized, setMinimized] = useState(false)
   const [openItemIds, setOpenItemIds] = useState([])
+  const [showDosPanel, setShowDosPanel] = useState(false)
 
   useEffect(() => {
     fetch('http://127.0.0.1:8000/items')
@@ -77,6 +79,30 @@ function App() {
           />
         )
       })}
+
+      {showDosPanel && <DosPanel onClose={() => setShowDosPanel(false)} />}
+
+      <div
+        className="win95-raised"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 36,
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 6px',
+        }}
+      >
+        <button
+          className="win95-raised"
+          onClick={() => setShowDosPanel((s) => !s)}
+          style={{ padding: '4px 10px', fontWeight: 'bold' }}
+        >
+          🖥 MS-DOS Search
+        </button>
+      </div>
     </>
   )
 }
