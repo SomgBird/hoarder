@@ -1,0 +1,70 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+}
+
+.label {
+  font-family: "MS Sans Serif", Tahoma, sans-serif;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.fieldGroup {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-style: solid;
+  border-width: 1px;
+  border-top-color: #808080;
+  border-left-color: #808080;
+  border-bottom-color: #fff;
+  border-right-color: #fff;
+  box-shadow: inset 1px 1px 0 #000;
+  height: 20px;
+}
+
+.field {
+  height: 100%;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin: 0 3px;
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  background: transparent;
+  font-family: "MS Sans Serif", Tahoma, sans-serif;
+  font-size: 11px;
+  outline: none;
+  padding: 0;
+}
+
+.historyDropdown {
+  flex-shrink: 0;
+  width: 18px;
+  height: 100%;
+  padding: 0;
+}
+
+.goButton {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  font-family: "MS Sans Serif", Tahoma, sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}

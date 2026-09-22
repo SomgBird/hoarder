@@ -1,0 +1,29 @@
+.bar {
+  --menu-hover-bg: #000080;
+  --menu-hover-text: #fff;
+
+  display: flex;
+  gap: 0;
+  padding: 1px 2px;
+  font-family: "MS Sans Serif", Tahoma, sans-serif;
+  font-size: 11px;
+}
+
+.item {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 2px 6px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.item:hover:not(:disabled),
+.itemOpen {
+  background: var(--menu-hover-bg);
+  color: var(--menu-hover-text);
+}
+
+.item:disabled {
+  color: #808080;
+  cursor: default;
+}
