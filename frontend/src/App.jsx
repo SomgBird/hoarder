@@ -3,12 +3,14 @@ import { Frame, TitleBar } from '@react95/core'
 import { Notepad } from '@react95/icons'
 import ExplorerWindow from './components/Explorer/ExplorerWindow'
 import DosPanel from './components/DosPanel/DosPanel'
+import AddItemForm from './components/AddItemForm'
 
 function App() {
   const [items, setItems] = useState([])
   const [minimized, setMinimized] = useState(false)
   const [openItemIds, setOpenItemIds] = useState([])
   const [showDosPanel, setShowDosPanel] = useState(false)
+  const [showAddItemPFrom, setShowAdditemForm] = useState(false)
 
   useEffect(() => {
     fetch('http://127.0.0.1:8000/items')
@@ -81,6 +83,8 @@ function App() {
       })}
 
       {showDosPanel && <DosPanel onClose={() => setShowDosPanel(false)} />}
+      
+      {showAddItemPFrom && <AddItemForm onClose={() => setShowAdditemForm(false)} onAdded={(item) => console.log("created:", item)} />}
 
       <div
         className="win95-raised"
@@ -101,6 +105,14 @@ function App() {
           style={{ padding: '4px 10px', fontWeight: 'bold' }}
         >
           🖥 MS-DOS Search
+        </button>
+
+        <button
+          className="win95-raised"
+          onClick={() => setShowAdditemForm((s) => !s)}
+          style={{ padding: '4px 10px', fontWeight: 'bold' }}
+        >
+          Add Item
         </button>
       </div>
     </>

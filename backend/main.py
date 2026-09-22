@@ -3,6 +3,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
 from db import create_db_and_tables, get_session
 from models import Item
+from schemas import ItemCreate
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 
@@ -32,8 +33,10 @@ def list_items(search: Optional[str] = None, session: Session = Depends(get_sess
         query = query.where(Item.title.contains(search))
     return session.exec(query).all()
 
-@app.post("/items")
-def create_item(item: Item, session: Session = Depends(get_session)):
+
+@app.post("/items", response_model=Item, status_code=201)
+def create_item(payload: ItemCreate, session: Session = Depends(get_session)):
+    item = Item(**payload.model_dump())
     session.add(item)
     session.commit()
     session.refresh(item)

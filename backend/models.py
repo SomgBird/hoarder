@@ -14,4 +14,4 @@ class Item(SQLModel, table=True):
     condition: str = ""
     cover_url: str = ""
     notes: str = ""
-    attributes: dict = Field(sa_column=Column(JSON), default={})
+    attributes: dict = Field(sa_column=Column(JSON), default_factory=dict)
