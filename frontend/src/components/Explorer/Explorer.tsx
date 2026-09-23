@@ -4,6 +4,8 @@ import ExplorerToolbar from "./ExplorerToolbar";
 import Separator from "../Separator";
 import MenuBar from "../MenuBar/MenuBar";
 import AddressBar from "../AddressBar/AddressBar";
+import ContentFrame from "./ContentFrame";
+import ItemView from "../ItemView";
 
 function Explorer() {
   return (
@@ -32,6 +34,13 @@ function Explorer() {
         onSubmit={() => {}}
         icon={<HtmlPage variant="16x16_8" />}
       />
+      <Frame bgColor="$material" padding="$4">
+        <Frame h="500px" bgColor="white" boxShadow="$in" padding="$1">
+          <ContentFrame>
+            <ItemView />
+          </ContentFrame>
+        </Frame>
+      </Frame>
     </Frame>
   );
 }
