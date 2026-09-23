@@ -5,7 +5,7 @@ import Separator from "../Separator";
 import MenuBar from "../MenuBar/MenuBar";
 import AddressBar from "../AddressBar/AddressBar";
 import ContentFrame from "./ContentFrame";
-import ItemView from "../ItemView";
+import ItemView from "../ItemView/ItemView";
 
 function Explorer() {
   return (

@@ -1,8 +1,6 @@
-import styles from "./ItemView.module.css";
-
 export default function ItemView() {
   return (
-    <div className={styles.page}>
+    <div>
       <h1>Albert Einstein</h1>
       <hr />
 
@@ -50,12 +48,7 @@ export default function ItemView() {
 
             {/* Right info box */}
             <td valign="top" width={260}>
-              <table
-                border={1}
-                cellPadding={4}
-                cellSpacing={0}
-                className={styles.infobox}
-              >
+              <table border={1} cellPadding={4} cellSpacing={0}>
                 <tbody>
                   <tr>
                     <th align="center">Albert Einstein</th>
