@@ -51,10 +51,7 @@ function AutoHeightIframe({ children }: { children: React.ReactNode }) {
 
 function ContentFrame({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      style={{ height: "100%", overflowY: "auto" }}
-      className="win95-scroll-area"
-    >
+    <div style={{ height: "100%", overflowY: "auto" }}>
       <AutoHeightIframe>{children}</AutoHeightIframe>
     </div>
   );
