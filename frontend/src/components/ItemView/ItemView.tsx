@@ -2,7 +2,7 @@ import styles from "./ItemView.module.css";
 
 function ItemView() {
   return (
-    <div>
+    <div className={styles.view}>
       <h1>Albert Einstein</h1>
       <hr />
 

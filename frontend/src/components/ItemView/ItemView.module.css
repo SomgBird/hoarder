@@ -1,5 +1,15 @@
+
+.view {
+  background-color: #D9E2AC;
+  display: flow-root;
+}
+
 .container {
   display: flex;
+}
+
+.container * {
+    font-family: 'Times New Roman', Times, serif;
 }
 
 .right_column {
@@ -16,8 +26,4 @@
   background: whitesmoke;
   border: 1px solid #9F896F;
   margin: 15px;
-}
-
-body {
-  background-color: #D9E2AC;
 }
