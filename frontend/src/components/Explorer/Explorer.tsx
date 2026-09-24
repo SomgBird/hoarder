@@ -35,7 +35,13 @@ function Explorer() {
         icon={<HtmlPage variant="16x16_8" />}
       />
       <Frame bgColor="$material" padding="$4">
-        <Frame h="500px" bgColor="white" boxShadow="$in" paddingTop="$1">
+        <Frame
+          h="500px"
+          bgColor="white"
+          boxShadow="$in"
+          paddingTop="$1"
+          paddingLeft="$1"
+        >
           <ContentFrame>
             <ItemView />
           </ContentFrame>

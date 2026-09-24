@@ -1,0 +1,11 @@
+.container {
+  display: flex;
+  gap: 20px;
+}
+
+.column {
+  flex: 1;
+  padding: 20px;
+  background: lightblue;
+  border: 1px solid blue;
+}
