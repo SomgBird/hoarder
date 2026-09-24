@@ -9,7 +9,7 @@ import ItemView from "../ItemView/ItemView";
 
 function Explorer() {
   return (
-    <Frame w="800px" bgColor="$material" boxShadow="$out" padding="$2">
+    <Frame w="1200px" bgColor="$material" boxShadow="$out" padding="$2">
       <TitleBar icon={<Ie variant="16x16_8" />} title="Explorer">
         <TitleBar.OptionsBox>
           <TitleBar.Close />
@@ -36,7 +36,7 @@ function Explorer() {
       />
       <Frame bgColor="$material" padding="$4">
         <Frame
-          h="500px"
+          h="650px"
           bgColor="white"
           boxShadow="$in"
           paddingTop="$1"

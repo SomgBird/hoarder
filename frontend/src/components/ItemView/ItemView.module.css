@@ -1,11 +1,23 @@
 .container {
   display: flex;
-  gap: 20px;
 }
 
-.column {
-  flex: 1;
-  padding: 20px;
-  background: lightblue;
-  border: 1px solid blue;
+.right_column {
+  flex: 25%;
+}
+
+
+.left_column {
+  flex: 75%;
+}
+
+.section {
+  padding: 8px;
+  background: whitesmoke;
+  border: 1px solid #9F896F;
+  margin: 15px;
+}
+
+body {
+  background-color: #D9E2AC;
 }
