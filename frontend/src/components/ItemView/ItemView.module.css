@@ -4,12 +4,12 @@
   display: flow-root;
 }
 
-.container {
-  display: flex;
+.view * {
+  font-family: 'Times New Roman', Times, serif;
 }
 
-.container * {
-    font-family: 'Times New Roman', Times, serif;
+.container {
+  display: flex;
 }
 
 .right_column {
