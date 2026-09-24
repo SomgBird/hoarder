@@ -3,18 +3,12 @@ import styles from "./ContentFrame.module.css";
 
 interface ContentFrameProps {
   children: ReactNode;
-  className?: string;
 }
 
-export default function ContentFrame({
-  children,
-  className,
-}: ContentFrameProps) {
+export default function ContentFrame({ children }: ContentFrameProps) {
   return (
     <div className={styles.scroll}>
-      <div className={[styles.reset, className].filter(Boolean).join(" ")}>
-        {children}
-      </div>
+      <div className={[styles.reset].filter(Boolean).join(" ")}>{children}</div>
     </div>
   );
 }
