@@ -1,12 +1,14 @@
+# backend/app/crud.py
 from datetime import datetime
 from typing import Optional, Sequence
+
 from sqlmodel import Session, select
 
-from .models import Book, Author, Language, Publisher
-from .schemas import BookCreate, BookUpdate
+from app.models import Book, Author, Language, Publisher
+from app.schemas import BookCreate, BookUpdate
 
 
-# ---- get-or-create helpers (keeps lookup tables clean) ----
+# ---------- get-or-create helpers ----------
 def get_or_create_language(
     session: Session, code: Optional[str], name: Optional[str]
 ) -> Optional[Language]:
@@ -22,11 +24,13 @@ def get_or_create_language(
         return lang
     lang = Language(code=(code or name.lower()[:10]), name=(name or code))
     session.add(lang)
-    session.flush()      # gives us lang.id without committing
+    session.flush()
     return lang
 
 
-def get_or_create_publisher(session: Session, name: Optional[str]) -> Optional[Publisher]:
+def get_or_create_publisher(
+    session: Session, name: Optional[str]
+) -> Optional[Publisher]:
     if not name:
         return None
     pub = session.exec(select(Publisher).where(Publisher.name == name)).first()
@@ -50,15 +54,15 @@ def get_or_create_authors(session: Session, names: list[str]) -> list[Author]:
     return authors
 
 
-# ---- Book operations ----
+# ---------- book operations ----------
 def create_book(session: Session, data: BookCreate) -> Book:
-    # Resolve language
     if data.language_id:
         language = session.get(Language, data.language_id)
     else:
-        language = get_or_create_language(session, data.language_code, data.language_name)
+        language = get_or_create_language(
+            session, data.language_code, data.language_name
+        )
 
-    # Resolve publisher
     if data.publisher_id:
         publisher = session.get(Publisher, data.publisher_id)
     else:
@@ -113,6 +117,5 @@ def update_book(session: Session, book: Book, data: BookUpdate) -> Book:
 
 
 def delete_book(session: Session, book: Book) -> None:
-    # Cleanup cover file first (see router for helper)
     session.delete(book)
     session.commit()
