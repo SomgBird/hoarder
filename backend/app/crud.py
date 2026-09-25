@@ -8,7 +8,6 @@ from app.models import Book, Author, Language, Publisher
 from app.schemas import BookCreate, BookUpdate
 
 
-# ---------- get-or-create helpers ----------
 def get_or_create_language(
     session: Session, code: Optional[str], name: Optional[str]
 ) -> Optional[Language]:
@@ -54,7 +53,6 @@ def get_or_create_authors(session: Session, names: list[str]) -> list[Author]:
     return authors
 
 
-# ---------- book operations ----------
 def create_book(session: Session, data: BookCreate) -> Book:
     if data.language_id:
         language = session.get(Language, data.language_id)
@@ -99,10 +97,8 @@ def update_book(session: Session, book: Book, data: BookUpdate) -> Book:
 
     if "authors" in payload:
         book.authors = get_or_create_authors(session, payload.pop("authors"))
-
     if "language_id" in payload:
         book.language = session.get(Language, payload.pop("language_id"))
-
     if "publisher_id" in payload:
         book.publisher = session.get(Publisher, payload.pop("publisher_id"))
 

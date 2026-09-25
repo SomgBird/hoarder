@@ -1,39 +1,39 @@
-# backend/routers/books.py
+# backend/app/routers/books.py
 import uuid
 from datetime import datetime
-from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlmodel import Session
 
+from app.config import (
+    ALLOWED_IMAGE_TYPES,
+    COVERS_DIR,
+    COVERS_URL_PREFIX,
+    MAX_UPLOAD_BYTES,
+)
 from app.database import get_session
 from app.schemas import BookCreate, BookRead, BookUpdate
 from app import crud
 
 router = APIRouter(prefix="/books", tags=["books"])
 
-# ---------- Cover image storage ----------
-MEDIA_ROOT = Path(__file__).resolve().parent.parent / "media" / "covers"
-MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 
-ALLOWED_TYPES = {
-    "image/jpeg": ".jpg",
-    "image/png": ".png",
-    "image/webp": ".webp",
-}
-MAX_BYTES = 5 * 1024 * 1024  # 5 MB
+# ---------- cover file helpers ----------
+def _delete_cover_file(stored_url_path: str) -> None:
+    """Delete a stored cover given its URL path like '/media/covers/<uuid>.jpg'.
 
-
-def _delete_cover_file(stored_path: str) -> None:
-    if not stored_path:
+    Sandboxed: refuses to touch anything outside COVERS_DIR.
+    """
+    if not stored_url_path:
         return
-    relative = stored_path.removeprefix("/media/covers/")
-    target = (MEDIA_ROOT / relative).resolve()
+    # Strip the URL prefix to get the bare filename.
+    filename = stored_url_path.removeprefix(f"{COVERS_URL_PREFIX}/")
+    target = (COVERS_DIR / filename).resolve()
     try:
-        target.relative_to(MEDIA_ROOT)
+        target.relative_to(COVERS_DIR.resolve())
     except ValueError:
-        return
+        return   # outside the sandbox — ignore
     target.unlink(missing_ok=True)
 
 
@@ -77,10 +77,12 @@ def delete_book(book_id: int, session: Session = Depends(get_session)):
     book = crud.get_book(session, book_id)
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
+    if book.cover_image_path:
+        _delete_cover_file(book.cover_image_path)
     crud.delete_book(session, book)
 
 
-# ---------- Cover ----------
+# ---------- cover ----------
 @router.post("/{book_id}/cover", response_model=BookRead)
 async def upload_cover(
     book_id: int,
@@ -91,24 +93,28 @@ async def upload_cover(
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
 
-    if file.content_type not in ALLOWED_TYPES:
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
             status_code=400,
-            detail=f"Unsupported type {file.content_type}. Allowed: {list(ALLOWED_TYPES)}",
+            detail=(
+                f"Unsupported type {file.content_type}. "
+                f"Allowed: {list(ALLOWED_IMAGE_TYPES)}"
+            ),
         )
 
     contents = await file.read()
-    if len(contents) > MAX_BYTES:
-        raise HTTPException(status_code=413, detail="Max 5 MB")
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="File too large")
 
-    ext = ALLOWED_TYPES[file.content_type]
+    ext = ALLOWED_IMAGE_TYPES[file.content_type]
     filename = f"{uuid.uuid4().hex}{ext}"
-    (MEDIA_ROOT / filename).write_bytes(contents)
+    (COVERS_DIR / filename).write_bytes(contents)
 
+    # remove previous cover if any
     if book.cover_image_path:
         _delete_cover_file(book.cover_image_path)
 
-    book.cover_image_path = f"/media/covers/{filename}"
+    book.cover_image_path = f"{COVERS_URL_PREFIX}/{filename}"
     book.updated_at = datetime.utcnow()
     session.add(book)
     session.commit()

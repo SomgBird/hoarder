@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import ControlPanel from "./components/ControlPanel/ControlPanel";
 import Explorer from "./components/Explorer/Explorer";
+import { BookList } from "./components/BookList";
 
 function App() {
   useEffect(() => {
@@ -18,6 +19,7 @@ function App() {
     >
       <ControlPanel />
       <Explorer />
+      <BookList />
     </div>
   );
 }
