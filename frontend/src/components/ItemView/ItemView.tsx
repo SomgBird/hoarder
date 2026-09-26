@@ -1,88 +1,93 @@
 import styles from "./ItemView.module.css";
+import { api, coverUrl } from "../../api.ts";
+import { useEffect, useState } from "react";
+import type { Book } from "../../types.ts";
 
-function ItemView() {
+interface Props {
+  id: number | null;
+}
+
+function ItemView({ id }: Props) {
+  const [book, setBook] = useState<Book>();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (id !== null)
+      api
+        .getBook(id)
+        .then(setBook)
+        .catch((e) => setError(e.message))
+        .finally(() => setLoading(false));
+  }, [id]);
+
+  if (!book) return <p>No book with id: {id}</p>;
+
+  if (loading) return <p>Loading…</p>;
+  if (error) return <p>Error: {error}</p>;
+
   return (
     <div className={styles.view}>
-      <h1>Albert Einstein</h1>
+      <h1>{book?.title}</h1>
       <hr />
-
       <div className={styles.container}>
         <div className={styles.left_column}>
           <div className={styles.section}>
-            Albert Einstein[a] (14 March 1879 – 18 April 1955) was a German-born
-            theoretical physicist best known for developing the theory of
-            relativity. Einstein also made important contributions to quantum
-            theory.[1][5] His mass–energy equivalence formula E = mc2, which
-            arises from special relativity, has been called "the world's most
-            famous equation".[6] He received the 1921 Nobel Prize in Physics for
-            "his services to theoretical physics, and especially for his
-            discovery of the law of the photoelectric effect".[7] Albert
-            Einstein[a] (14 March 1879 – 18 April 1955) was a German-born
-            theoretical physicist best known for developing the theory of
-            relativity. Einstein also made important contributions to quantum
-            theory.[1][5] His mass–energy equivalence formula E = mc2, which
-            arises from special relativity, has been called "the world's most
-            famous equation".[6] He received the 1921 Nobel Prize in Physics for
-            "his services to theoretical physics, and especially for his
-            discovery of the law of the photoelectric effect".[7] Albert
-            Einstein[a] (14 March 1879 – 18 April 1955) was a German-born
-            theoretical physicist best known for developing the theory of
-            relativity. Einstein also made important contributions to quantum
-            theory.[1][5] His mass–energy equivalence formula E = mc2, which
-            arises from special relativity, has been called "the world's most
-            famous equation".[6] He received the 1921 Nobel Prize in Physics for
-            "his services to theoretical physics, and especially for his
-            discovery of the law of the photoelectric effect".[7]
+            <h2>Info</h2>
+            <table>
+              <tbody>
+                <tr>
+                  <td>Authors:</td>
+                  <td>{book.authors.map((a) => a.name).join(", ")}</td>
+                </tr>
+                <tr>
+                  <td> Release date:</td>
+                  <td>{book.release_date}</td>
+                </tr>
+                <tr>
+                  <td>ISBN:</td>
+                  <td>{book.isbn}</td>
+                </tr>
+                <tr>
+                  <td>pages:</td>
+                  <td>{book.pages}</td>
+                </tr>
+                <tr>
+                  <td>Language:</td>
+                  <td>{book.language?.name}</td>
+                </tr>
+                <tr>
+                  <td>Publisher:</td>
+                  <td>{book.publisher?.name}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           <div className={styles.section}>
-            Albert Einstein[a] (14 March 1879 – 18 April 1955) was a German-born
-            theoretical physicist best known for developing the theory of
-            relativity. Einstein also made important contributions to quantum
-            theory.[1][5] His mass–energy equivalence formula E = mc2, which
-            arises from special relativity, has been called "the world's most
-            famous equation".[6] He received the 1921 Nobel Prize in Physics for
-            "his services to theoretical physics, and especially for his
-            discovery of the law of the photoelectric effect".[7]
-          </div>
-          <div className={styles.section}>
-            Albert Einstein[a] (14 March 1879 – 18 April 1955) was a German-born
-            theoretical physicist best known for developing the theory of
-            relativity. Einstein also made important contributions to quantum
-            theory.[1][5] His mass–energy equivalence formula E = mc2, which
-            arises from special relativity, has been called "the world's most
-            famous equation".[6] He received the 1921 Nobel Prize in Physics for
-            "his services to theoretical physics, and especially for his
-            discovery of the law of the photoelectric effect".[7]
+            <h2>Description</h2>
+            {book.description}
           </div>
         </div>
         <div className={styles.right_column}>
           <div className={styles.section}>
-            Born as a subject to the Kingdom of Württemberg, part of the German
-            Empire,[note 1] Einstein moved to Switzerland in 1895, forsaking his
-            citizenship the following year. In 1896, at the age of seventeen, he
-            enrolled in the mathematics and physics teaching diploma program at
-            the Swiss federal polytechnic school in Zurich, graduating in 1900.
-            He acquired Swiss citizenship a year later, which he kept for the
-            rest of his life, and afterwards secured a permanent position at the
-            Swiss Patent Office in Bern.
-          </div>
-          <div className={styles.section}>
-            In 1905, he submitted a successful PhD dissertation to the
-            University of Zurich. In 1914, he moved to Berlin to join the
-            Prussian Academy of Sciences and the Humboldt University of Berlin,
-            becoming director of the Kaiser Wilhelm Institute for Physics in
-            1917; he also became a Prussian and consequently also German citizen
-            again.
-          </div>
-          <div className={styles.section}>
-            In 1933, while Einstein was visiting the United States, Adolf Hitler
-            came to power in Germany. Horrified by the Nazi persecution of his
-            fellow Jews,[8] he decided to remain in the US, and was granted
-            American citizenship in 1940.[9] On the eve of World War II, he
-            endorsed a letter to President Franklin D. Roosevelt alerting him to
-            the potential German nuclear weapons program and recommending that
-            the US begin similar research, later carried out as the Manhattan
-            Project
+            <h2>Cover</h2>
+            {coverUrl(book.cover_image_path) ? (
+              <img
+                src={coverUrl(book.cover_image_path)!}
+                alt={book.title}
+                width={"100%"}
+                style={{ objectFit: "cover", borderRadius: 4 }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  height: "200px",
+                  background: "#eee",
+                  borderRadius: 4,
+                }}
+              />
+            )}
           </div>
         </div>
       </div>

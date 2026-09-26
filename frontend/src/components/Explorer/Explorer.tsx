@@ -7,7 +7,11 @@ import AddressBar from "../AddressBar/AddressBar";
 import ContentFrame from "./ContentFrame";
 import ItemView from "../ItemView/ItemView";
 
-function Explorer() {
+interface Props {
+  id: number | null;
+}
+
+function Explorer({ id }: Props) {
   return (
     <Frame w="1200px" bgColor="$material" boxShadow="$out" padding="$2">
       <TitleBar icon={<Ie variant="16x16_8" />} title="Explorer">
@@ -43,7 +47,7 @@ function Explorer() {
           paddingLeft="$1"
         >
           <ContentFrame>
-            <ItemView />
+            <ItemView id={id} />
           </ContentFrame>
         </Frame>
       </Frame>

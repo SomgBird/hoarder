@@ -3,7 +3,12 @@ import { Frame, TitleBar } from "@react95/core";
 import { Notepad } from "@react95/icons";
 import type { Book } from "../../types";
 
-function ControlPanel() {
+interface Props {
+  selectedItemId: number | null;
+  onSelectItem: (id: number) => void;
+}
+
+function ControlPanel({ selectedItemId, onSelectItem }: Props) {
   const [items, setItems] = useState<Book[]>([]);
 
   useEffect(() => {
@@ -32,7 +37,8 @@ function ControlPanel() {
           {items.map((item, i) => (
             <div
               key={item.id}
-              //onClick={() => openItem(item.id)}
+              aria-current={item.id === selectedItemId}
+              onClick={() => onSelectItem(item.id)}
               style={{
                 display: "flex",
                 justifyContent: "space-between",

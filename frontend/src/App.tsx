@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ControlPanel from "./components/ControlPanel/ControlPanel";
 import Explorer from "./components/Explorer/Explorer";
-import { BookList } from "./components/BookList";
 
 function App() {
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+
   useEffect(() => {
     document.body.style.backgroundColor = "#008080";
   });
@@ -14,12 +15,13 @@ function App() {
         display: "flex",
         gap: "1rem",
         alignItems: "center",
-        backgroundColor: "#008080",
       }}
     >
-      <ControlPanel />
-      <Explorer />
-      <BookList />
+      <ControlPanel
+        selectedItemId={selectedItemId}
+        onSelectItem={setSelectedItemId}
+      />
+      <Explorer id={selectedItemId} />
     </div>
   );
 }
