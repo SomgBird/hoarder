@@ -10,10 +10,11 @@ from pathlib import Path
 #   .parent      -> backend/app/
 #   .parent.parent -> backend/
 BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / "data"
 
-MEDIA_DIR = BASE_DIR / "media"
+MEDIA_DIR = DATA_DIR / "media"
 COVERS_DIR = MEDIA_DIR / "covers"
-DB_PATH = BASE_DIR / "books.db"
+DB_PATH = DATA_DIR / "books.db"
 
 # Ensure directories exist at import time.
 # Doing this here means main.py / routers / seed.py never need to.

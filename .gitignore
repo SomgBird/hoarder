@@ -6,15 +6,17 @@ __pycache__/
 build/
 dist/
 
-# Virtual environments (in case you ever create one alongside conda)
+# Virtual environments 
 .venv/
 venv/
 env/
 
-# SQLite database (generated at runtime — don't commit real data)
+# SQLite database and data folders
 *.db
 *.sqlite
 *.sqlite3
+*.db
+data/
 
 # --- Node / React / Vite frontend ---
 node_modules/
@@ -41,5 +43,4 @@ Thumbs.db
 desktop.ini
 $RECYCLE.BIN/
 
-# --- macOS (harmless to include even though you're on Windows, in case you ever collaborate) ---
 .DS_Store
