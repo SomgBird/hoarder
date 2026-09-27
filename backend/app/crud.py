@@ -5,7 +5,7 @@ from typing import Optional, Sequence
 from sqlmodel import Session, select
 
 from app.models import Book, Author, Language, Publisher
-from app.schemas import BookCreate, BookUpdate
+from app.schemas import BookCreate, BookListItem, BookUpdate
 
 
 def get_or_create_language(
@@ -88,8 +88,11 @@ def get_book(session: Session, book_id: int) -> Optional[Book]:
     return session.get(Book, book_id)
 
 
-def list_books(session: Session, offset: int = 0, limit: int = 20) -> Sequence[Book]:
+def all_books(session: Session, offset: int = 0, limit: int = 20) -> Sequence[Book]:
     return session.exec(select(Book).offset(offset).limit(limit)).all()
+
+def list_books(session: Session, offset: int = 0, limit: int = 20) -> Sequence[BookListItem]:
+    return session.exec(select(Book.id, Book.title, Book.authors).offset(offset).limit(limit)).all()
 
 
 def update_book(session: Session, book: Book, data: BookUpdate) -> Book:

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Frame, TitleBar } from "@react95/core";
 import { Notepad } from "@react95/icons";
-import type { Book } from "../../types";
+import type { BookListItem } from "../../types";
 
 interface Props {
   selectedItemId: number | null;
@@ -9,7 +9,7 @@ interface Props {
 }
 
 function ControlPanel({ selectedItemId, onSelectItem }: Props) {
-  const [items, setItems] = useState<Book[]>([]);
+  const [items, setItems] = useState<BookListItem[]>([]);
 
   useEffect(() => {
     fetch("http://127.0.0.1:8000/books")
@@ -49,7 +49,7 @@ function ControlPanel({ selectedItemId, onSelectItem }: Props) {
               }}
             >
               <span>{item.title}</span>
-              <span>{item.release_date}</span>
+              <span>{item.authors.map((a) => a.name).join(", ")}</span>
             </div>
           ))}
         </Frame>

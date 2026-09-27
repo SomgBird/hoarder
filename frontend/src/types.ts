@@ -45,3 +45,9 @@ export interface BookCreate {
   language_id?: number;
   publisher_id?: number;
 }
+
+export interface BookListItem {
+  id: number;
+  title: string;
+  authors: Author[];
+}

@@ -70,3 +70,8 @@ class BookRead(SQLModel):
 
     created_at: datetime
     updated_at: datetime
+
+class BookListItem(SQLModel):
+    id: int
+    title: str
+    authors: Optional[List[str]] = None

@@ -13,7 +13,7 @@ from app.config import (
     MAX_UPLOAD_BYTES,
 )
 from app.database import get_session
-from app.schemas import BookCreate, BookRead, BookUpdate
+from app.schemas import BookCreate, BookListItem, BookRead, BookUpdate
 from app import crud
 
 router = APIRouter(prefix="/books", tags=["books"])
@@ -49,8 +49,12 @@ def list_books(
     limit: int = Query(default=20, le=100),
     session: Session = Depends(get_session),
 ):
-    return crud.list_books(session, offset, limit)
+    return crud.all_books(session, offset, limit)
 
+
+@router.get("/booklist", response_model=BookListItem)
+def get_booklist(session : Session = Depends(get_session)):
+    return
 
 @router.get("/{book_id}", response_model=BookRead)
 def get_book(book_id: int, session: Session = Depends(get_session)):
