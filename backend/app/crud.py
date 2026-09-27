@@ -1,23 +1,29 @@
-# backend/app/crud.py
-from datetime import datetime
 from typing import Optional, Sequence
 
+from sqlalchemy import func
+from sqlalchemy.orm import load_only, selectinload
 from sqlmodel import Session, select
 
-from app.models import Book, Author, Language, Publisher
-from app.schemas import BookCreate, BookListItem, BookUpdate
+from app.models import Author, Book, Language, Publisher, utcnow
+from app.schemas import BookCreate, BookUpdate
+
+# Eager-load options shared by every query that returns a full Book,
+# so callers never trip the "N+1 lazy load after session closed" trap.
+_BOOK_RELATIONS = (
+    selectinload(Book.authors),
+    selectinload(Book.language),
+    selectinload(Book.publisher),
+)
 
 
+# ---------- Lookups (get-or-create) ----------
 def get_or_create_language(
     session: Session, code: Optional[str], name: Optional[str]
 ) -> Optional[Language]:
     if not code and not name:
         return None
     stmt = select(Language)
-    if code:
-        stmt = stmt.where(Language.code == code)
-    else:
-        stmt = stmt.where(Language.name == name)
+    stmt = stmt.where(Language.code == code) if code else stmt.where(Language.name == name)
     lang = session.exec(stmt).first()
     if lang:
         return lang
@@ -27,9 +33,7 @@ def get_or_create_language(
     return lang
 
 
-def get_or_create_publisher(
-    session: Session, name: Optional[str]
-) -> Optional[Publisher]:
+def get_or_create_publisher(session: Session, name: Optional[str]) -> Optional[Publisher]:
     if not name:
         return None
     pub = session.exec(select(Publisher).where(Publisher.name == name)).first()
@@ -53,19 +57,18 @@ def get_or_create_authors(session: Session, names: list[str]) -> list[Author]:
     return authors
 
 
+# ---------- Books ----------
 def create_book(session: Session, data: BookCreate) -> Book:
-    if data.language_id:
-        language = session.get(Language, data.language_id)
-    else:
-        language = get_or_create_language(
-            session, data.language_code, data.language_name
-        )
-
-    if data.publisher_id:
-        publisher = session.get(Publisher, data.publisher_id)
-    else:
-        publisher = get_or_create_publisher(session, data.publisher_name)
-
+    language = (
+        session.get(Language, data.language_id)
+        if data.language_id
+        else get_or_create_language(session, data.language_code, data.language_name)
+    )
+    publisher = (
+        session.get(Publisher, data.publisher_id)
+        if data.publisher_id
+        else get_or_create_publisher(session, data.publisher_name)
+    )
     authors = get_or_create_authors(session, data.authors)
 
     book = Book(
@@ -84,15 +87,36 @@ def create_book(session: Session, data: BookCreate) -> Book:
     return book
 
 
+def get_book_by_isbn(session: Session, isbn: str) -> Optional[Book]:
+    return session.exec(select(Book).where(Book.isbn == isbn)).first()
+
+
 def get_book(session: Session, book_id: int) -> Optional[Book]:
-    return session.get(Book, book_id)
+    return session.exec(
+        select(Book).where(Book.id == book_id).options(*_BOOK_RELATIONS)
+    ).first()
+
+
+def count_books(session: Session) -> int:
+    return session.exec(select(func.count()).select_from(Book)).one()
 
 
 def all_books(session: Session, offset: int = 0, limit: int = 20) -> Sequence[Book]:
-    return session.exec(select(Book).offset(offset).limit(limit)).all()
+    return session.exec(
+        select(Book).options(*_BOOK_RELATIONS).offset(offset).limit(limit)
+    ).all()
 
-def list_books(session: Session, offset: int = 0, limit: int = 20) -> Sequence[BookListItem]:
-    return session.exec(select(Book.id, Book.title, Book.authors).offset(offset).limit(limit)).all()
+
+def list_books(session: Session, offset: int = 0, limit: int = 20) -> Sequence[Book]:
+    """Lightweight listing: only the columns BookListItem actually needs,
+    with authors batch-loaded in one extra query (no N+1)."""
+    return session.exec(
+        select(Book)
+        .options(load_only(Book.id, Book.title), selectinload(Book.authors))
+        .order_by(Book.id)
+        .offset(offset)
+        .limit(limit)
+    ).all()
 
 
 def update_book(session: Session, book: Book, data: BookUpdate) -> Book:
@@ -108,7 +132,7 @@ def update_book(session: Session, book: Book, data: BookUpdate) -> Book:
     for key, value in payload.items():
         setattr(book, key, value)
 
-    book.updated_at = datetime.utcnow()
+    book.updated_at = utcnow()
     session.add(book)
     session.commit()
     session.refresh(book)
@@ -118,3 +142,16 @@ def update_book(session: Session, book: Book, data: BookUpdate) -> Book:
 def delete_book(session: Session, book: Book) -> None:
     session.delete(book)
     session.commit()
+
+
+# ---------- Simple lookups for dropdowns / reference lists ----------
+def list_authors(session: Session) -> Sequence[Author]:
+    return session.exec(select(Author).order_by(Author.name)).all()
+
+
+def list_publishers(session: Session) -> Sequence[Publisher]:
+    return session.exec(select(Publisher).order_by(Publisher.name)).all()
+
+
+def list_languages(session: Session) -> Sequence[Language]:
+    return session.exec(select(Language).order_by(Language.name)).all()

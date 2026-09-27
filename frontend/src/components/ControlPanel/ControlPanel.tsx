@@ -12,9 +12,9 @@ function ControlPanel({ selectedItemId, onSelectItem }: Props) {
   const [items, setItems] = useState<BookListItem[]>([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/books")
+    fetch("http://127.0.0.1:8000/books/booklist")
       .then((res) => res.json())
-      .then(setItems)
+      .then((page) => setItems(page.items))
       .catch((err) => console.error("Failed to fetch items:", err));
   }, []);
 

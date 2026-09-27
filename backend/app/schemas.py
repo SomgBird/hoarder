@@ -1,5 +1,7 @@
 from datetime import date, datetime
-from typing import List, Optional
+from typing import Generic, List, Optional, TypeVar
+
+from pydantic import BaseModel
 from sqlmodel import SQLModel
 
 
@@ -71,7 +73,19 @@ class BookRead(SQLModel):
     created_at: datetime
     updated_at: datetime
 
+
 class BookListItem(SQLModel):
     id: int
     title: str
-    authors: Optional[List[str]] = None
+    authors: List[AuthorRead]
+
+
+# ---------- Pagination envelope ----------
+T = TypeVar("T")
+
+
+class Page(BaseModel, Generic[T]):
+    items: List[T]
+    total: int
+    offset: int
+    limit: int
