@@ -1,7 +1,11 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import List, Optional
 from sqlmodel import SQLModel, Field, Relationship
 
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+ 
 
 class BookAuthorLink(SQLModel, table=True):
     book_id: Optional[int] = Field(
