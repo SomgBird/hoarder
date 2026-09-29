@@ -51,3 +51,7 @@ export interface BookListItem {
   title: string;
   authors: Author[];
 }
+
+export interface Page<T> {
+  items: T[];
+}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Frame, TitleBar } from "@react95/core";
 import { Notepad } from "@react95/icons";
 import type { BookListItem } from "../../types";
+import { itemService } from "../../services/itemService";
 
 interface Props {
   selectedItemId: number | null;
@@ -12,8 +13,7 @@ function ControlPanel({ selectedItemId, onSelectItem }: Props) {
   const [items, setItems] = useState<BookListItem[]>([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/books/booklist")
-      .then((res) => res.json())
+    itemService.listbooks()
       .then((page) => setItems(page.items))
       .catch((err) => console.error("Failed to fetch items:", err));
   }, []);
