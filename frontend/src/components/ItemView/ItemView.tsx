@@ -1,7 +1,8 @@
 import styles from "./ItemView.module.css";
-import { api, coverUrl } from "../../api.ts";
 import { useEffect, useState } from "react";
 import type { Book } from "../../types.ts";
+import { itemService } from "../../services/itemService.ts";
+import { coverUrl } from "../../services/utils.ts";
 
 interface Props {
   id: number | null;
@@ -14,7 +15,7 @@ function ItemView({ id }: Props) {
 
   useEffect(() => {
     if (id !== null)
-      api
+      itemService
         .getBook(id)
         .then(setBook)
         .catch((e) => setError(e.message))
