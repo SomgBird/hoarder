@@ -13,7 +13,8 @@ function ControlPanel({ selectedItemId, onSelectItem }: Props) {
   const [items, setItems] = useState<BookListItem[]>([]);
 
   useEffect(() => {
-    itemService.listbooks()
+    itemService
+      .list()
       .then((page) => setItems(page.items))
       .catch((err) => console.error("Failed to fetch items:", err));
   }, []);

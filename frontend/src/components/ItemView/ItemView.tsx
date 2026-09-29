@@ -16,7 +16,7 @@ function ItemView({ id }: Props) {
   useEffect(() => {
     if (id !== null)
       itemService
-        .getBook(id)
+        .get(id)
         .then(setBook)
         .catch((e) => setError(e.message))
         .finally(() => setLoading(false));

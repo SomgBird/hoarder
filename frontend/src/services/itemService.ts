@@ -2,22 +2,22 @@ import type { Book, BookCreate, BookListItem, Page } from '../types';
 import { request } from './client.ts'
 
 export const itemService = {
-  allbooks: () => request<Book[]>("/books"),
+  all: () => request<Book[]>("/books"),
 
-  listbooks: () => request<Page<BookListItem>>("/books/booklist"),
+  list: () => request<Page<BookListItem>>("/books/booklist"),
 
-  getBook: (id: number) => request<Book>(`/books/${id}`),
+  get: (id: number) => request<Book>(`/books/${id}`),
 
-  createBook: (data: BookCreate)  =>
+  create: (data: BookCreate)  =>
     request("/books/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
 
-  deleteBook: (id: number) =>
+  delete: (id: number) =>
     request(`/books/${id}`, { method: "DELETE" }),
-  
+
   uploadCover: (id: number, file: File) => {
     const form = new FormData();
     form.append("file", file);
