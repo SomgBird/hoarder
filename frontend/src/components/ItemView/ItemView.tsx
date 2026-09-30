@@ -9,7 +9,7 @@ interface Props {
 }
 
 function ItemView({ id }: Props) {
-  const [book, setBook] = useState<Book>();
+  const [item, setItem] = useState<Book>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,19 +17,19 @@ function ItemView({ id }: Props) {
     if (id !== null)
       itemService
         .get(id)
-        .then(setBook)
+        .then(setItem)
         .catch((e) => setError(e.message))
         .finally(() => setLoading(false));
   }, [id]);
 
-  if (!book) return <p>No book with id: {id}</p>;
+  if (!item) return <p>No book with id: {id}</p>;
 
   if (loading) return <p>Loading…</p>;
   if (error) return <p>Error: {error}</p>;
 
   return (
     <div className={styles.view}>
-      <h1>{book?.title}</h1>
+      <h1>{item?.title}</h1>
       <hr />
       <div className={styles.container}>
         <div className={styles.left_column}>
@@ -39,43 +39,43 @@ function ItemView({ id }: Props) {
               <tbody>
                 <tr>
                   <td>Authors:</td>
-                  <td>{book.authors.map((a) => a.name).join(", ")}</td>
+                  <td>{item.authors.map((a) => a.name).join(", ")}</td>
                 </tr>
                 <tr>
                   <td> Release date:</td>
-                  <td>{book.release_date}</td>
+                  <td>{item.release_date}</td>
                 </tr>
                 <tr>
                   <td>ISBN:</td>
-                  <td>{book.isbn}</td>
+                  <td>{item.isbn}</td>
                 </tr>
                 <tr>
                   <td>pages:</td>
-                  <td>{book.pages}</td>
+                  <td>{item.pages}</td>
                 </tr>
                 <tr>
                   <td>Language:</td>
-                  <td>{book.language?.name}</td>
+                  <td>{item.language?.name}</td>
                 </tr>
                 <tr>
                   <td>Publisher:</td>
-                  <td>{book.publisher?.name}</td>
+                  <td>{item.publisher?.name}</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <div className={styles.section}>
             <h2>Description</h2>
-            {book.description}
+            {item.description}
           </div>
         </div>
         <div className={styles.right_column}>
           <div className={styles.section}>
             <h2>Cover</h2>
-            {coverUrl(book.cover_image_path) ? (
+            {coverUrl(item.cover_image_path) ? (
               <img
-                src={coverUrl(book.cover_image_path)!}
-                alt={book.title}
+                src={coverUrl(item.cover_image_path)!}
+                alt={item.title}
                 width={"100%"}
                 style={{ objectFit: "cover", borderRadius: 4 }}
               />
