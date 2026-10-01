@@ -1,0 +1,15 @@
+.layout {
+    display: grid;
+    grid-template-columns: 2200px 1fr;    
+    gap: "1rem";
+    align-items: "center",
+}
+
+.navbar {
+    flex: 20%;
+}
+
+.content {
+    flex: 80%;
+    flex-direction: "column";
+}
