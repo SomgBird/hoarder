@@ -1,16 +1,19 @@
+import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import NavBar from "./NavBar";
-import styles from "./Layout.module.css"
+import styles from "./Layout.module.css";
 
 function Layout() {
-    return (
+  return (
     <div className={styles.page}>
-        <NavBar className={styles.navbar}/>
-        <main className={styles.content}>
-            <Outlet />
-        </main>
+      <NavBar className={styles.navbar} />
+      <main className={styles.content}>
+        <Suspense fallback="Loading…">
+          <Outlet />
+        </Suspense>
+      </main>
     </div>
-    );
+  );
 }
 
 export default Layout;

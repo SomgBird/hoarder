@@ -1,15 +1,15 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home/Home";
-import About from "./pages/About/About";
 import Layout from "./components/NavBar/Layout";
+import { routes } from "./config/navigation";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" index element={<Home />} />
-          <Route path="/about" element={<About />} />
+          {routes.map(({ path, Component }) => (
+            <Route key={path} path={path} element={<Component />} />
+          ))}
         </Route>
       </Routes>
     </BrowserRouter>
