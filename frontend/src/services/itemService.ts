@@ -1,4 +1,4 @@
-import type { Book, BookCreate, BookListItem, Page } from '../types';
+import type { Book, BookCreate, BookListItem, Page } from '../types/item.ts';
 import { request } from './client.ts'
 
 const PATH = "/books";
