@@ -1,16 +1,16 @@
-import type { Book, BookCreate, BookListItem, Page } from '../types/item.ts';
+import type { Item, ItemCreate, ItemInfo, Page } from '../types/item.ts';
 import { request } from './client.ts'
 
 const PATH = "/books";
 
 export const itemService = {
-  all: () => request<Book[]>(`${PATH}`),
+  all: () => request<Item[]>(`${PATH}`),
 
-  list: () => request<Page<BookListItem>>(`${PATH}/booklist`),
+  list: () => request<Page<ItemInfo>>(`${PATH}/booklist`),
 
-  get: (id: number) => request<Book>(`${PATH}/${id}`),
+  get: (id: number) => request<Item>(`${PATH}/${id}`),
 
-  create: (data: BookCreate)  =>
+  create: (data: ItemCreate)  =>
     request(`${PATH}/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

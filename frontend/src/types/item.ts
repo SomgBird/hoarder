@@ -16,7 +16,7 @@ export interface Author {
   name: string;
 }
 
-export interface Book {
+export interface Item {
   id: number;
   title: string;
   release_date: string | null;   // ISO date string "1937-09-21"
@@ -32,7 +32,7 @@ export interface Book {
 }
 
 // payload for POST /books/ — matches BookCreate in schemas.py
-export interface BookCreate {
+export interface ItemCreate {
   title: string;
   release_date?: string;
   isbn?: string;
@@ -46,7 +46,7 @@ export interface BookCreate {
   publisher_id?: number;
 }
 
-export interface BookListItem {
+export interface ItemInfo {
   id: number;
   title: string;
   authors: Author[];
