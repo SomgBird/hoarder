@@ -5,7 +5,15 @@ import {
   type LazyExoticComponent,
   type ReactNode,
 } from "react";
-import { Inetcpl1319, Winhlp324000 } from "@react95/icons";
+import {
+  ComputerFind,
+  Defrag9,
+  Inetcpl1319,
+  MicrosoftExchange,
+  Notepad2,
+  Progman17,
+  Winhlp324000,
+} from "@react95/icons";
 
 export interface NavEntry {
   path?: string; // omit for folder-only parents
@@ -17,32 +25,38 @@ export interface NavEntry {
 
 export const navigation: readonly NavEntry[] = [
   {
-    path: "/",
-    label: "Home",
-    icon: <Inetcpl1319 variant="32x32_4" />,
-    Component: lazy(() => import("../pages/Home/Home")),
+    label: "Collection",
+    icon: <Defrag9 variant="32x32_4" />,
+    children: [
+      {
+        path: "/",
+        label: "Item Viewer",
+        icon: <Inetcpl1319 variant="32x32_4" />,
+        Component: lazy(() => import("../pages/Home/Home")),
+      },
+      {
+        label: "Page Editor",
+        icon: <Progman17 variant="32x32_4" />,
+      },
+    ],
+  },
+  {
+    label: "Tracker",
+    icon: <ComputerFind variant="32x32_4" />,
+  },
+  {
+    label: "Barcode Scanner",
+    icon: <MicrosoftExchange variant="32x32_4" />,
+  },
+  {
+    label: "Shopping List",
+    icon: <Notepad2 variant="32x32_4" />,
   },
   {
     path: "/about",
     label: "About",
     icon: <Winhlp324000 variant="32x32_4" />,
     Component: lazy(() => import("../pages/About/About")),
-  },
-  {
-    label: "Projects",
-    icon: <Winhlp324000 variant="32x32_4" />,
-    children: [
-      {
-        //path: "/projects/games",
-        label: "Games",
-        //Component: lazy(() => import("../pages/Games/Games")),
-      },
-      {
-        //path: "/projects/books",
-        label: "Books",
-        //Component: lazy(() => import("../pages/Books/Books")),
-      },
-    ],
   },
 ];
 

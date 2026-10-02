@@ -2,6 +2,7 @@
 import { List } from "@react95/core";
 import { useLocation, useNavigate } from "react-router-dom";
 import { navigation, type NavEntry } from "../../config/navigation";
+import styles from "./NavBar.module.css";
 
 // "/" must match exactly, otherwise Home would be active on every page
 const matches = (pathname: string, path: string): boolean =>
@@ -37,7 +38,7 @@ function NavItems({ items, pathname, onNavigate }: NavItemsProps) {
           >
             {label}
             {children && (
-              <List>
+              <List className={styles.submenu}>
                 <NavItems
                   items={children}
                   pathname={pathname}
