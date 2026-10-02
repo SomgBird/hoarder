@@ -1,6 +1,6 @@
 import styles from "./ItemView.module.css";
 import { useEffect, useState } from "react";
-import type { Book } from "../../types.ts";
+import type { Item } from "@types";
 import { itemService } from "../../services/itemService.ts";
 import { coverUrl } from "../../services/utils.ts";
 
@@ -9,7 +9,7 @@ interface Props {
 }
 
 function ItemView({ id }: Props) {
-  const [item, setItem] = useState<Book>();
+  const [item, setItem] = useState<Item>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

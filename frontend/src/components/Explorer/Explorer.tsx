@@ -1,11 +1,14 @@
 import { Frame, TitleBar } from "@react95/core";
+
+import {
+  ExplorerToolbar,
+  MenuBar,
+  Separator,
+  AddressBar,
+  ContentFrame,
+  ItemView,
+} from "@components";
 import { HtmlPage, Ie } from "@react95/icons";
-import ExplorerToolbar from "./ExplorerToolbar";
-import Separator from "../Separator";
-import MenuBar from "../MenuBar/MenuBar";
-import AddressBar from "../AddressBar/AddressBar";
-import ContentFrame from "../ContentFrame/ContentFrame";
-import ItemView from "../ItemView/ItemView";
 
 interface Props {
   id: number | null;

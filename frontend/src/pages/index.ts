@@ -1,2 +1,4 @@
-export { default as About } from "./About/About";
-export { default as Home } from "./Home/Home";
+import Home from "./Home/Home";
+import About from "./About/About";
+
+export { Home, About }

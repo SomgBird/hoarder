@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Frame, TitleBar } from "@react95/core";
 import { Notepad } from "@react95/icons";
-import type { BookListItem } from "../../types";
+import type { ItemInfo } from "@types";
 import { itemService } from "../../services/itemService";
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 }
 
 function ControlPanel({ selectedItemId, onSelectItem }: Props) {
-  const [items, setItems] = useState<BookListItem[]>([]);
+  const [items, setItems] = useState<ItemInfo[]>([]);
 
   useEffect(() => {
     itemService
