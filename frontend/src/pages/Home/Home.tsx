@@ -3,7 +3,7 @@ import ControlPanel from "../../components/ControlPanel/ControlPanel";
 import Explorer from "../../components/Explorer/Explorer";
 import "./Home.module.css";
 
-function Home() {
+export default function Home() {
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
 
   return (
@@ -22,5 +22,3 @@ function Home() {
     </div>
   );
 }
-
-export default Home;

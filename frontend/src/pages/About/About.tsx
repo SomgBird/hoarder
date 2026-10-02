@@ -1,6 +1,3 @@
-function About() {
-    return ("test");
+export default function About() {
+  return "test";
 }
-
-
-export default About;

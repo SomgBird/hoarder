@@ -32,7 +32,7 @@ export const navigation: readonly NavEntry[] = [
         path: "/",
         label: "Item Viewer",
         icon: <Inetcpl1319 variant="32x32_4" />,
-        Component: lazy(() => import("../pages/Home/Home")),
+        Component: lazy(() => import("@pages").then(({ Home }) => ({ default: Home }))),
       },
       {
         label: "Page Editor",
@@ -56,7 +56,7 @@ export const navigation: readonly NavEntry[] = [
     path: "/about",
     label: "About",
     icon: <Winhlp324000 variant="32x32_4" />,
-    Component: lazy(() => import("../pages/About/About")),
+    Component: lazy(() => import("@pages").then(({ About }) => ({ default: About }))),
   },
 ];
 
