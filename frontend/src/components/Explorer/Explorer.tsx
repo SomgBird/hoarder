@@ -4,7 +4,7 @@ import ExplorerToolbar from "./ExplorerToolbar";
 import Separator from "../Separator";
 import MenuBar from "../MenuBar/MenuBar";
 import AddressBar from "../AddressBar/AddressBar";
-import ContentFrame from "./ContentFrame";
+import ContentFrame from "../ContentFrame/ContentFrame";
 import ItemView from "../ItemView/ItemView";
 
 interface Props {
