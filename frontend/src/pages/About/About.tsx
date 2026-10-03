@@ -1,4 +1,4 @@
-import { Frame, Button, TitleBar } from "@react95/core";
+import { Frame, TitleBar } from "@react95/core";
 import styles from "./About.module.css";
 import { Winhlp324000 } from "@react95/icons";
 
@@ -12,11 +12,12 @@ interface AppInfo {
 }
 
 const APP: AppInfo = {
-  name: "Collection Manager",
+  name: "Hoarder",
   version: "pre-alpha",
   author: "SomgBird",
   year: 2026,
-  description: "A personal catalog for games, books, journals and merch.",
+  description:
+    "A personal catalog and tracker for your games, books, journals, merch, and everything. Manage your collection and track wanted items in a single app.",
   repo: "https://github.com/SomgBird/hoarder",
 };
 
@@ -41,11 +42,11 @@ export default function About() {
             </p>
 
             <p className={styles.paragraphLast}>
-              Built with react95, FastAPI and SQLModel.
+              Built with{" "}
+              <a href="https://github.com/react95/react95">react95</a>, FastAPI
+              and SQLModel.
               <br />
-              <a href={APP.repo} target="_blank" rel="noreferrer">
-                Source code
-              </a>
+              <a href={APP.repo}>Source code (GitHub)</a>
             </p>
           </div>
         </Frame>
