@@ -1,0 +1,21 @@
+.toolbarButton {
+  --raised:
+    inset 1px 1px 0 1px var(--r95-color-borderLightest),
+    inset 0 0 0 1px var(--r95-color-borderDark),
+    1px 1px 0 0 var(--r95-color-borderDarkest);
+  --pressed:
+    inset 0 0 0 1px var(--r95-color-borderDark),
+    0 0 0 1px var(--r95-color-borderDarkest);
+
+  /* no border at rest and when focused */
+  box-shadow: none !important;
+}
+
+.toolbarButton:hover {
+  box-shadow: var(--raised) !important;
+}
+
+/* must come after :hover */
+.toolbarButton:active {
+  box-shadow: var(--pressed) !important;
+}

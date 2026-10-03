@@ -2,7 +2,7 @@ import AddressBar from "./AddressBar/AddressBar";
 import ContentFrame from "./ContentFrame/ContentFrame";
 import ControlPanel from "./ControlPanel/ControlPanel";
 import Explorer from "./Explorer/Explorer";
-import ExplorerToolbar from "./Explorer/ExplorerToolbar";
+import ExplorerToolbar from "./ExplorerToolbar/ExplorerToolbar";
 import ItemView from "./ItemView/ItemView";
 import Layout from "./Layout/Layout";
 import MenuBar from "./MenuBar/MenuBar";
