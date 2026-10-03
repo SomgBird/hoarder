@@ -12,6 +12,7 @@ import {
   MicrosoftExchange,
   Notepad2,
   Progman17,
+  Settings,
   Winhlp324000,
 } from "@react95/icons";
 
@@ -53,6 +54,10 @@ export const navigation: readonly NavEntry[] = [
   {
     label: "Shopping List",
     icon: <Notepad2 variant="32x32_4" />,
+  },
+  {
+    label: "Settings",
+    icon: <Settings variant="32x32_4" />,
   },
   {
     path: "/about",
