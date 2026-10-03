@@ -3,13 +3,14 @@ import { Frame, TitleBar } from "@react95/core";
 import { Notepad } from "@react95/icons";
 import type { ItemInfo } from "@types";
 import { itemService } from "../../services/itemService";
+import CollectionManagerToolbar from "@components/CollectionManagerToolbar/CollectionManagerToolbar";
 
 interface Props {
   selectedItemId: number | null;
   onSelectItem: (id: number) => void;
 }
 
-function ControlPanel({ selectedItemId, onSelectItem }: Props) {
+function CollectionManager({ selectedItemId, onSelectItem }: Props) {
   const [items, setItems] = useState<ItemInfo[]>([]);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ function ControlPanel({ selectedItemId, onSelectItem }: Props) {
             <TitleBar.Close />
           </TitleBar.OptionsBox>
         </TitleBar>
+        <CollectionManagerToolbar></CollectionManagerToolbar>
         <Frame bgColor="$inputBackground" boxShadow="$in" padding="$2">
           {items.length === 0 && <p style={{ margin: 4 }}>No items yet.</p>}
           {items.map((item, i) => (
@@ -59,4 +61,4 @@ function ControlPanel({ selectedItemId, onSelectItem }: Props) {
   );
 }
 
-export default ControlPanel;
+export default CollectionManager;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ControlPanel from "../../components/ControlPanel/ControlPanel";
+import CollectionManager from "../../components/ControlPanel/CollectionManager";
 import Explorer from "../../components/Explorer/Explorer";
 import "./Home.module.css";
 
@@ -14,7 +14,7 @@ export default function Home() {
         alignItems: "center",
       }}
     >
-      <ControlPanel
+      <CollectionManager
         selectedItemId={selectedItemId}
         onSelectItem={setSelectedItemId}
       />
