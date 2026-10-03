@@ -1,5 +1,5 @@
 import { useState } from "react";
-import CollectionManager from "../../components/ControlPanel/CollectionManager";
+import CollectionManager from "../../components/CollectionManager/CollectionManager";
 import Explorer from "../../components/Explorer/Explorer";
 import "./Home.module.css";
 
