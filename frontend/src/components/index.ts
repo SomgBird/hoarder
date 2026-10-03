@@ -1,6 +1,6 @@
 import AddressBar from "./AddressBar/AddressBar";
 import ContentFrame from "./ContentFrame/ContentFrame";
-import CollectionManager from "./ControlPanel/CollectionManager";
+import CollectionManager from "./CollectionManager/CollectionManager";
 import Explorer from "./Explorer/Explorer";
 import ExplorerToolbar from "./ExplorerToolbar/ExplorerToolbar";
 import ItemView from "./ItemView/ItemView";
