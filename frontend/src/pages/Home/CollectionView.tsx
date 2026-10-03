@@ -9,7 +9,6 @@ export function CollectionView() {
   return (
     <div className={styles.page}>
       <div>
-        {" "}
         <CollectionManager
           selectedItemId={selectedItemId}
           onSelectItem={setSelectedItemId}

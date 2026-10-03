@@ -1,4 +1,5 @@
 .page {
-  display: flex;
+  display: grid;
+  grid-template-columns: 25% minmax(0, 1fr); /* navbar left, content right */
   gap: 1rem;
 }

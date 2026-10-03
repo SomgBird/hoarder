@@ -22,7 +22,7 @@ function CollectionManager({ selectedItemId, onSelectItem }: Props) {
 
   return (
     <>
-      <Frame w="500px" bgColor="$material" boxShadow="$out" padding="$3">
+      <Frame bgColor="$material" boxShadow="$out" padding="$3">
         <TitleBar
           title="Collection Manager"
           icon={<Notepad variant="16x16_4" />}

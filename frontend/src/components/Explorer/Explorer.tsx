@@ -17,7 +17,7 @@ interface Props {
 
 function Explorer({ id }: Props) {
   return (
-    <Frame w="1200px" bgColor="$material" boxShadow="$out" padding="$2">
+    <Frame bgColor="$material" boxShadow="$out" padding="$2">
       <TitleBar icon={<Ie variant="16x16_8" />} title="Explorer">
         <TitleBar.OptionsBox>
           <TitleBar.Close />
