@@ -14,6 +14,7 @@ import {
   Progman17,
   Settings,
   Winhlp324000,
+  Winhlp324001,
 } from "@react95/icons";
 
 export interface NavEntry {
@@ -58,6 +59,10 @@ export const navigation: readonly NavEntry[] = [
   {
     label: "Settings",
     icon: <Settings variant="32x32_4" />,
+  },
+  {
+    label: "Help",
+    icon: <Winhlp324001 variant="32x32_4" />,
   },
   {
     path: "/about",
