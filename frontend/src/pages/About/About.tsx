@@ -14,7 +14,7 @@ interface AppInfo {
 const APP: AppInfo = {
   name: "Collection Manager",
   version: "pre-alpha",
-  author: "SongBird",
+  author: "SomgBird",
   year: 2026,
   description: "A personal catalog for games, books, journals and merch.",
   repo: "https://github.com/SomgBird/hoarder",
