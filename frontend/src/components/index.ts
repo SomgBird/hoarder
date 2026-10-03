@@ -1,6 +1,6 @@
 import AddressBar from "./AddressBar/AddressBar";
 import ContentFrame from "./ContentFrame/ContentFrame";
-import ControlPanel from "./ControlPanel/ControlPanel";
+import CollectionManager from "./ControlPanel/CollectionManager";
 import Explorer from "./Explorer/Explorer";
 import ExplorerToolbar from "./ExplorerToolbar/ExplorerToolbar";
 import ItemView from "./ItemView/ItemView";
@@ -9,6 +9,7 @@ import MenuBar from "./MenuBar/MenuBar";
 import NavBar from "./NavBar/NavBar";
 import Separator from "./Separator";
 import { Icon } from "./Icon/Icon";
+import { Toolbar } from "./Toolbar";
 
 
-export { AddressBar, ContentFrame, ControlPanel, Explorer, ExplorerToolbar, ItemView, Layout, MenuBar, NavBar, Separator, Icon }
+export { AddressBar, ContentFrame, CollectionManager, Explorer, ExplorerToolbar, ItemView, Layout, MenuBar, NavBar, Separator, Icon, Toolbar }
