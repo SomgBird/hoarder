@@ -35,7 +35,9 @@ export const navigation: readonly NavEntry[] = [
         label: "Collection Manager",
         icon: <Inetcpl1319 variant="32x32_4" />,
         Component: lazy(() =>
-          import("@pages").then(({ Home }) => ({ default: Home })),
+          import("@pages").then(({ CollectionView }) => ({
+            default: CollectionView,
+          })),
         ),
       },
       {
