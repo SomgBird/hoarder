@@ -1,5 +1,5 @@
 import { Button } from "@react95/core";
-import { Shdocvw260, Progman37, Printer, FileFind2 } from "@react95/icons";
+import { Progman37 } from "@react95/icons";
 import Separator from "../Separator";
 
 import styles from "./ExplorerToolbar.module.css";
@@ -25,24 +25,24 @@ function ExplorerToolbar() {
       <Separator orientation="vertical" className={styles.toolbarSeparator} />
 
       <Button className={styles.toolbarButton}>
-        <FileFind2 variant="32x32_4" />
+        <Icon name="search" />
         <span>Search</span>
       </Button>
       <Button className={styles.toolbarButton}>
-        <Shdocvw260 variant="32x32_4" />
+        <Icon name="star" />
         <span>Favorites</span>
       </Button>
 
       <Separator orientation="vertical" className={styles.toolbarSeparator} />
 
       <Button className={styles.toolbarButton}>
-        <Printer variant="32x32_4" />
+        <Icon name="printer" />
       </Button>
 
       <Separator orientation="vertical" className={styles.toolbarSeparator} />
 
       <Button className={styles.toolbarButton}>
-        <Progman37 variant="32x32_4" />
+        <Icon name="question_mark" />
       </Button>
     </div>
   );
