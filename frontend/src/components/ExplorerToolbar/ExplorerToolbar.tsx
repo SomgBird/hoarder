@@ -1,5 +1,4 @@
 import { Button } from "@react95/core";
-import { Progman37 } from "@react95/icons";
 import Separator from "../Separator";
 
 import styles from "./ExplorerToolbar.module.css";
