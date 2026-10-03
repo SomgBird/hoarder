@@ -1,49 +1,28 @@
-import { Button } from "@react95/core";
-import Separator from "../Separator";
-
-import styles from "./ExplorerToolbar.module.css";
+// ExplorerToolbar/ExplorerToolbar.tsx
 import { Icon } from "@components/Icon/Icon";
+import { Toolbar } from "../Toolbar";
 
 function ExplorerToolbar() {
   return (
-    <div className={styles.toolbar}>
-      <Button className={styles.toolbarButton}>
-        <Icon name="back" />
-        <span>Back</span>
-      </Button>
-      <Button className={styles.toolbarButton}>
-        <Icon name="forward" />
-      </Button>
-      <Button className={styles.toolbarButton}>
-        <Icon name="stop" />
-      </Button>
-      <Button className={styles.toolbarButton}>
-        <Icon name="refresh" />
-      </Button>
+    <Toolbar>
+      <Toolbar.Button icon={<Icon name="back" />} />
+      <Toolbar.Button icon={<Icon name="forward" />} />
+      <Toolbar.Button icon={<Icon name="stop" />} />
+      <Toolbar.Button icon={<Icon name="refresh" />} />
 
-      <Separator orientation="vertical" className={styles.toolbarSeparator} />
+      <Toolbar.Separator />
 
-      <Button className={styles.toolbarButton}>
-        <Icon name="search" />
-        <span>Search</span>
-      </Button>
-      <Button className={styles.toolbarButton}>
-        <Icon name="star" />
-        <span>Favorites</span>
-      </Button>
+      <Toolbar.Button icon={<Icon name="search" />} />
+      <Toolbar.Button icon={<Icon name="star" />} label="Favorites" />
 
-      <Separator orientation="vertical" className={styles.toolbarSeparator} />
+      <Toolbar.Separator />
 
-      <Button className={styles.toolbarButton}>
-        <Icon name="printer" />
-      </Button>
+      <Toolbar.Button icon={<Icon name="printer" />} />
 
-      <Separator orientation="vertical" className={styles.toolbarSeparator} />
+      <Toolbar.Separator />
 
-      <Button className={styles.toolbarButton}>
-        <Icon name="question_mark" />
-      </Button>
-    </div>
+      <Toolbar.Button icon={<Icon name="question_mark" />} />
+    </Toolbar>
   );
 }
 
