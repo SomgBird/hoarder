@@ -1,5 +1,5 @@
 .page {
   display: grid;
-  grid-template-columns: 25% minmax(0, 1fr); /* navbar left, content right */
+  grid-template-columns: minmax(350px, 25%) minmax(650px, 1fr);
   gap: 1rem;
 }

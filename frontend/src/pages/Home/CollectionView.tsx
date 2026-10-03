@@ -8,7 +8,7 @@ export function CollectionView() {
 
   return (
     <div className={styles.page}>
-      <div>
+      <div className={styles.manager_column}>
         <CollectionManager
           selectedItemId={selectedItemId}
           onSelectItem={setSelectedItemId}
