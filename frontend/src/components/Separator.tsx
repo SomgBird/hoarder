@@ -1,6 +1,18 @@
-// src/components/Separator.jsx
-function Separator({ orientation = "horizontal" }) {
-  const baseStyle =
+// src/components/Separator.tsx
+import type { CSSProperties } from "react";
+
+type SeparatorProps = {
+  orientation?: "horizontal" | "vertical";
+  style?: CSSProperties;
+  className?: string;
+};
+
+function Separator({
+  orientation = "horizontal",
+  style,
+  className,
+}: SeparatorProps) {
+  const baseStyle: CSSProperties =
     orientation === "vertical"
       ? {
           width: 0,
@@ -22,7 +34,12 @@ function Separator({ orientation = "horizontal" }) {
           margin: "6px 0",
         };
 
-  return <hr style={{ border: "none", ...baseStyle }} />;
+  return (
+    <hr
+      className={className}
+      style={{ border: "none", ...baseStyle, ...style }}
+    />
+  );
 }
 
 export default Separator;

@@ -9,6 +9,7 @@ import {
   ItemView,
 } from "@components";
 import { HtmlPage, Ie } from "@react95/icons";
+import styles from "./Explorer.module.css";
 
 interface Props {
   id: number | null;
@@ -32,9 +33,9 @@ function Explorer({ id }: Props) {
           { label: "Help", mnemonicIndex: 0 },
         ]}
       />
-      <Separator />
+      <Separator className={styles.explorerSeparator} />
       <ExplorerToolbar />
-      <Separator />
+      <Separator className={styles.explorerSeparator} />
       <AddressBar
         value={"Test URL"}
         onChange={() => {}}

@@ -1,0 +1,3 @@
+.explorerSeparator {
+  margin: 0 2px !important; /* inline style from Separator would otherwise win */
+}
