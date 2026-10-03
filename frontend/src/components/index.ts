@@ -8,6 +8,7 @@ import { NavBar } from "./NavBar/NavBar";
 import Separator from "./Separator";
 import { Icon } from "./Icon/Icon";
 import { Toolbar } from "./Toolbar";
+import CollectionManager from "./CollectionManager/CollectionManager";
 
 
-export { AddressBar, ContentFrame, Explorer, ItemView, Layout, MenuBar, NavBar, Separator, Icon, Toolbar }
+export { AddressBar, ContentFrame, Explorer, ItemView, Layout, MenuBar, NavBar, Separator, Icon, Toolbar, CollectionManager }
