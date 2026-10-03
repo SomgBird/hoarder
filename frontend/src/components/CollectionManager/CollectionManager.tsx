@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Frame, TitleBar } from "@react95/core";
 import { Notepad } from "@react95/icons";
 import type { ItemInfo } from "@types";
-import { itemService } from "../../services/itemService";
-import CollectionManagerToolbar from "@components/CollectionManagerToolbar/CollectionManagerToolbar";
+import { itemService } from "@services";
+import CollectionManagerToolbar from "./CollectionManagerToolbar";
 
 interface Props {
   selectedItemId: number | null;

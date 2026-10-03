@@ -1,8 +1,8 @@
 import styles from "./ItemView.module.css";
 import { useEffect, useState } from "react";
 import type { Item } from "@types";
-import { itemService } from "../../services/itemService.ts";
-import { coverUrl } from "../../services/utils.ts";
+import { itemService } from "@services";
+import { coverUrl } from "@services";
 
 interface Props {
   id: number | null;

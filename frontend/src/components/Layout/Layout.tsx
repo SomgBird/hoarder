@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
-import NavBar from "../NavBar/NavBar";
+import { NavBar } from "@components";
 import styles from "./Layout.module.css";
 
 function Layout() {

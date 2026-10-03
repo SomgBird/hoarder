@@ -1,7 +1,6 @@
 import { Frame, TitleBar } from "@react95/core";
 
 import {
-  ExplorerToolbar,
   MenuBar,
   Separator,
   AddressBar,
@@ -10,6 +9,7 @@ import {
 } from "@components";
 import { HtmlPage, Ie } from "@react95/icons";
 import styles from "./Explorer.module.css";
+import ExplorerToolbar from "./ExplorerToolbar";
 
 interface Props {
   id: number | null;

@@ -1,6 +1,6 @@
 // ExplorerToolbar/ExplorerToolbar.tsx
-import { Icon } from "@components/Icon/Icon";
-import { Toolbar } from "../Toolbar";
+import { Icon } from "@components";
+import { Toolbar } from "@components";
 
 function ExplorerToolbar() {
   return (

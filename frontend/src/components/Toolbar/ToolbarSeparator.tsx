@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import Separator from "../Separator";
+import { Separator } from "@components";
 import styles from "./Toolbar.module.css";
 
 type Props = Omit<React.ComponentProps<typeof Separator>, "orientation">;

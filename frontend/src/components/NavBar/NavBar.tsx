@@ -57,7 +57,7 @@ interface NavBarProps {
   className?: string;
 }
 
-function NavBar({ className }: NavBarProps) {
+export function NavBar({ className }: NavBarProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -73,5 +73,3 @@ function NavBar({ className }: NavBarProps) {
     </nav>
   );
 }
-
-export default NavBar;
