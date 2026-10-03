@@ -18,7 +18,9 @@ function CollectionManagerToolbar() {
 
       <Toolbar.Menu icon={<Files variant="32x32_4" />} label="Order">
         <Toolbar.MenuItem>Title</Toolbar.MenuItem>
+        <Toolbar.MenuDivider />
         <Toolbar.MenuItem>Release date</Toolbar.MenuItem>
+        <Toolbar.MenuDivider />
         <Toolbar.MenuItem>Date added</Toolbar.MenuItem>
       </Toolbar.Menu>
 
@@ -26,12 +28,15 @@ function CollectionManagerToolbar() {
         <Toolbar.MenuItem icon={<Shdocvw272 variant="16x16_4" />}>
           Icons
         </Toolbar.MenuItem>
+        <Toolbar.MenuDivider />
         <Toolbar.MenuItem icon={<Detlicon variant="16x16_4" />}>
           Table
         </Toolbar.MenuItem>
+        <Toolbar.MenuDivider />
         <Toolbar.MenuItem icon={<FolderFile variant="16x16_4" />}>
           Categories
         </Toolbar.MenuItem>
+        <Toolbar.MenuDivider />
         <Toolbar.MenuItem icon={<Mailnews20 variant="16x16_4" />}>
           Mini pages
         </Toolbar.MenuItem>
