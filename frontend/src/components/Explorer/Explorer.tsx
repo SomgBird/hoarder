@@ -9,8 +9,8 @@ import {
   EtchedBox,
 } from "@components";
 import styles from "./Explorer.module.css";
-import ExplorerToolbar from "./ExplorerToolbar";
-import { ExplorerMenuBar } from "./ExplorerMenuBar";
+import ExplorerToolbar from "./ExplorerToolbar/ExplorerToolbar";
+import { ExplorerMenuBar } from "./ExplorerMenuBar/ExplorerMenuBar";
 import { useExplorer } from "./ExplorerContext";
 import { parseUrl, toUrl } from "./locations";
 import { renderPage } from "./explorer_pages";

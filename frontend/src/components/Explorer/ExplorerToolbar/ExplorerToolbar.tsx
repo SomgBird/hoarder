@@ -9,7 +9,7 @@ import {
   Winhlp324001,
   Wmsui323934,
 } from "@react95/icons";
-import { useExplorer } from "./ExplorerContext";
+import { useExplorer } from "../ExplorerContext";
 import styles from "./ExplorerToolbar.module.css";
 
 function ExplorerToolbar() {
