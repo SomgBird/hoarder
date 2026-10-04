@@ -13,6 +13,7 @@ import {
   Notepad2,
   Progman17,
   Settings,
+  Wangimg128,
   Winhlp324000,
   Winhlp324001,
 } from "@react95/icons";
@@ -43,6 +44,10 @@ export const navigation: readonly NavEntry[] = [
       {
         label: "Page Editor",
         icon: <Progman17 variant="32x32_4" />,
+      },
+      {
+        label: "Media Viewer",
+        icon: <Wangimg128 variant="32x32_4" />,
       },
     ],
   },
