@@ -8,14 +8,16 @@ export function CollectionView() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.manager_column}>
+      <div>
         <CollectionManager
           selectedItemId={selectedItemId}
           onSelectItem={setSelectedItemId}
         />
       </div>
-      <div>
-        <Explorer id={selectedItemId} />
+      <div className={styles.explorer_column}>
+        <div className={styles.explorer_wrapper}>
+          <Explorer id={selectedItemId} />
+        </div>
       </div>
     </div>
   );

@@ -12,13 +12,13 @@ import styles from "./Explorer.module.css";
 import ExplorerToolbar from "./ExplorerToolbar";
 import { ExplorerMenuBar } from "./ExplorerMenuBar";
 
-interface Props {
+interface ExplorerProps {
   id: number | null;
 }
 
-function Explorer({ id }: Props) {
+function Explorer({ id }: ExplorerProps) {
   return (
-    <Frame bgColor="$material" boxShadow="$out" padding="$2">
+    <Frame bgColor="$material" boxShadow="$out" padding="$2" className={styles.explorer}>
       <TitleBar icon={<Ie variant="16x16_8" />} title="Explorer">
         <TitleBar.OptionsBox>
           <TitleBar.Close />
@@ -26,9 +26,9 @@ function Explorer({ id }: Props) {
       </TitleBar>
       <EtchedBox>
         <ExplorerMenuBar />
-        <Separator className={styles.explorerSeparator} />
+        <Separator className={styles.explorer_separator} />
         <ExplorerToolbar />
-        <Separator className={styles.explorerSeparator} />
+        <Separator className={styles.explorer_separator} />
         <AddressBar
           value={"Test URL"}
           onChange={() => {}}
@@ -37,14 +37,8 @@ function Explorer({ id }: Props) {
         />
       </EtchedBox>
 
-      <Frame bgColor="$material" padding="$4">
-        <Frame
-          h="650px"
-          bgColor="white"
-          boxShadow="$in"
-          paddingTop="$1"
-          paddingLeft="$1"
-        >
+    <Frame bgColor="$material" className={styles.outer_content_wrapper}>
+      <Frame boxShadow="$in" className={styles.inner_content_wrapper}>
           <ContentFrame>
             <ItemView id={id} />
           </ContentFrame>
