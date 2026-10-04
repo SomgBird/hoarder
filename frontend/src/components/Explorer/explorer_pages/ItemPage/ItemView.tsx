@@ -1,35 +1,17 @@
 import styles from "./ItemView.module.css";
-import { useEffect, useState } from "react";
 import type { Item } from "@types";
-import { itemService } from "@services";
 import { coverUrl } from "@services";
 
 interface Props {
-  id: number | null;
+  item: Item;
 }
 
-function ItemView({ id }: Props) {
-  const [item, setItem] = useState<Item>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (id !== null)
-      itemService
-        .get(id)
-        .then(setItem)
-        .catch((e) => setError(e.message))
-        .finally(() => setLoading(false));
-  }, [id]);
-
-  if (!item) return <p>No book with id: {id}</p>;
-
-  if (loading) return <p>Loading…</p>;
-  if (error) return <p>Error: {error}</p>;
+function ItemView({ item }: Props) {
+  const cover = coverUrl(item.cover_image_path);
 
   return (
     <div className={styles.view}>
-      <h1>{item?.title}</h1>
+      <h1>{item.title}</h1>
       <hr />
       <div className={styles.container}>
         <div className={styles.left_column}>
@@ -42,7 +24,7 @@ function ItemView({ id }: Props) {
                   <td>{item.authors.map((a) => a.name).join(", ")}</td>
                 </tr>
                 <tr>
-                  <td> Release date:</td>
+                  <td>Release date:</td>
                   <td>{item.release_date}</td>
                 </tr>
                 <tr>
@@ -50,7 +32,7 @@ function ItemView({ id }: Props) {
                   <td>{item.isbn}</td>
                 </tr>
                 <tr>
-                  <td>pages:</td>
+                  <td>Pages:</td>
                   <td>{item.pages}</td>
                 </tr>
                 <tr>
@@ -72,11 +54,11 @@ function ItemView({ id }: Props) {
         <div className={styles.right_column}>
           <div className={styles.section}>
             <h2>Cover</h2>
-            {coverUrl(item.cover_image_path) ? (
+            {cover ? (
               <img
-                src={coverUrl(item.cover_image_path)!}
+                src={cover}
                 alt={item.title}
-                width={"100%"}
+                width="100%"
                 style={{ objectFit: "cover", borderRadius: 4 }}
               />
             ) : (

@@ -1,24 +1,38 @@
-import { useState } from "react";
-import { CollectionManager } from "@components";
-import { Explorer } from "@components";
+import {
+  CollectionManager,
+  Explorer,
+  ExplorerProvider,
+  useExplorer,
+} from "@components";
 import styles from "./CollectionView.module.css";
 
-export function CollectionView() {
-  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+function CollectionViewContent() {
+  const { current, navigate } = useExplorer();
+  const selectedItemId = current.page === "item" ? current.id : null;
 
   return (
     <div className={styles.page}>
-      <div>
+      <div className={styles.manager_column}>
         <CollectionManager
           selectedItemId={selectedItemId}
-          onSelectItem={setSelectedItemId}
+          onSelectItem={(id) =>
+            navigate(id === null ? { page: "home" } : { page: "item", id })
+          }
         />
       </div>
       <div className={styles.explorer_column}>
         <div className={styles.explorer_wrapper}>
-          <Explorer id={selectedItemId} />
+          <Explorer />
         </div>
       </div>
     </div>
+  );
+}
+
+export function CollectionView() {
+  return (
+    <ExplorerProvider>
+      <CollectionViewContent />
+    </ExplorerProvider>
   );
 }

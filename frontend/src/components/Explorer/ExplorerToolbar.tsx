@@ -9,18 +9,33 @@ import {
   Winhlp324001,
   Wmsui323934,
 } from "@react95/icons";
+import { useExplorer } from "./ExplorerContext";
 import styles from "./ExplorerToolbar.module.css";
 
 function ExplorerToolbar() {
+  const { back, forward, canBack, canForward, navigate } = useExplorer();
+
   return (
     <div className={styles.container}>
       <Separator orientation="vertical" variant="grip" />
       <Toolbar>
-        <Toolbar.Button icon={<Progman44 variant="32x32_4" />} label="Back" />
-        <Toolbar.Button icon={<Progman45 variant="32x32_4" />} />
+        <Toolbar.Button
+          icon={<Progman44 variant="32x32_4" />}
+          label="Back"
+          onClick={back}
+          disabled={!canBack}
+        />
+        <Toolbar.Button
+          icon={<Progman45 variant="32x32_4" />}
+          onClick={forward}
+          disabled={!canForward}
+        />
         <Toolbar.Button icon={<Icon name="stop" />} />
         <Toolbar.Button icon={<Icon name="refresh_page" />} />
-        <Toolbar.Button icon={<Icon name="home" />} />
+        <Toolbar.Button
+          icon={<Icon name="home" />}
+          onClick={() => navigate({ page: "home" })}
+        />
 
         <Toolbar.Separator />
 
