@@ -1,8 +1,13 @@
+.container {
+  display: flex;
+}
+
 .wrapper {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 2px 4px;
+  width: 100%;
 }
 
 .label {
@@ -38,6 +43,7 @@
   height: 16px;
   margin: 0 3px;
   flex-shrink: 0;
+  padding-top: 2px;
 }
 
 .input {
@@ -48,7 +54,7 @@
   font-family: "MS Sans Serif", Tahoma, sans-serif;
   font-size: 11px;
   outline: none;
-  padding: 0;
+  padding-top: 5px;
 }
 
 .historyDropdown {

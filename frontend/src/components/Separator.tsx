@@ -3,15 +3,32 @@ import type { CSSProperties } from "react";
 
 type SeparatorProps = {
   orientation?: "horizontal" | "vertical";
+  variant?: "etched" | "grip";
   style?: CSSProperties;
   className?: string;
 };
 
 function Separator({
   orientation = "horizontal",
+  variant = "etched",
   style,
   className,
 }: SeparatorProps) {
+  if (variant === "grip") {
+    const gripStyle: CSSProperties = {
+      flexShrink: 0,
+      alignSelf: "stretch",
+      width: 4,
+      margin: "2px 4px 2px 2px",
+      boxSizing: "border-box",
+      borderTop: "1px solid #ffffff",
+      borderLeft: "1px solid #ffffff",
+      borderBottom: "1px solid #808080",
+      borderRight: "1px solid #808080",
+    };
+    return <div className={className} style={{ ...gripStyle, ...style }} />;
+  }
+
   const baseStyle: CSSProperties =
     orientation === "vertical"
       ? {

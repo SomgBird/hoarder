@@ -1,0 +1,7 @@
+.etchedBox {
+  border: 1px solid #808080;
+  box-shadow:
+    inset 1px 1px 0 #ffffff, /* white line inside, top/left */
+    1px 1px 0 #ffffff;       /* white line outside, bottom/right */
+  margin: 2px 1px 2px 0;     /* room for the outer white line */
+}

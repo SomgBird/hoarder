@@ -1,6 +1,7 @@
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { Dropdown } from "@react95/core";
 import styles from "./AddressBar.module.css";
+import Separator from "@components/Separator";
 
 interface AddressBarProps {
   value: string;
@@ -33,26 +34,29 @@ function AddressBar({
   };
 
   return (
-    <div className={styles.wrapper}>
-      <span className={styles.label}>{label}</span>
-      <div className={styles.fieldGroup}>
-        {icon && <span className={styles.icon}>{icon}</span>}
-        <input
-          type="text"
-          className={styles.input}
-          value={value}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-        />
-        {history.length > 0 && (
-          <Dropdown
-            className={styles.historyDropdown}
-            options={history}
-            value=""
-            onChange={handleHistorySelect}
-            aria-label="Address history"
+    <div className={styles.container}>
+      <Separator orientation="vertical" variant="grip" />
+      <div className={styles.wrapper}>
+        <span className={styles.label}>{label}</span>
+        <div className={styles.fieldGroup}>
+          {icon && <span className={styles.icon}>{icon}</span>}
+          <input
+            type="text"
+            className={styles.input}
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
           />
-        )}
+          {history.length > 0 && (
+            <Dropdown
+              className={styles.historyDropdown}
+              options={history}
+              value=""
+              onChange={handleHistorySelect}
+              aria-label="Address history"
+            />
+          )}
+        </div>
       </div>
     </div>
   );
