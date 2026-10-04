@@ -24,7 +24,7 @@ const APP: AppInfo = {
 export default function About() {
   return (
     <div className={styles.root}>
-      <Frame w="320px" bgColor="$material" boxShadow="$out" padding="$4">
+      <Frame bgColor="$material" boxShadow="$out" padding="$4">
         <TitleBar icon={<Winhlp324000 variant="16x16_4" />} title="About">
           <TitleBar.OptionsBox>
             <TitleBar.Close />
