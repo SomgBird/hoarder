@@ -1,0 +1,30 @@
+
+.view {
+  background-color: #D9E2AC;
+  display: flow-root;
+  height: 100%;
+}
+
+.view * {
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.container {
+  display: flex;
+}
+
+.right_column {
+  flex: 25%;
+}
+
+
+.left_column {
+  flex: 75%;
+}
+
+.section {
+  padding: 8px;
+  background: whitesmoke;
+  border: 1px solid #9F896F;
+  margin: 15px;
+}

@@ -1,0 +1,36 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.content {
+  height: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.title {
+  margin: 0;
+}
+
+.version {
+  margin: 2px 0 10px;
+}
+
+.paragraph {
+  margin: 0 0 10px;
+}
+
+.paragraphLast {
+  margin: 0;
+}
+
+.footer {
+  text-align: right;
+}
+
+.okButton {
+  width: 80px;
+}

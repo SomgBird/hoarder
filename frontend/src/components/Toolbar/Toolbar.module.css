@@ -1,0 +1,123 @@
+.toolbar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 2px;
+  padding: 2px 4px;
+}
+
+.toolbarButton {
+  --raised:
+    inset 1px 1px 0 1px var(--r95-color-borderLightest),
+    inset 0 0 0 1px var(--r95-color-borderDark),
+    1px 1px 0 0 var(--r95-color-borderDarkest);
+  --pressed:
+    inset 0 0 0 1px var(--r95-color-borderDark),
+    0 0 0 1px var(--r95-color-borderDarkest);
+
+  --pad-y: 2px;
+  --pad-x: 4px;
+
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  padding: var(--pad-y) var(--pad-x) !important;
+
+  background: transparent;
+  box-shadow: none !important;
+  outline: none !important;
+
+  font-size: 11px;
+  line-height: 13px;
+  white-space: nowrap;
+}
+
+.icon {
+  display: flex;      /* removes the inline baseline gap around svg/img */
+  flex-shrink: 0;
+}
+
+.toolbarButton[data-label-position="bottom"] {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toolbarButton:hover:not(:disabled) {
+  box-shadow: var(--raised) !important;
+}
+
+/* keep after :hover. Content shifts 1px down and right */
+.toolbarButton:active:not(:disabled),
+.toolbarButton[aria-pressed="true"] {
+  box-shadow: var(--pressed) !important;
+  padding:
+    calc(var(--pad-y) + 1px)
+    calc(var(--pad-x) - 1px)
+    calc(var(--pad-y) - 1px)
+    calc(var(--pad-x) + 1px) !important;
+}
+
+.toolbarSeparator {
+  margin: 0 2px !important; /* Separator's inline style would otherwise win */
+}
+
+.menu {
+  position: relative;
+  display: flex;
+}
+
+.menuList {
+  display: none;
+  position: absolute;
+  top: 100%;   /* no gap, or hover breaks between button and list */
+  left: 0;
+  z-index: 1000;
+}
+
+.menu:hover .menuList,
+.menu:focus-within .menuList {
+  display: block;
+}
+
+/* existing pressed rule, with the menu selectors added */
+.toolbarButton:active:not(:disabled),
+.toolbarButton[aria-pressed="true"],
+.menu:hover > .toolbarButton,
+.menu:focus-within > .toolbarButton {
+  box-shadow: var(--pressed) !important;
+  padding:
+    calc(var(--pad-y) + 1px)
+    calc(var(--pad-x) - 1px)
+    calc(var(--pad-y) - 1px)
+    calc(var(--pad-x) + 1px) !important;
+}
+
+.arrow {
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: middle;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-color: transparent;
+}
+
+.arrow-down {
+  border-width: 4px 3px 0 3px;
+  border-top-color: currentColor;
+}
+
+.arrow-right {
+  border-width: 4px 0 4px 4px;
+  border-left-color: currentColor;
+}
+
+.check {
+  display: inline-block;
+  width: 12px;
+  margin-right: 4px;
+  text-align: center;
+}

@@ -1,0 +1,9 @@
+/* NavBar.module.css */
+.submenu {
+  min-width: 220px;   /* same as the navbar column */
+  width: max-content; /* grows if a label is longer */
+}
+
+.submenu li {
+  white-space: nowrap;
+}

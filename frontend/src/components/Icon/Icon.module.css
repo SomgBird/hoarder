@@ -1,0 +1,9 @@
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  object-fit: contain;
+  /* 32x32 PNGs scale cleanly — keep them crisp */
+  image-rendering: -webkit-optimize-contrast;
+  user-select: none;
+  flex-shrink: 0;
+}

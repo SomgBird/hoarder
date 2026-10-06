@@ -1,0 +1,16 @@
+.scroll {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;          /* removes the inline baseline gap entirely */
+  flex-direction: column;
+}
+
+.reset {
+  all: initial;
+  display: flow-root;   /* block + BFC: stops margin collapse, keeps baseline fix */
+  box-sizing: border-box;
+  height: 100%;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #000;
+}

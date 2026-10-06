@@ -1,0 +1,19 @@
+.page {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr); /* navbar left, content right */
+  gap: 1rem;
+  align-items: start;
+  min-height: 100vh;
+}
+
+.navbar {
+  position: relative; /* stacking context for flyout submenus */
+  z-index: 10;        /* above .content so submenus can overlap it */
+  overflow: visible;  /* no clipping, no scrollbars */
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;       /* wide content can't stretch the column */
+}
