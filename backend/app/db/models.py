@@ -3,6 +3,8 @@ from typing import Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
+from backend.app.db.base import ItemBase
+
 
 # ─────────────────────────────────────────────────────────────
 # LINK TABLES
@@ -43,13 +45,8 @@ class ItemTypeGenreLink(SQLModel, table=True):
 # Item related tables
 # ─────────────────────────────────────────────────────────────
 
-class Item(SQLModel, table=True):
+class Item(ItemBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
-
-    release_date: date | None = None
-    cover_image_path: str | None = None
-    icon_image_path: str | None = None
-    is_owned: bool | None = None
 
     item_type_id: int | None = Field(default=None, foreign_key="item_type.id")
 
