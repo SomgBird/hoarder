@@ -28,6 +28,16 @@ class ItemGenreLink(SQLModel, table=True):
     genre_id: int = Field(foreign_key="genre.id", primary_key=True)
 
 
+class ItemTypeFormatLink(SQLModel, table=True):
+    item_type_id: int = Field(foreign_key="item_type.id", primary_key=True)
+    format_id: int = Field(foreign_key="format.id", primary_key=True)
+
+
+class ItemTypeGenreLink(SQLModel, table=True):
+    item_type_id: int = Field(foreign_key="item_type.id", primary_key=True)
+    genre_id: int = Field(foreign_key="genre.id", primary_key=True)
+
+
 # ─────────────────────────────────────────────────────────────
 # Item related tables
 # ─────────────────────────────────────────────────────────────
@@ -56,6 +66,13 @@ class ItemType(SQLModel, table=True):
     description: str | None = None
 
     items: list["Item"] = Relationship(back_populates="item_type")
+
+
+class Format(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    name: str
+    short_name: str | None
+    description: str | None = None
 
 
 class Title(SQLModel, table=True):
@@ -112,3 +129,86 @@ class Genre(SQLModel, table=True):
     items: list["Item"] = Relationship(back_populates="genres", link_model=ItemGenreLink)
 
 
+# ─────────────────────────────────────────────────────────────
+# Authors and companies
+# ─────────────────────────────────────────────────────────────
+
+
+
+
+# ─────────────────────────────────────────────────────────────
+# Item subtypes
+# ─────────────────────────────────────────────────────────────
+class Film(SQLModel, table=True):
+    id : int | None = Field(default=None, foreign_key="item.id", primary_key=True)
+    length: int | None
+
+    
+class BoardGame(SQLModel, table=True):
+    id : int | None = Field(default=None, foreign_key="item.id", primary_key=True)
+
+
+class VideoGame(SQLModel, table=True):
+    id : int | None = Field(default=None, foreign_key="item.id", primary_key=True)
+
+    game_platform_id: int | None = Field(default=None, foreign_key="game_platform.id")
+
+    
+class Book(SQLModel, table=True):
+    id : int | None = Field(default=None, foreign_key="item.id", primary_key=True)
+    number_of_pages: int | None = Field(default=None, ge=1)
+
+    
+class JournalIssue(SQLModel, table=True):
+    id : int | None = Field(default=None, foreign_key="item.id", primary_key=True)
+    number_of_pages: int | None = Field(default=None, ge=1)
+    issue: str | None
+
+    journal_id: int | None = Field(default=None, foreign_key="journal.id")
+
+    
+class Figurine(SQLModel, table=True):
+    id : int | None = Field(default=None, foreign_key="item.id", primary_key=True)
+
+    scale_id: int | None = Field(default=None, foreign_key="scale.id")
+
+
+class Miniature(SQLModel, table=True):
+    id : int | None = Field(default=None, foreign_key="item.id", primary_key=True)
+    height: float | None = Field(default=None, ge=0)
+    width: float | None = Field(default=None, ge=0)
+    
+    scale_id: int | None = Field(default=None, foreign_key="scale.id")
+
+
+class LegoSet(SQLModel, table=True):
+    id : int | None = Field(default=None, foreign_key="item.id", primary_key=True)
+    number_of_pieces: int | None = Field(default=None, ge=1)
+
+
+
+# ─────────────────────────────────────────────────────────────
+# Item subtypes related tables
+# ─────────────────────────────────────────────────────────────
+class Scale(SQLModel, table=True):
+    id : int | None = Field(default=None, primary_key=True)
+    scale: str
+
+
+class Journal(SQLModel, table=True):
+    id : int | None = Field(default=None, primary_key=True)
+    name: str
+    description: str | None
+
+
+class GamePlatform(SQLModel, table=True):
+    id : int | None = Field(default=None, primary_key=True)
+    name: str
+    short_name: str | None
+    description: str | None
+
+
+
+# ─────────────────────────────────────────────────────────────
+# Pages tables
+# ─────────────────────────────────────────────────────────────
