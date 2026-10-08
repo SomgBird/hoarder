@@ -1,3 +1,5 @@
+from datetime import date
+
 from sqlmodel import SQLModel
 
 from backend.app.db.base import ItemBase
@@ -22,3 +24,11 @@ class LanguageRead(SQLModel):
     id: int
     code: str
     name: str
+
+
+class ItemListEntryRead(SQLModel):
+    id: int
+    title: str
+    release_date: date 
+    is_owned: bool
+    icon_image_path: str

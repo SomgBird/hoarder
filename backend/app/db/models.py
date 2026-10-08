@@ -49,9 +49,11 @@ class Item(ItemBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
     item_type_id: int | None = Field(default=None, foreign_key="item_type.id")
+    selected_language_id : int | None = Field(default=None, foreign_key="language.id")
 
     item_type: Optional["ItemType"] = Relationship(back_populates="items")
-    # One-to-many to the association object: NO link_model here.
+    selected_language: Optional["Language"] = Relationship(back_populates="items")
+
     language_links: list["ItemLanguageLink"] = Relationship(back_populates="item")
     franchises: list["Franchise"] = Relationship(back_populates="items", link_model=ItemFranchiseLink)
     genres: list["Genre"] = Relationship(back_populates="items", link_model=ItemGenreLink)
