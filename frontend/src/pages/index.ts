@@ -1,4 +1,5 @@
-import { CollectionView } from "./Home/CollectionView";
+import { CollectionView } from "./CollectionView/CollectionView";
 import About from "./About/About";
+import { PageEditor } from "./PageEditor/PageEditor";
 
-export { CollectionView, About }
+export { CollectionView, About, PageEditor }

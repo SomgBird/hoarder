@@ -1,53 +1,58 @@
+import { useEffect, useState } from "react";
 import { Frame, TitleBar } from "@react95/core";
+import { HtmlPage, Ie } from "@react95/icons";
 
 import {
   Separator,
   AddressBar,
   ContentFrame,
-  ItemView,
   EtchedBox,
 } from "@components";
-import { HtmlPage, Ie } from "@react95/icons";
 import styles from "./Explorer.module.css";
-import ExplorerToolbar from "./ExplorerToolbar";
-import { ExplorerMenuBar } from "./ExplorerMenuBar";
+import ExplorerToolbar from "./ExplorerToolbar/ExplorerToolbar";
+import { ExplorerMenuBar } from "./ExplorerMenuBar/ExplorerMenuBar";
+import { useExplorer } from "./ExplorerContext";
+import { parseUrl, toUrl } from "./locations";
+import { renderPage } from "./explorer_pages";
 
-interface Props {
-  id: number | null;
-}
+function Explorer() {
+  const { current, navigate } = useExplorer();
 
-function Explorer({ id }: Props) {
+  // What's typed in the address bar before Enter; reset whenever we navigate.
+  const [draft, setDraft] = useState(toUrl(current));
+  useEffect(() => {
+    setDraft(toUrl(current));
+  }, [current]);
+
   return (
-    <Frame bgColor="$material" boxShadow="$out" padding="$2">
+    <Frame
+      bgColor="$material"
+      boxShadow="$out"
+      padding="$2"
+      className={styles.explorer}
+    >
       <TitleBar icon={<Ie variant="16x16_8" />} title="Explorer">
         <TitleBar.OptionsBox>
           <TitleBar.Close />
         </TitleBar.OptionsBox>
       </TitleBar>
+
       <EtchedBox>
         <ExplorerMenuBar />
-        <Separator className={styles.explorerSeparator} />
+        <Separator className={styles.explorer_separator} />
         <ExplorerToolbar />
-        <Separator className={styles.explorerSeparator} />
+        <Separator className={styles.explorer_separator} />
         <AddressBar
-          value={"Test URL"}
-          onChange={() => {}}
-          onSubmit={() => {}}
+          value={draft}
+          onChange={setDraft}
+          onSubmit={() => navigate(parseUrl(draft))}
           icon={<HtmlPage variant="16x16_8" />}
         />
       </EtchedBox>
 
-      <Frame bgColor="$material" padding="$4">
-        <Frame
-          h="650px"
-          bgColor="white"
-          boxShadow="$in"
-          paddingTop="$1"
-          paddingLeft="$1"
-        >
-          <ContentFrame>
-            <ItemView id={id} />
-          </ContentFrame>
+      <Frame bgColor="$material" className={styles.outer_content_wrapper}>
+        <Frame boxShadow="$in" className={styles.inner_content_wrapper}>
+          <ContentFrame>{renderPage(current)}</ContentFrame>
         </Frame>
       </Frame>
     </Frame>

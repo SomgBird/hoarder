@@ -9,6 +9,7 @@
   padding: 12px;
   box-sizing: border-box;
   overflow-y: auto;
+  margin-top: 2px;
 }
 
 .title {
@@ -29,8 +30,4 @@
 
 .footer {
   text-align: right;
-}
-
-.okButton {
-  width: 80px;
 }
