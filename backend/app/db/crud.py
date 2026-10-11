@@ -24,6 +24,10 @@ def get_item(session: Session, item_id: int) -> Optional[Item]:
     ).first()
 
 
+def create_item(session: Session, item: ItemCreate) -> Item:
+    pass
+
+
 def count_items(session: Session) -> int:
     return session.exec(select(func.count()).select_from(Item)).one()
 

@@ -14,6 +14,10 @@ class ItemRead(ItemBase):
     languages: Optional[List["LanguageRead"]]
 
 
+class ItemCreate(ItemBase):
+    pass
+
+
 class TitleRead(SQLModel):
     id: int
 
