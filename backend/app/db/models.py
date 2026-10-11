@@ -154,10 +154,14 @@ class Film(SQLModel, table=True):
 
 
 class BoardGame(SQLModel, table=True):
+    __tablename__ = "board_game"
+
     id: int | None = Field(default=None, foreign_key="item.id", primary_key=True)
 
 
 class VideoGame(SQLModel, table=True):
+    __tablename__ = "video_game"
+
     id: int | None = Field(default=None, foreign_key="item.id", primary_key=True)
 
     game_platform_id: int | None = Field(default=None, foreign_key="game_platform.id")
@@ -171,13 +175,15 @@ class Book(SQLModel, table=True):
 
 
 class JournalIssue(SQLModel, table=True):
+    __tablename__ = "journal_issue"
+
     id: int | None = Field(default=None, foreign_key="item.id", primary_key=True)
     number_of_pages: int | None = Field(default=None, ge=1)
     issue: str | None = None
 
     journal_id: int | None = Field(default=None, foreign_key="journal.id")
 
-    journal: Optional["Journal"] = Relationship(back_populates="issues")
+    journal: Optional["Journal"] = Relationship(back_populates="journal_issues")
 
 
 class Figurine(SQLModel, table=True):
@@ -199,6 +205,8 @@ class Miniature(SQLModel, table=True):
 
 
 class LegoSet(SQLModel, table=True):
+    __tablename__ = "lego_set"
+
     id: int | None = Field(default=None, foreign_key="item.id", primary_key=True)
     number_of_pieces: int | None = Field(default=None, ge=1)
 
