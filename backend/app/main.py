@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Book Library API", lifespan=lifespan, version=APP_VERSION)
+app = FastAPI(title="Hoarder API", lifespan=lifespan, version=APP_VERSION)
 
 # Adjust to your actual frontend origin(s) in production.
 app.add_middleware(
