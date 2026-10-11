@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Generic, List, TypeVar
+from typing import Generic, List, Optional, TypeVar
 
 from pydantic import BaseModel
 from sqlmodel import SQLModel
@@ -10,8 +10,8 @@ from backend.app.db.base import ItemBase
 class ItemRead(ItemBase):
     id: int 
 
-    titles: list[TitleRead]
-    languages: list[LanguageRead]
+    titles: Optional[List["TitleRead"]]
+    languages: Optional[List["LanguageRead"]]
 
 
 class TitleRead(SQLModel):
@@ -19,7 +19,7 @@ class TitleRead(SQLModel):
 
     title_text: str
     short_text: str | None = None
-    language: LanguageRead
+    language: Optional[List["LanguageRead"]]
 
 
 class LanguageRead(SQLModel):
