@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-
+from pathlib import Path  
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -9,13 +9,17 @@ from app.database import create_db_and_tables
 from app.routers import books, reference
 
 
+VERSION_FILE = Path(__file__).resolve().parents[2] / "VERSION"
+APP_VERSION = VERSION_FILE.read_text().strip()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_db_and_tables()
     yield
 
 
-app = FastAPI(title="Book Library API", lifespan=lifespan)
+app = FastAPI(title="Book Library API", lifespan=lifespan, version=APP_VERSION)
 
 # Adjust to your actual frontend origin(s) in production.
 app.add_middleware(
@@ -35,4 +39,4 @@ app.mount("/media/covers", StaticFiles(directory=COVERS_DIR), name="covers")
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return { "status": "ok", "version": APP_VERSION }

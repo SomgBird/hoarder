@@ -13,7 +13,7 @@ interface AppInfo {
 
 const APP: AppInfo = {
   name: "Hoarder",
-  version: "pre-alpha",
+  version: __APP_VERSION__,
   author: "SomgBird",
   year: 2026,
   description:

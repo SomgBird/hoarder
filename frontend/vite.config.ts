@@ -1,9 +1,12 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import path from "node:path";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 
-// https://vite.dev/config/
+const version = readFileSync(resolve(__dirname, "../VERSION"), "utf-8").trim();
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -14,5 +17,8 @@ export default defineConfig({
       "@config": path.resolve(__dirname, "./src/config"),
       "@services": path.resolve(__dirname, "./src/services"),
     },
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(version),
   },
 })
