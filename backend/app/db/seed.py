@@ -16,7 +16,10 @@ from backend.app.db.models import Language
 SAMPLE_ITEMS = [
     ItemCreate(
         release_date=date(2011, 10, 2),
-        is_owned=True
+        is_owned=True,
+        titles=["Dune"],
+        language_codes=["en"],
+        selected_language_code=["en"]
     )
 ]
 
@@ -50,7 +53,7 @@ def main() -> None:
     create_db_and_tables()
     with Session(engine) as session:
         seed_languages()
-        
+
         for data in SAMPLE_ITEMS:
             item = crud.create_item(session, data)
             print(f"inserted #{item.id}")

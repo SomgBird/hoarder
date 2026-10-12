@@ -15,7 +15,9 @@ class ItemRead(ItemBase):
 
 
 class ItemCreate(ItemBase):
-    pass
+    titles: List["ItemCreate"] = []
+    language_codes: List[str] = []
+    selected_languag_code: str = None
 
 
 class TitleRead(SQLModel):
@@ -23,7 +25,13 @@ class TitleRead(SQLModel):
 
     title_text: str
     short_text: str | None = None
-    language: Optional[List["LanguageRead"]]
+    language: Optional["LanguageRead"]
+
+
+class TitleCreate(SQLModel):
+    title_text: str
+    short_text: str | None
+    language: Optional["LanguageRead"]
 
 
 class LanguageRead(SQLModel):

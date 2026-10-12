@@ -6,6 +6,7 @@ from sqlalchemy.orm import load_only, selectinload
 from sqlmodel import Session, select
 
 from backend.app.db.models import Item
+from backend.app.db.schemas import ItemCreate
 
 # TODO: rework to items
 # Eager-load options shared by every query that returns a full Item,
