@@ -17,7 +17,7 @@ class ItemRead(ItemBase):
 class ItemCreate(ItemBase):
     titles: List["ItemCreate"] = []
     language_codes: List[str] = []
-    selected_languag_code: str = None
+    selected_language_code: str = None
 
 
 class TitleRead(SQLModel):
