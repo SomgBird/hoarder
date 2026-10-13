@@ -5,7 +5,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import load_only, selectinload
 from sqlmodel import Session, select
 
-from backend.app.db.models import Item
+from backend.app.db.models import Item, ItemType, Language
 from backend.app.db.schemas import ItemCreate
 
 # TODO: rework to items
@@ -25,8 +25,48 @@ def get_item(session: Session, item_id: int) -> Optional[Item]:
     ).first()
 
 
-def create_item(session: Session, item: ItemCreate) -> Item:
-    pass
+def create_item(session: Session, data: ItemCreate) -> Item:
+    selected_lang = get_language(session, data.selected_language_code)
+    langs = []
+    for code in data.language_codes:
+        l = get_language(session, code)
+        if code:
+            langs.append(l)
+    item_t = get_item_type(data.item_type_name)
+
+    item = Item(
+        release_date=data.release_date,
+        cover_image_path=data.cover_image_path,
+        icon_image_path=data.icon_image_path,
+        is_owned=data.is_owned,
+        item_type=item_t,
+        languages=langs,
+        selected_language=selected_lang
+    )
+
+    return item
+
+
+def get_item_type(session: Session, type_name: str) -> ItemType:
+    if not type_name:
+        return None
+    
+    r = select(ItemType).where(ItemType.name == type_name)
+    item_t = session.exec(r).first()
+    return item_t
+
+
+def get_language(session: Session, code: str = None, name: str = None) -> Language:
+    if not code and not name:
+        return None
+
+    r = select(Language)
+    if code:
+        r.where(Language.code == code)
+    else:
+        r.where(Language.name == name)
+    lang = session.exec(r).first()
+    return lang
 
 
 def count_items(session: Session) -> int:

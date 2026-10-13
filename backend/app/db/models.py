@@ -54,7 +54,7 @@ class Item(ItemBase, table=True):
     item_type: Optional["ItemType"] = Relationship(back_populates="items")
     selected_language: Optional["Language"] = Relationship(back_populates="items")
 
-    language_links: list["ItemLanguageLink"] = Relationship(back_populates="item")
+    languages = list["Language"] = Relationship(back_populates="item", link_model=ItemLanguageLink)
     franchises: list["Franchise"] = Relationship(back_populates="items", link_model=ItemFranchiseLink)
     genres: list["Genre"] = Relationship(back_populates="items", link_model=ItemGenreLink)
     titles: list["Title"] = Relationship(back_populates="item")

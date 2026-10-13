@@ -15,9 +15,10 @@ class ItemRead(ItemBase):
 
 
 class ItemCreate(ItemBase):
-    titles: List["ItemCreate"] = []
+    titles: List["TitleCreate"] = []
     language_codes: List[str] = []
     selected_language_code: str = None
+    item_type_name: str = ""
 
 
 class TitleRead(SQLModel):
