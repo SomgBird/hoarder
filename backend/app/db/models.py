@@ -1,17 +1,17 @@
 from datetime import date
-from typing import Optional
+from typing import List, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
-from backend.app.db.base import ItemBase
+from app.db.base import ItemBase
 
 
 # ─────────────────────────────────────────────────────────────
 # LINK TABLES
 # ─────────────────────────────────────────────────────────────
 class ItemLanguageLink(SQLModel, table=True):
-    item_id: int = Field(foreign_key="item.id", primary_key=True)
-    language_id: int = Field(foreign_key="language.id", primary_key=True)
+    item_id: int | None = Field(default=None, foreign_key="item.id", primary_key=True)
+    language_id: int | None = Field(default=None, foreign_key="language.id", primary_key=True)
 
     ui: bool | None = None
     text: bool | None = None
@@ -54,10 +54,14 @@ class Item(ItemBase, table=True):
     item_type: Optional["ItemType"] = Relationship(back_populates="items")
     selected_language: Optional["Language"] = Relationship(back_populates="items")
 
-    languages = list["Language"] = Relationship(back_populates="item", link_model=ItemLanguageLink)
-    franchises: list["Franchise"] = Relationship(back_populates="items", link_model=ItemFranchiseLink)
-    genres: list["Genre"] = Relationship(back_populates="items", link_model=ItemGenreLink)
-    titles: list["Title"] = Relationship(back_populates="item")
+    language_links: List[ItemLanguageLink] = Relationship(back_populates="item")
+    languages: List["Language"] = Relationship(
+        link_model=ItemLanguageLink,
+        sa_relationship_kwargs={"viewonly": True},
+    )
+    franchises: List["Franchise"] = Relationship(back_populates="items", link_model=ItemFranchiseLink)
+    genres: List["Genre"] = Relationship(back_populates="items", link_model=ItemGenreLink)
+    titles: List["Title"] = Relationship(back_populates="item")
 
 
 class ItemType(SQLModel, table=True):
@@ -102,6 +106,10 @@ class Language(SQLModel, table=True):
     name: str  # English, Russian, etc
 
     item_links: list["ItemLanguageLink"] = Relationship(back_populates="language")
+    items: List["Item"] = Relationship(
+        link_model=ItemLanguageLink,
+        sa_relationship_kwargs={"viewonly": True},
+    )
     titles: list["Title"] = Relationship(back_populates="language")
 
 
@@ -228,7 +236,7 @@ class Journal(SQLModel, table=True):
     name: str
     description: str | None = None
 
-    issues: list["JournalIssue"] = Relationship(back_populates="journal")
+    journal_issues: list["JournalIssue"] = Relationship(back_populates="journal")
 
 
 class GamePlatform(SQLModel, table=True):

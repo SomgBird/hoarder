@@ -7,16 +7,16 @@ from sqlmodel import Session, select
 
 from app.config import DB_PATH
 from app.database import create_db_and_tables, engine
-from app.db.schemas import ItemCreate
+from app.db.schemas import ItemCreate, TitleCreate
 from app.db import crud
-from backend.app.db.models import Language
+from app.db.models import Language
 
 
 SAMPLE_ITEMS = [
     ItemCreate(
-        release_date=date(2011, 10, 2),
+        release_date="2011-10-02",
         is_owned=True,
-        titles=["Dune"],
+        titles=[TitleCreate(title_text="Dune", language_code="en")],
         language_codes=["en"],
         selected_language_code="en"
     )
@@ -51,7 +51,7 @@ def main() -> None:
 
     create_db_and_tables()
     with Session(engine) as session:
-        seed_languages()
+        seed_languages(session)
 
         for data in SAMPLE_ITEMS:
             item = crud.create_item(session, data)

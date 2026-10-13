@@ -14,7 +14,7 @@ DATA_DIR = BASE_DIR / "data"
 
 MEDIA_DIR = DATA_DIR / "media"
 COVERS_DIR = MEDIA_DIR / "covers"
-DB_PATH = DATA_DIR / "books.db"
+DB_PATH = DATA_DIR / "collection.db"
 
 # Ensure directories exist at import time.
 # Doing this here means main.py / routers / seed.py never need to.

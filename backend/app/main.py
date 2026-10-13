@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import COVERS_DIR
 from app.database import create_db_and_tables
-from app.routers import books, reference
+from app.routers import items
 
 
 VERSION_FILE = Path(__file__).resolve().parents[2] / "VERSION"
@@ -30,8 +30,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(books.router)
-app.include_router(reference.router)
+app.include_router(items.router)
 
 # Serves uploaded cover images at /media/covers/<filename>.
 app.mount("/media/covers", StaticFiles(directory=COVERS_DIR), name="covers")

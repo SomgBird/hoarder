@@ -4,7 +4,7 @@ from typing import Generic, List, Optional, TypeVar
 from pydantic import BaseModel
 from sqlmodel import SQLModel
 
-from backend.app.db.base import ItemBase
+from app.db.base import ItemBase
 
 
 class ItemRead(ItemBase):
@@ -31,8 +31,8 @@ class TitleRead(SQLModel):
 
 class TitleCreate(SQLModel):
     title_text: str
-    short_text: str | None
-    language: Optional["LanguageRead"]
+    short_text: str | None = None
+    language_code: str
 
 
 class LanguageRead(SQLModel):
