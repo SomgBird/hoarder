@@ -12,9 +12,10 @@ from app.db.schemas import ItemCreate
 # Eager-load options shared by every query that returns a full Item,
 # so callers never trip the "N+1 lazy load after session closed" trap.
 _ITEM_RELATIONS = (
-    # selectinload(Book.authors),
-    # selectinload(Book.language),
-    # selectinload(Book.publisher),
+    selectinload(Item.titles),
+    selectinload(Item.selected_language),
+    selectinload(Item.item_type),
+    selectinload(Item.languages)
 )
 
 
@@ -71,15 +72,15 @@ def get_item_type(session: Session, type_name: str) -> ItemType:
     return item_t
 
 
-def get_language(session: Session, code: str = None, name: str = None) -> Language:
+def get_language(session: Session, code: str | None = None, name: str | None = None) -> Language:
     if not code and not name:
         return None
 
     r = select(Language)
     if code:
-        r.where(Language.code == code)
+        r = r.where(Language.code == code)
     else:
-        r.where(Language.name == name)
+        r = r.where(Language.name == name)
     lang = session.exec(r).first()
     return lang
 
