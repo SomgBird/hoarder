@@ -18,8 +18,14 @@ SAMPLE_ITEMS = [
         is_owned=True,
         titles=[TitleCreate(title_text="Dune", language_code="en")],
         language_codes=["en"],
-        selected_language_code="en"
+        selected_language_code="en",
+        details={"type_name": "book","page_count": 412},
     )
+]
+
+ITEM_TYPES = [
+    {"name": "book", "description": "A book"},
+    {"name": "game", "description": "A game"},
 ]
 
 def seed_languages(session: Session) -> None:
@@ -32,6 +38,19 @@ def seed_languages(session: Session) -> None:
     ]
 
     session.add_all(new_langs)
+    session.commit()
+
+
+def seed_item_types(session: Session) -> None:
+    existing = set(session.exec(select(crud.ItemType.name)).all())
+
+    new_types = [
+        crud.ItemType(name=it["name"], description=it.get("description"))
+        for it in ITEM_TYPES
+        if it["name"] not in existing
+    ]
+
+    session.add_all(new_types)
     session.commit()
 
 
@@ -52,6 +71,7 @@ def main() -> None:
     create_db_and_tables()
     with Session(engine) as session:
         seed_languages(session)
+        seed_item_types(session)
 
         for data in SAMPLE_ITEMS:
             item = crud.create_item(session, data)

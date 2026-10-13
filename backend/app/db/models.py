@@ -52,7 +52,7 @@ class Item(ItemBase, table=True):
     selected_language_id : int | None = Field(default=None, foreign_key="language.id")
 
     item_type: Optional["ItemType"] = Relationship(back_populates="items")
-    selected_language: Optional["Language"] = Relationship(back_populates="items")
+    selected_language: Optional["Language"] = Relationship()
 
     language_links: List[ItemLanguageLink] = Relationship(back_populates="item")
     languages: List["Language"] = Relationship(
@@ -105,6 +105,8 @@ class Language(SQLModel, table=True):
     code: str  # en, ru, etc
     name: str  # English, Russian, etc
 
+    # Language
+    selected_by_items: list["Item"] = Relationship(back_populates="selected_language")
     item_links: list["ItemLanguageLink"] = Relationship(back_populates="language")
     items: List["Item"] = Relationship(
         link_model=ItemLanguageLink,
@@ -179,14 +181,16 @@ class VideoGame(SQLModel, table=True):
 
 class Book(SQLModel, table=True):
     id: int | None = Field(default=None, foreign_key="item.id", primary_key=True)
-    number_of_pages: int | None = Field(default=None, ge=1)
+    page_count: int | None = Field(default=None, ge=1)
+
+    item: Item = Relationship()
 
 
 class JournalIssue(SQLModel, table=True):
     __tablename__ = "journal_issue"
 
     id: int | None = Field(default=None, foreign_key="item.id", primary_key=True)
-    number_of_pages: int | None = Field(default=None, ge=1)
+    page_count: int | None = Field(default=None, ge=1)
     issue: str | None = None
 
     journal_id: int | None = Field(default=None, foreign_key="journal.id")
