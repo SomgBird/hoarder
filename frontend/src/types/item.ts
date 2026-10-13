@@ -1,4 +1,7 @@
 // frontend/src/types.ts
+
+
+// TODO: update types for new db
 export interface Language {
   id: number;
   code: string;

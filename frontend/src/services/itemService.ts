@@ -1,7 +1,7 @@
 import type { Item, ItemCreate, ItemInfo, Page } from '../types/item.ts';
 import { request } from './client.ts'
 
-const PATH = "/books";
+const PATH = "/items";
 
 export const itemService = {
   all: () => request<Item[]>(`${PATH}`),

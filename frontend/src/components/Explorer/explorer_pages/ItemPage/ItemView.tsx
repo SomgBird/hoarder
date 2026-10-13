@@ -21,7 +21,7 @@ function ItemView({ item }: Props) {
               <tbody>
                 <tr>
                   <td>Authors:</td>
-                  <td>{item.authors.map((a) => a.name).join(", ")}</td>
+                  <td>{}</td>
                 </tr>
                 <tr>
                   <td>Release date:</td>
@@ -29,19 +29,19 @@ function ItemView({ item }: Props) {
                 </tr>
                 <tr>
                   <td>ISBN:</td>
-                  <td>{item.isbn}</td>
+                  <td>{}</td>
                 </tr>
                 <tr>
                   <td>Pages:</td>
-                  <td>{item.pages}</td>
+                  <td>{}</td>
                 </tr>
                 <tr>
                   <td>Language:</td>
-                  <td>{item.language?.name}</td>
+                  <td>{}</td>
                 </tr>
                 <tr>
                   <td>Publisher:</td>
-                  <td>{item.publisher?.name}</td>
+                  <td>{}</td>
                 </tr>
               </tbody>
             </table>
