@@ -1,5 +1,4 @@
-# backend/app/seed.py
-"""Seed the DB. Run from backend/:  python -m app.seed  [--reset]"""
+"""Seed the DB. Run from backend/:  python -m app.db.seed  [--reset]"""
 import argparse
 import pycountry
 from datetime import date
@@ -19,7 +18,7 @@ SAMPLE_ITEMS = [
         is_owned=True,
         titles=["Dune"],
         language_codes=["en"],
-        selected_language_code=["en"]
+        selected_language_code="en"
     )
 ]
 
