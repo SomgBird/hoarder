@@ -1,14 +1,14 @@
-import type { Item, ItemCreate, ItemInfo, Page } from '../types/item.ts';
+import type { ItemRead, ItemCreate, ItemListEntryRead, Page } from '../types/item.ts';
 import { request } from './client.ts'
 
 const PATH = "/items";
 
 export const itemService = {
-  all: () => request<Item[]>(`${PATH}`),
+  all: () => request<ItemRead[]>(`${PATH}`),
 
-  list: () => request<Page<ItemInfo>>(`${PATH}/booklist`),
+  list: () => request<Page<ItemListEntryRead>>(`${PATH}/itemlist`),
 
-  get: (id: number) => request<Item>(`${PATH}/${id}`),
+  get: (id: number) => request<ItemRead>(`${PATH}/${id}`),
 
   create: (data: ItemCreate)  =>
     request(`${PATH}/`, {

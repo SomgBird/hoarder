@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Frame, TitleBar } from "@react95/core";
 import { Notepad } from "@react95/icons";
-import type { ItemInfo } from "@types";
+import type { ItemListEntryRead } from "@types";
 import { itemService } from "@services";
 import CollectionManagerToolbar from "./CollectionManagerToolbar";
 
@@ -11,7 +11,7 @@ interface Props {
 }
 
 function CollectionManager({ selectedItemId, onSelectItem }: Props) {
-  const [items, setItems] = useState<ItemInfo[]>([]);
+  const [items, setItems] = useState<ItemListEntryRead[]>([]);
 
   useEffect(() => {
     itemService
@@ -52,7 +52,7 @@ function CollectionManager({ selectedItemId, onSelectItem }: Props) {
               }}
             >
               <span>{item.title}</span>
-              <span>{item.authors.map((a) => a.name).join(", ")}</span>
+              <span>{item.release_date}</span>
             </div>
           ))}
         </Frame>

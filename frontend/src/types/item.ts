@@ -1,60 +1,68 @@
-// frontend/src/types.ts
+// ---------- subtype details (discriminated on type_name) ----------
+export interface BookDetails {
+  type_name: "book";
+  page_count: number | null;
+}
 
+export interface GameDetails {
+  type_name: "game";
+}
 
-// TODO: update types for new db
-export interface Language {
+export type ItemDetails = BookDetails | GameDetails;
+export type ItemType = ItemDetails["type_name"]; // "book" | "game"
+
+// ---------- languages / titles ----------
+export interface LanguageRead {
   id: number;
   code: string;
   name: string;
 }
 
-export interface Publisher {
+export interface TitleRead {
   id: number;
-  name: string;
-  country: string | null;
+  title_text: string;
+  short_text: string | null;
+  language: LanguageRead | null;
 }
 
-export interface Author {
-  id: number;
-  name: string;
+export interface TitleCreate {
+  title_text: string;
+  short_text?: string | null;
+  language_code: string;
 }
 
-export interface Item {
-  id: number;
-  title: string;
-  release_date: string | null;   // ISO date string "1937-09-21"
-  isbn: string | null;
-  pages: number | null;
+// ---------- items ----------
+// TODO: fill in from ItemBase (not shown). Guessing from the old Item type.
+export interface ItemBase {
+  release_date: string | null; // ISO date "1937-09-21"
   description: string | null;
-  cover_image_path: string | null;   // e.g. "/media/covers/abc.jpg"
-  language: Language | null;
-  publisher: Publisher | null;
-  authors: Author[];
-  created_at: string;
-  updated_at: string;
 }
 
-// payload for POST /books/ — matches BookCreate in schemas.py
-export interface ItemCreate {
-  title: string;
-  release_date?: string;
-  isbn?: string;
-  pages?: number;
-  description?: string;
-  authors: string[];
-  language_code?: string;
-  language_name?: string;
-  publisher_name?: string;
-  language_id?: number;
-  publisher_id?: number;
+export interface ItemRead extends ItemBase {
+  id: number;
+  titles: TitleRead[] | null;
+  languages: LanguageRead[] | null;
 }
 
-export interface ItemInfo {
+export interface ItemCreate extends ItemBase {
+  titles?: TitleCreate[];
+  language_codes?: string[];
+  selected_language_code?: string | null;
+  details: ItemDetails;
+}
+
+export interface ItemListEntryRead {
   id: number;
   title: string;
-  authors: Author[];
+  release_date: string; // non-null here, unlike ItemBase
+  is_owned: boolean;
+  icon_image_path: string | null;
 }
 
+// ---------- pagination ----------
 export interface Page<T> {
   items: T[];
+  total: number;
+  offset: number;
+  limit: number;
 }

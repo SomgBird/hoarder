@@ -128,6 +128,7 @@ def get_item_type(session: Session, type_name: str) -> ItemType:
         raise UnknownCode(f"Unknown item type: {type_name!r}")
     return item_t
 
+
 def get_language(session: Session, code: str | None = None, name: str | None = None) -> Language:
     if not code and not name:
         return None
