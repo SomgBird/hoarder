@@ -15,7 +15,7 @@ def get_itemlist(
     limit: int = Query(default=20, ge=1, le=100),
     session: Session = Depends(get_session),
 ):
-    items = crud.list_items(session, offset=offset, limit=limit)
+    items = crud.get_item_list(session, offset=offset, limit=limit)
     total = crud.count_items(session)
     return Page(items=items, total=total, offset=offset, limit=limit)
 

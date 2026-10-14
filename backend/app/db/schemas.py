@@ -59,7 +59,7 @@ class ItemListEntryRead(SQLModel):
     title: str
     release_date: date 
     is_owned: bool
-    icon_image_path: str
+    icon_image_path: str | None = None
 
 
 

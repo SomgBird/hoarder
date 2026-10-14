@@ -7,7 +7,7 @@ from sqlalchemy.orm import load_only, selectinload
 from sqlmodel import SQLModel, Session, select
 
 from app.db.models import Book, Item, ItemLanguageLink, ItemType, Language, Title
-from app.db.schemas import BookDetails, GameDetails, ItemCreate
+from app.db.schemas import BookDetails, GameDetails, ItemCreate, ItemListEntryRead
 
 
 _ITEM_RELATIONS = (
@@ -82,6 +82,41 @@ def create_item(session: Session, data: ItemCreate) -> Item:
 
     session.refresh(item)
     return item
+
+
+def get_item_list_entry(session: Session, item_id: int) -> Optional[ItemListEntryRead]:
+    item = session.exec(
+        select(Item)
+        .where(Item.id == item_id)
+        .options(load_only(Item.id, Item.release_date, Item.is_owned, Item.icon_image_path, Item.selected_language_id))
+    ).first()
+
+    if not item:
+        return None
+
+    title = session.exec(
+        select(Title.title_text)
+        .where(Title.language_id == item.selected_language_id and Title.item_id == item.id)
+    ).first()
+
+    return ItemListEntryRead(
+        id=item.id,
+        title=title,
+        release_date=item.release_date,
+        is_owned=item.is_owned,
+        icon_image_path=item.icon_image_path,
+    )
+
+
+def get_item_list(session: Session, offset: int = 0, limit: int = 20) -> list[ItemListEntryRead]:
+    item_ids = session.exec(select(Item.id).offset(offset).limit(limit)).all()
+    item_list = []
+    for item_id in item_ids:
+        entry = get_item_list_entry(session, item_id)
+        if entry:
+            item_list.append(entry)
+
+    return item_list
 
 
 def get_item_type(session: Session, type_name: str) -> ItemType:
