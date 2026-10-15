@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import type { Item } from "@types";
+import type { ItemRead } from "@types";
 import { itemService } from "@services";
 import { ErrorPage } from "../ErrorPage";
 import ItemView from "./ItemView";
 
 type State =
   | { status: "loading" }
-  | { status: "ready"; item: Item }
+  | { status: "ready"; item: ItemRead }
   | { status: "not-found" }
   | { status: "error"; message: string };
 

@@ -36,11 +36,12 @@ export interface TitleCreate {
 export interface ItemBase {
   release_date: string | null; // ISO date "1937-09-21"
   description: string | null;
+  cover_image_path: string | null; // relative path to the cover image file
 }
 
 export interface ItemRead extends ItemBase {
   id: number;
-  titles: TitleRead[] | null;
+  titles: TitleRead[];
   languages: LanguageRead[] | null;
 }
 

@@ -1,17 +1,18 @@
 import styles from "./ItemView.module.css";
-import type { Item } from "@types";
+import type { ItemRead } from "@types";
 import { coverUrl } from "@services";
 
 interface Props {
-  item: Item;
+  item: ItemRead;
 }
 
 function ItemView({ item }: Props) {
   const cover = coverUrl(item.cover_image_path);
+  const title = item.titles[0]?.title_text || "Untitled";
 
   return (
     <div className={styles.view}>
-      <h1>{item.title}</h1>
+      <h1>{title}</h1>
       <hr />
       <div className={styles.container}>
         <div className={styles.left_column}>
@@ -57,7 +58,7 @@ function ItemView({ item }: Props) {
             {cover ? (
               <img
                 src={cover}
-                alt={item.title}
+                alt={title}
                 width="100%"
                 style={{ objectFit: "cover", borderRadius: 4 }}
               />
