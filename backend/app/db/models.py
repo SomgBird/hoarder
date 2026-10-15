@@ -62,6 +62,10 @@ class Item(ItemBase, table=True):
     franchises: List["Franchise"] = Relationship(back_populates="items", link_model=ItemFranchiseLink)
     genres: List["Genre"] = Relationship(back_populates="items", link_model=ItemGenreLink)
     titles: List["Title"] = Relationship(back_populates="item")
+    credits: list["AuthorRoleItemLink"] = Relationship(
+        back_populates="item",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+)
 
 
 class ItemType(SQLModel, table=True):
@@ -153,6 +157,37 @@ class Genre(SQLModel, table=True):
 # ─────────────────────────────────────────────────────────────
 
 
+class Author(SQLModel, table=True):
+    __tablename__ = "author"
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    bio: str | None = None
+    birth_date: date | None = None
+    death_date: date | None = None
+
+    credits: list["AuthorRoleItemLink"] = Relationship(back_populates="author")
+
+
+class AuthorRole(SQLModel, table=True):
+    __tablename__ = "author_role"
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(unique=True)
+    description: str | None = None
+
+    credits: list["AuthorRoleItemLink"] = Relationship(back_populates="role")
+
+
+class AuthorRoleItemLink(SQLModel, table=True):
+    __tablename__ = "author_role_item_link"
+    author_id: int = Field(foreign_key="author.id", primary_key=True)
+    item_id: int = Field(foreign_key="item.id", primary_key=True, index=True)
+    role_id: int = Field(foreign_key="author_role.id", primary_key=True, index=True)
+    involvement_date: date | None = None
+    comments: str | None = None
+
+    author: Author = Relationship(back_populates="credits")
+    item: Item = Relationship(back_populates="credits")
+    role: AuthorRole = Relationship(back_populates="credits")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -162,11 +197,15 @@ class Film(SQLModel, table=True):
     id: int | None = Field(default=None, foreign_key="item.id", primary_key=True)
     length: int | None = None
 
+    item: Item = Relationship()
+
 
 class BoardGame(SQLModel, table=True):
     __tablename__ = "board_game"
 
     id: int | None = Field(default=None, foreign_key="item.id", primary_key=True)
+
+    item: Item = Relationship()
 
 
 class VideoGame(SQLModel, table=True):
@@ -174,8 +213,8 @@ class VideoGame(SQLModel, table=True):
 
     id: int | None = Field(default=None, foreign_key="item.id", primary_key=True)
 
+    item: Item = Relationship()
     game_platform_id: int | None = Field(default=None, foreign_key="game_platform.id")
-
     game_platform: Optional["GamePlatform"] = Relationship(back_populates="video_games")
 
 
@@ -193,6 +232,8 @@ class JournalIssue(SQLModel, table=True):
     page_count: int | None = Field(default=None, ge=1)
     issue: str | None = None
 
+    item: Item = Relationship()
+
     journal_id: int | None = Field(default=None, foreign_key="journal.id")
 
     journal: Optional["Journal"] = Relationship(back_populates="journal_issues")
@@ -205,6 +246,8 @@ class Figurine(SQLModel, table=True):
 
     scale: Optional["Scale"] = Relationship(back_populates="figurines")
 
+    item: Item = Relationship()
+
 
 class Miniature(SQLModel, table=True):
     id: int | None = Field(default=None, foreign_key="item.id", primary_key=True)
@@ -215,12 +258,16 @@ class Miniature(SQLModel, table=True):
 
     scale: Optional["Scale"] = Relationship(back_populates="miniatures")
 
+    item: Item = Relationship()
+
 
 class LegoSet(SQLModel, table=True):
     __tablename__ = "lego_set"
 
     id: int | None = Field(default=None, foreign_key="item.id", primary_key=True)
     number_of_pieces: int | None = Field(default=None, ge=1)
+
+    item: Item = Relationship()
 
 
 

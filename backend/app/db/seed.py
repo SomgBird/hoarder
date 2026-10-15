@@ -7,7 +7,7 @@ from sqlmodel import Session, select
 
 from app.config import DB_PATH
 from app.database import create_db_and_tables, engine
-from app.db.schemas import ItemCreate, TitleCreate
+from app.db.schemas import CreditCreate, ItemCreate, TitleCreate
 from app.db import crud
 from app.db.models import Language
 
@@ -19,8 +19,36 @@ SAMPLE_ITEMS = [
         titles=[TitleCreate(title_text="Dune", language_code="en")],
         language_codes=["en"],
         selected_language_code="en",
-        details={"type_name": "book","page_count": 412},
-    )
+        details={"type_name": "book", "page_count": 412},
+        credits=[
+            CreditCreate(author_name="Frank Herbert", role_name="Writer"),
+        ],
+    ),
+    # same author again: exercises get-or-create reuse instead of a duplicate row
+    ItemCreate(
+        release_date="2012-03-15",
+        is_owned=False,
+        titles=[TitleCreate(title_text="Dune Messiah", language_code="en")],
+        language_codes=["en"],
+        selected_language_code="en",
+        details={"type_name": "book", "page_count": 256},
+        credits=[
+            CreditCreate(author_name="frank herbert", role_name="writer"),
+        ],
+    ),
+    # game: different details type, multiple credits with different roles
+    ItemCreate(
+        release_date="2017-03-03",
+        is_owned=True,
+        titles=[TitleCreate(title_text="The Legend of Zelda: Breath of the Wild", language_code="en")],
+        language_codes=["en"],
+        selected_language_code="en",
+        details={"type_name": "game"},
+        credits=[
+            CreditCreate(author_name="Hidemaro Fujibayashi", role_name="Director"),
+            CreditCreate(author_name="Eiji Aonuma", role_name="Producer"),
+        ],
+    ),
 ]
 
 ITEM_TYPES = [
