@@ -25,6 +25,7 @@ class ItemRead(ItemBase):
 
     titles: Optional[List["TitleRead"]]
     languages: Optional[List["LanguageRead"]]
+    credits: list["CreditRead"] = []
 
 
 class ItemCreate(ItemBase):
@@ -57,7 +58,6 @@ class TitleRead(SQLModel):
     title_text: str
     short_text: str | None = None
     language: Optional["LanguageRead"]
-    credits: list[CreditRead] = []
 
 
 class TitleCreate(SQLModel):
