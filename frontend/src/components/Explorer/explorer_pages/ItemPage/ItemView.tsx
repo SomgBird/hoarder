@@ -22,7 +22,7 @@ function ItemView({ item }: Props) {
               <tbody>
                 <tr>
                   <td>Authors:</td>
-                  <td>{}</td>
+                  <td>{item.author_credits.map((credit) => credit.author.name).join(", ")}</td>
                 </tr>
                 <tr>
                   <td>Release date:</td>
@@ -38,11 +38,11 @@ function ItemView({ item }: Props) {
                 </tr>
                 <tr>
                   <td>Language:</td>
-                  <td>{}</td>
+                  <td>{item.selected_language.name}</td>
                 </tr>
                 <tr>
                   <td>Publisher:</td>
-                  <td>{}</td>
+                  <td>{item.company_credits[0]?.company.name}</td>
                 </tr>
               </tbody>
             </table>

@@ -109,6 +109,7 @@ export interface ItemRead extends ItemBase {
   id: number;
   titles: TitleRead[];
   languages: LanguageRead[];
+  selected_language: LanguageRead;
   author_credits: AuthorCreditRead[];
   company_credits: CompanyCreditRead[];
   details: ItemDetails;

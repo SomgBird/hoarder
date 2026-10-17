@@ -116,6 +116,7 @@ class ItemRead(ItemBase):
     id: int
     titles: List[TitleRead]
     languages: List[LanguageRead]
+    selected_language: LanguageRead
     # No defaults on purpose: if the ORM attribute is missing or misnamed this should
     # fail loudly instead of quietly returning an empty list.
     author_credits: List[AuthorCreditRead]
