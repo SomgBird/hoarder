@@ -1,5 +1,5 @@
 import styles from "./ItemView.module.css";
-import type { ItemRead } from "@types";
+import type { BookDetails, ItemRead } from "@types";
 import { coverUrl } from "@services";
 
 interface Props {
@@ -34,7 +34,7 @@ function ItemView({ item }: Props) {
                 </tr>
                 <tr>
                   <td>Pages:</td>
-                  <td>{}</td>
+                  <td>{item.item_type.name === "book" ? (item.details as BookDetails).page_count : "N/A"}</td>
                 </tr>
                 <tr>
                   <td>Language:</td>

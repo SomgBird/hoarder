@@ -33,6 +33,7 @@ from app.db.schemas import (
     GameDetails,
     ItemCreate,
     ItemListEntryRead,
+    ItemRead,
     ItemUpdate,
     Page,
     TitleCreate,
@@ -158,14 +159,27 @@ _ITEM_RELATIONS = (
 )
 
 
-def get_item(session: Session, item_id: int) -> Optional[Item]:
-    return session.exec(
+def get_item(session: Session, item_id: int) -> Optional[ItemRead]:
+    item: Item = session.exec(
         select(Item)
         .where(Item.id == item_id)
         .options(*_ITEM_RELATIONS)
         # always reload, so collections replaced by an update are re-read from the DB
         .execution_options(populate_existing=True)
     ).first()
+
+    item_read = ItemRead.model_validate(item)
+    match item.item_type.name:
+        case "book":
+            details = session.exec(select(Book).where(Book.id == item_id)).first()
+            item_read.details = DETAIL_BUILDERS[item.item_type.name](session, item, details)
+        case "game":
+            details = session.exec(select(VideoGame).where(VideoGame.id == item_id)).first()
+            item_read.details = DETAIL_BUILDERS[item.item_type.name](session, item, details)
+        case _:
+            raise ValueError(f"unsupported item type: {item.item_type.name}")
+    
+    return item_read
 
 
 def _list_query():

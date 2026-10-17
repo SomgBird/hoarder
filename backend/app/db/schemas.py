@@ -117,10 +117,13 @@ class ItemRead(ItemBase):
     titles: List[TitleRead]
     languages: List[LanguageRead]
     selected_language: LanguageRead
+    item_type: "ItemTypeRead"
     # No defaults on purpose: if the ORM attribute is missing or misnamed this should
     # fail loudly instead of quietly returning an empty list.
     author_credits: List[AuthorCreditRead]
     company_credits: List[CompanyCreditRead]
+
+    details: ItemDetails | None = None
 
 
 class ItemCreate(ItemBase, _Strict):
@@ -147,6 +150,11 @@ class ItemUpdate(_Strict):
     author_credits: List[AuthorCreditCreate] | None = None
     company_credits: List[CompanyCreditCreate] | None = None
 
+
+class ItemTypeRead(SQLModel):
+    id: int
+    name: str
+    description: str | None = None
 
 # ---------- list ----------
 class ItemListEntryRead(SQLModel):

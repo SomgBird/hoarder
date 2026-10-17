@@ -18,6 +18,13 @@ export interface GameDetails {
 export type ItemDetails = BookDetails | GameDetails;
 export type ItemType = ItemDetails["type_name"]; // "book" | "game"
 
+
+export interface ItemTypeRead {
+  id: number;
+  name: ItemType;
+  description: string | null;
+}
+
 // ---------- languages / titles ----------
 export interface LanguageRead {
   id: number;
@@ -110,6 +117,7 @@ export interface ItemRead extends ItemBase {
   titles: TitleRead[];
   languages: LanguageRead[];
   selected_language: LanguageRead;
+  item_type: ItemTypeRead;
   author_credits: AuthorCreditRead[];
   company_credits: CompanyCreditRead[];
   details: ItemDetails;
