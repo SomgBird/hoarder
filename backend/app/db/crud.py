@@ -168,7 +168,10 @@ def get_item(session: Session, item_id: int) -> Optional[ItemRead]:
         .execution_options(populate_existing=True)
     ).first()
 
-    item_read = ItemRead.model_validate(item)
+    try:
+        item_read = ItemRead.model_validate(item)
+    except Exception:
+        return None
     match item.item_type.name:
         case "book":
             details = session.exec(select(Book).where(Book.id == item_id)).first()
