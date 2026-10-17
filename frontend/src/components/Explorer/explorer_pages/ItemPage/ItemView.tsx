@@ -1,5 +1,5 @@
 import styles from "./ItemView.module.css";
-import type { BookDetails, ItemRead } from "@types";
+import type { ItemRead, BookDetailsRead } from "@types";
 import { coverUrl } from "@services";
 
 interface Props {
@@ -22,7 +22,11 @@ function ItemView({ item }: Props) {
               <tbody>
                 <tr>
                   <td>Authors:</td>
-                  <td>{item.author_credits.map((credit) => credit.author.name).join(", ")}</td>
+                  <td>
+                    {item.author_credits
+                      .map((credit) => credit.author.name)
+                      .join(", ")}
+                  </td>
                 </tr>
                 <tr>
                   <td>Release date:</td>
@@ -34,11 +38,15 @@ function ItemView({ item }: Props) {
                 </tr>
                 <tr>
                   <td>Pages:</td>
-                  <td>{item.item_type.name === "book" ? (item.details as BookDetails).page_count : "N/A"}</td>
+                  <td>
+                    {item.item_type.name === "book"
+                      ? (item.details as BookDetailsRead).page_count
+                      : "N/A"}
+                  </td>
                 </tr>
                 <tr>
                   <td>Language:</td>
-                  <td>{item.selected_language.name}</td>
+                  <td>{item.selected_language?.name}</td>
                 </tr>
                 <tr>
                   <td>Publisher:</td>

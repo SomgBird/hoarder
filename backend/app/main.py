@@ -1,41 +1,33 @@
 from contextlib import asynccontextmanager
-from pathlib import Path  
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from sqlmodel import Session
 
-from app.config import COVERS_DIR
-from app.database import create_db_and_tables
-from app.routers import items
-
-
-VERSION_FILE = Path(__file__).resolve().parents[2] / "VERSION"
-APP_VERSION = VERSION_FILE.read_text().strip()
+from app.database import create_db_and_tables, engine
+from app.db.seed import seed_builtin
+from app.errors import register_exception_handlers
+from app.routers import items, reference
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_db_and_tables()
+    create_db_and_tables()          # 1. tables first
+    with Session(engine) as session:
+        seed_builtin(session)       # 2. builtin reference data (idempotent, every startup)
     yield
 
 
-app = FastAPI(title="Hoarder API", lifespan=lifespan, version=APP_VERSION)
-
-# Adjust to your actual frontend origin(s) in production.
+app = FastAPI(lifespan=lifespan)
+# The browser blocks cross-origin fetches (Vite dev server -> API) unless the API allows
+# the origin. Swagger works without this because it is served from the API itself.
+# Add your own origin here if you open the frontend from another host/port (e.g. home server).
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
-    allow_credentials=True,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+register_exception_handlers(app)
 app.include_router(items.router)
-
-# Serves uploaded cover images at /media/covers/<filename>.
-app.mount("/media/covers", StaticFiles(directory=COVERS_DIR), name="covers")
-
-
-@app.get("/health")
-def health():
-    return { "status": "ok", "version": APP_VERSION }
+app.include_router(reference.router)
