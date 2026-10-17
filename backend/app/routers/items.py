@@ -10,14 +10,8 @@ router = APIRouter(prefix="/items", tags=["items"])
 
 
 @router.get("/itemlist", response_model=Page[ItemListEntryRead])
-def get_itemlist(
-    offset: int = Query(default=0, ge=0),
-    limit: int = Query(default=20, ge=1, le=100),
-    session: Session = Depends(get_session),
-):
-    items = crud.get_item_list(session, offset=offset, limit=limit)
-    total = crud.count_items(session)
-    return Page(items=items, total=total, offset=offset, limit=limit)
+def item_list(offset: int = 0, limit: int = 20, session: Session = Depends(get_session)):
+    return crud.get_item_list(session, offset, limit)
 
 
 @router.get("/{item_id}", response_model=ItemRead)

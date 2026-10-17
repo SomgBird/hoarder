@@ -48,24 +48,31 @@ class ItemTypeGenreLink(SQLModel, table=True):
 class Item(ItemBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
+
     item_type_id: int | None = Field(default=None, foreign_key="item_type.id")
-    selected_language_id : int | None = Field(default=None, foreign_key="language.id")
-
     item_type: Optional["ItemType"] = Relationship(back_populates="items")
-    selected_language: Optional["Language"] = Relationship()
 
-    language_links: List[ItemLanguageLink] = Relationship(back_populates="item")
+    selected_language_id : int | None = Field(default=None, foreign_key="language.id")
+    selected_language: Optional["Language"] = Relationship()
+    language_links: List[ItemLanguageLink] = Relationship(
+        back_populates="item",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     languages: List["Language"] = Relationship(
         link_model=ItemLanguageLink,
         sa_relationship_kwargs={"viewonly": True},
     )
+
     franchises: List["Franchise"] = Relationship(back_populates="items", link_model=ItemFranchiseLink)
     genres: List["Genre"] = Relationship(back_populates="items", link_model=ItemGenreLink)
-    titles: List["Title"] = Relationship(back_populates="item")
-    credits: list["AuthorRoleItemLink"] = Relationship(
+    titles: List["Title"] = Relationship(
         back_populates="item",
-        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
-)
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    author_credits: list["AuthorRoleItemLink"] = Relationship(
+        back_populates="item",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    company_credits: list["CompanyRoleItemLink"] = Relationship(
+        back_populates="item",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 
 class ItemType(SQLModel, table=True):
@@ -172,8 +179,8 @@ class AuthorRole(SQLModel, table=True):
     __tablename__ = "author_role"
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(unique=True)
-    description: str | None = None
-
+    description: str | None = None    
+    
     credits: list["AuthorRoleItemLink"] = Relationship(back_populates="role")
 
 
@@ -186,9 +193,42 @@ class AuthorRoleItemLink(SQLModel, table=True):
     comments: str | None = None
 
     author: Author = Relationship(back_populates="credits")
-    item: Item = Relationship(back_populates="credits")
+    item: Item = Relationship(back_populates="author_credits")
     role: AuthorRole = Relationship(back_populates="credits")
 
+
+class Company(SQLModel, table=True):
+    __tablename__ = "company"
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    description: str | None = None
+    country: str | None = None
+    founded_date: date | None = None
+    dissolved_date: date | None = None
+
+    credits: list["CompanyRoleItemLink"] = Relationship(back_populates="company")
+
+
+class CompanyRole(SQLModel, table=True):
+    __tablename__ = "company_role"
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(unique=True)
+    description: str | None = None
+
+    credits: list["CompanyRoleItemLink"] = Relationship(back_populates="role")
+
+
+class CompanyRoleItemLink(SQLModel, table=True):
+    __tablename__ = "company_role_item_link"
+    company_id: int = Field(foreign_key="company.id", primary_key=True)
+    item_id: int = Field(foreign_key="item.id", primary_key=True, index=True)
+    role_id: int = Field(foreign_key="company_role.id", primary_key=True, index=True)
+    involvement_date: date | None = None
+    comments: str | None = None
+
+    company: Company = Relationship(back_populates="credits")
+    item: "Item" = Relationship(back_populates="company_credits")
+    role: CompanyRole = Relationship(back_populates="credits")
 
 # ─────────────────────────────────────────────────────────────
 # Item subtypes

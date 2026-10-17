@@ -8,3 +8,4 @@ class ItemBase(SQLModel):
     cover_image_path: str | None = None
     icon_image_path: str | None = None
     is_owned: bool | None = None
+    description: str | None = None
