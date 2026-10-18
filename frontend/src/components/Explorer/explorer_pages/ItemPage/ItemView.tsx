@@ -1,119 +1,29 @@
-import type { ReactNode } from "react";
 import styles from "./ItemView.module.css";
-import type {
-  ItemRead,
-  ItemDetailsRead,
-  AuthorCreditRead,
-  CompanyCreditRead,
-} from "@types";
+import type { ItemRead } from "@types";
 import { coverUrl } from "@services";
+import { detailRows } from "./details";
+import { groupByRole, isEmpty, type Row } from "./rows";
 
 interface Props {
   item: ItemRead;
 }
-
-type Row = { label: string; value: ReactNode };
-
-// ------------------------------------------------------------
-// helpers
-// ------------------------------------------------------------
-
-// Empty values (null, undefined, "", []) are not worth a row.
-function isEmpty(value: ReactNode): boolean {
-  return (
-    value === null ||
-    value === undefined ||
-    value === "" ||
-    (Array.isArray(value) && value.length === 0)
-  );
-}
-
-// Group credits by role so we get "Author: A, B" / "Illustrator: C"
-// instead of one flat "Authors" row.
-function groupByRole<T extends AuthorCreditRead | CompanyCreditRead>(
-  credits: T[],
-  getName: (credit: T) => string,
-): Row[] {
-  const groups = new Map<string, string[]>();
-  for (const credit of credits) {
-    const names = groups.get(credit.role.name) ?? [];
-    names.push(getName(credit));
-    groups.set(credit.role.name, names);
-  }
-  return [...groups].map(([label, names]) => ({
-    label,
-    value: names.join(", "),
-  }));
-}
-
-// Subtype-specific rows. The switch is exhaustive: adding a new subtype to
-// ItemDetailsRead makes this fail to compile until it's handled here.
-function detailRows(details: ItemDetailsRead | null): Row[] {
-  if (!details) return [];
-
-  switch (details.type_name) {
-    case "book":
-      return [{ label: "Pages", value: details.page_count }];
-
-    case "game":
-      return [{ label: "Platform", value: details.game_platform?.name }];
-
-    case "film":
-      return [
-        {
-          label: "Length",
-          value: details.length != null ? `${details.length} min` : null,
-        },
-      ];
-
-    case "board_game":
-      return [];
-
-    case "journal_issue":
-      return [
-        { label: "Journal", value: details.journal?.name },
-        { label: "Issue", value: details.issue },
-        { label: "Pages", value: details.page_count },
-      ];
-
-    case "figurine":
-      return [{ label: "Scale", value: details.scale?.scale }];
-
-    case "miniature":
-      return [
-        { label: "Height", value: details.height },
-        { label: "Width", value: details.width },
-        { label: "Scale", value: details.scale?.scale },
-      ];
-
-    case "lego_set":
-      return [{ label: "Pieces", value: details.number_of_pieces }];
-  }
-}
-
-// ------------------------------------------------------------
-// component
-// ------------------------------------------------------------
 
 function ItemView({ item }: Props) {
   const cover = coverUrl(item.cover_image_path);
   const title = item.titles[0]?.title_text || "Untitled";
 
   // Languages with ui/text/voice flags are only meaningful for some items
-  // (games mostly). If any flag is set, show a table; otherwise a plain row.
+  // (games mostly). If any flag is set, show a table; otherwise a plain list.
   const hasLanguageFlags = item.languages.some(
     (l) => l.ui != null || l.text != null || l.voice != null,
   );
 
   const infoRows: Row[] = [
-    // common rows
     ...groupByRole(item.author_credits, (c) => c.author.name),
     ...groupByRole(item.company_credits, (c) => c.company.name),
     { label: "Release date", value: item.release_date },
     { label: "Format", value: item.format?.name },
-    // subtype rows
-    ...detailRows(item.details),
-    // common rows that come after
+    ...detailRows(item.details), // subtype-specific, see ./details
     { label: "Language", value: item.selected_language?.name },
     { label: "Genres", value: item.genres.map((g) => g.name).join(", ") },
     {
