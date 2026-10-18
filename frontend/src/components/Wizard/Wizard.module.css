@@ -1,0 +1,14 @@
+.wizard_content_wrapper {
+    padding: 15px;
+}
+
+.buttons_section {
+    display: flex;
+    gap: 2px;
+    justify-content: right;
+    padding-top: 10px;
+}
+
+.cancel_button {
+  margin-left: 10px;
+}
