@@ -4,44 +4,42 @@ import { itemService } from "@services";
 import { ErrorPage } from "../ErrorPage";
 import ItemView from "./ItemView";
 
-type State =
-  | { status: "loading" }
-  | { status: "ready"; item: ItemRead }
-  | { status: "not-found" }
-  | { status: "error"; message: string };
+type Result =
+  | { id: number; status: "ready"; item: ItemRead }
+  | { id: number; status: "not-found" }
+  | { id: number; status: "error"; message: string };
 
-// Assumes itemService throws an error carrying the HTTP status.
 const isNotFound = (e: unknown) => (e as { status?: number })?.status === 404;
 
 export function ItemPage({ id }: { id: number }) {
-  const [state, setState] = useState<State>({ status: "loading" });
+  const [result, setResult] = useState<Result | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    setState({ status: "loading" });
 
     itemService
       .get(id)
       .then((item) => {
-        if (!cancelled) setState({ status: "ready", item });
+        if (!cancelled) setResult({ id, status: "ready", item });
       })
       .catch((e) => {
         if (cancelled) return;
-        setState(
+        setResult(
           isNotFound(e)
-            ? { status: "not-found" }
-            : { status: "error", message: e.message }
+            ? { id, status: "not-found" }
+            : { id, status: "error", message: e.message },
         );
       });
 
     return () => {
-      cancelled = true; // ignore responses for a page we've already left
+      cancelled = true;
     };
   }, [id]);
 
-  switch (state.status) {
-    case "loading":
-      return <p>Loading…</p>;
+  // Loading = no result yet, or the result is for a previous id
+  if (!result || result.id !== id) return <p>Loading…</p>;
+
+  switch (result.status) {
     case "not-found":
       return (
         <ErrorPage
@@ -52,9 +50,9 @@ export function ItemPage({ id }: { id: number }) {
       );
     case "error":
       return (
-        <ErrorPage heading="Something went wrong" message={state.message} />
+        <ErrorPage heading="Something went wrong" message={result.message} />
       );
     case "ready":
-      return <ItemView item={state.item} />;
+      return <ItemView item={result.item} />;
   }
 }
