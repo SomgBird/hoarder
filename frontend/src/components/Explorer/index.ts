@@ -1,2 +1,3 @@
 export { default as Explorer } from "./Explorer";
-export { ExplorerProvider, useExplorer } from "./ExplorerContext";
+export { ExplorerProvider } from "./ExplorerProvider";
+export { useExplorer } from "./ExplorerContext";

@@ -1,8 +1,7 @@
-
 .view {
   background-color: #D9E2AC;
   display: flow-root;
-  height: 100%;
+  flex: 1 0 auto; /* fills ContentFrame's wrapper, grows with content */
 }
 
 .view * {
@@ -27,4 +26,22 @@
   background: whitesmoke;
   border: 1px solid #9F896F;
   margin: 15px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0 15px 8px;
+  padding: 0;
+}
+
+.tag {
+  padding: 2px 10px;
+  background: #c9c9c4;
+  color: #3a3a37;
+  border: 1px solid #8f8f88;
+  border-radius: 999px;
+  font-size: 0.85em;
 }

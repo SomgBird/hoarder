@@ -1,13 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Frame, TitleBar } from "@react95/core";
 import { HtmlPage, Ie } from "@react95/icons";
 
-import {
-  Separator,
-  AddressBar,
-  ContentFrame,
-  EtchedBox,
-} from "@components";
+import { Separator, AddressBar, ContentFrame, EtchedBox } from "@components";
 import styles from "./Explorer.module.css";
 import ExplorerToolbar from "./ExplorerToolbar/ExplorerToolbar";
 import { ExplorerMenuBar } from "./ExplorerMenuBar/ExplorerMenuBar";
@@ -19,10 +14,14 @@ function Explorer() {
   const { current, navigate } = useExplorer();
 
   // What's typed in the address bar before Enter; reset whenever we navigate.
+  // Resetting during render (instead of in an effect) avoids a second,
+  // cascading render with a stale address bar in between.
   const [draft, setDraft] = useState(toUrl(current));
-  useEffect(() => {
+  const [draftFor, setDraftFor] = useState(current);
+  if (draftFor !== current) {
+    setDraftFor(current);
     setDraft(toUrl(current));
-  }, [current]);
+  }
 
   return (
     <Frame
