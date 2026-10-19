@@ -8,7 +8,9 @@ export function PageEditor() {
       icon={<Mshtml32541 variant="16x16_4" />}
       onCancel={() => {}}
       confirmCancel={false}
-      steps={[]}
+      steps={[
+        
+      ]}
       initialValues={{}}
       onFinish={() => {}}
     />
