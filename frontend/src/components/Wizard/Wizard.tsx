@@ -46,9 +46,7 @@ export function Wizard({
         message */}
         <div onChange={() => setError("")}>
           {step.content}
-          {error && (
-            <div style={{ color: "#a00000", marginTop: 4 }}>{error}</div>
-          )}
+          {error && <div className={styles.error_text}>{error}</div>}
         </div>
         <Separator />
         <div className={styles.buttons_section}>

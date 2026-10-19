@@ -24,3 +24,8 @@
 .cancel_button {
     margin-left: 10px;
 }
+
+.error_text {
+    color: #a00000;
+    margin-top: 4px;
+}
