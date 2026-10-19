@@ -54,7 +54,7 @@ export function PageEditor() {
               checked={pageType === "custom"}
               onChange={() => setPageType("custom")}
             >
-              Custom page &mdash; -- a page with custom design and content.
+              Custom page &mdash; a page with custom design and content.
             </RadioButton>
           </div>
         </>
