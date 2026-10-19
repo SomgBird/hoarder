@@ -6,7 +6,11 @@ export function PageEditor() {
     <Wizard
       title="Page Editor Wizard"
       icon={<Mshtml32541 variant="16x16_4" />}
-      text="You can use this wizard to create and edit pages for your collection. Follow the steps to customize your page layout, add content, and configure settings."
+      onCancel={() => {}}
+      confirmCancel={false}
+      steps={[]}
+      initialValues={{}}
+      onFinish={() => {}}
     />
   );
 }

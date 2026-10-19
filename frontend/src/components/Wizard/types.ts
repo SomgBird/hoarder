@@ -1,6 +1,11 @@
 import type { ReactElement, ReactNode } from "react";
 
 
+// Field-level errors, keyed by the wizard value they belong to.
+export type WizardErrors<T> = Partial<Record<keyof T, string>>;
+ 
+export type WizardStatus = 'idle' | 'validating' | 'submitting';
+
 // Stores the values of the wizard and provides methods to update them
 export interface StepContext <T> {
     values: T;
@@ -15,6 +20,7 @@ export interface WizardStep<T> {
     title: string;
     description?: string;
     render: (ctx: StepContext<T>) => ReactNode;
+    validate?: (values: T) => WizardErrors<T> | Promise<WizardErrors<T>>; // Return an empty object when valid.
 }
 
 // Options for the useWizard hook
