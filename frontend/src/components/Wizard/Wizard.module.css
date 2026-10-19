@@ -1,14 +1,26 @@
-.wizard_content_wrapper {
-    padding: 15px;
+.wizard_frame {
+    width: 600px;
+    padding: 3px;
+    display: flex;
+    flex-direction: column;
 }
+
+.wizard_content_wrapper {
+    padding: 12px;
+}
+
+.step_title {
+    margin: 0 0 12px;
+}
+
 
 .buttons_section {
     display: flex;
     gap: 2px;
-    justify-content: right;
+    justify-content: flex-end;
     padding-top: 10px;
 }
 
 .cancel_button {
-  margin-left: 10px;
+    margin-left: 10px;
 }
