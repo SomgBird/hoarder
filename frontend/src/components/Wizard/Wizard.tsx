@@ -46,14 +46,14 @@ export function Wizard({
       <TitleBar icon={icon} title={title}></TitleBar>
       <div className={styles.wizard_content_wrapper}>
         <div className={styles.wizard_inner_content_wrapper}>
-          {showImage && (<WizardBanner bannerImage={imageSrc} />)}
-          {showSteps && (<WizardStepList steps={steps} currentIndex={index} />)}
-  
+          {showImage && <WizardBanner bannerImage={imageSrc} />}
+          {showSteps && <WizardStepList steps={steps} currentIndex={index} />}
+
           {/* Content column: heading, step content */}
           <div className={styles.content_column}>
             <h3 className={styles.step_title}>{step.title}</h3>
             <div className={styles.step_wrapper}>
-              <div onChange={() => setError('')}>
+              <div onChange={() => setError("")}>
                 {step.content}
                 {error && <div className={styles.error_text}>{error}</div>}
               </div>
@@ -64,9 +64,13 @@ export function Wizard({
         {/* Buttons */}
         <Separator />
         <div className={styles.buttons_section}>
-          <Button onClick={goBack} disabled={isFirstStep}>&lt; Back</Button>
-          <Button onClick={goNext}>{isLastStep ? 'Finish' : 'Next >'}</Button>
-          <Button className={styles.cancel_button} onClick={onCancel}>Cancel</Button>
+          <Button onClick={goBack} disabled={isFirstStep}>
+            &lt; Back
+          </Button>
+          <Button onClick={goNext}>{isLastStep ? "Finish" : "Next >"}</Button>
+          <Button className={styles.cancel_button} onClick={onCancel}>
+            Cancel
+          </Button>
         </div>
       </div>
     </Frame>
