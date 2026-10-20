@@ -52,16 +52,13 @@ export function Wizard({
           {/* Content column: heading, step content */}
           <div className={styles.content_column}>
             <h3 className={styles.step_title}>{step.title}</h3>
-            <div className={styles.step_wrapper}>
-              <div onChange={() => setError("")}>
-                {step.content}
-                {error && <div className={styles.error_text}>{error}</div>}
-              </div>
+            <div className={styles.step_wrapper} onChange={() => setError("")}>
+              {step.content}
+              {error && <div className={styles.error_text}>{error}</div>}
             </div>
           </div>
         </div>
 
-        {/* Buttons */}
         <Separator />
         <div className={styles.buttons_section}>
           <Button onClick={goBack} disabled={isFirstStep}>
