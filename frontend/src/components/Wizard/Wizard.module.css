@@ -1,18 +1,34 @@
 .wizard_frame {
-    width: 600px;
+    width: fit-content;
     padding: 3px;
     display: flex;
     flex-direction: column;
 }
 
 .wizard_content_wrapper {
+    display: flex;
     padding: 12px;
+    gap: 12px;
+    flex-direction: column;
+}
+
+.wizard_inner_content_wrapper {
+    display: flex;
+    flex-direction: row;
+}
+
+.content_column {
+    width: 500px;
+    height: 300px;
 }
 
 .step_title {
     margin: 0 0 12px;
 }
 
+.step_content {
+    padding: 12px;
+}
 
 .buttons_section {
     display: flex;

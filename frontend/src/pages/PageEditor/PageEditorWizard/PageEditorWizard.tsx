@@ -10,6 +10,16 @@ import {
   type PageData,
 } from "./PageEditorWizardSteps";
 
+const BANNER =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="150" height="290">' +
+      '<rect width="150" height="290" fill="#008080"/>' +
+      '<rect x="25" y="40" width="100" height="70" fill="#c0c0c0" stroke="#000"/>' +
+      '<rect x="25" y="40" width="100" height="12" fill="#000080"/>' +
+    '</svg>',
+  );
+
 export function PageEditorWizard() {
   const [open, setOpen] = useState(true);
   const [result, setResult] = useState("");
@@ -45,10 +55,10 @@ export function PageEditorWizard() {
             title="New page"
             icon={<Mshtml32541 variant="16x16_4" />}
             steps={steps}
-            onFinish={() => {
-              setResult(JSON.stringify(data, null, 2));
-              setOpen(false);
-            }}
+            imageSrc={BANNER}
+            showImage={true}
+            showSteps={true}
+            onFinish={() => { setResult(JSON.stringify(data, null, 2)); setOpen(false); }}
             onCancel={() => setOpen(false)}
             confirmCancel={false}
           />

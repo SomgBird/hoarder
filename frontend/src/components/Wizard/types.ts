@@ -16,7 +16,10 @@ export interface WizardStep {
 export interface WizardProps {
     title: string;
     icon?: ReactElement;
-    sidebar?: boolean; // Show the sidebar with the list of steps
+    imageSrc?: string;
+    showImage?: boolean;
+    showSteps?: boolean;
+
     onCancel: () => void;
     onFinish: () => void;
     confirmCancel: boolean; // Show a confirmation dialog when canceling
