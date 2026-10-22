@@ -26,8 +26,9 @@ export function PageEditorWizard() {
 
   // All wizard data in one object, changed through `update`
   const [data, setData] = useState<PageData>({
-    pageType: "franchise",
+    pageType: "item",
     title: "",
+    itemType: null 
   });
   const update = (changes: Partial<PageData>) =>
     setData({ ...data, ...changes });
@@ -35,12 +36,18 @@ export function PageEditorWizard() {
   // Each step is now one short entry: title, component, optional rule
   const stepProps = { data, update };
 
+
+
   const steps: WizardStep[] = [
     { title: "Page type", content: <TypeStep {...stepProps} /> },
     {
       title: "Details",
       content: <DetailsStep {...stepProps} />,
-      validate: () => (data.title.trim() ? null : "Title is required."),
+      validate: () => { 
+        if (!data.title.trim()) return "Title is required."
+        if (!data.itemType) return "Item type is requiered."
+        return null;
+      },
     },
     { title: "Review", content: <ReviewStep {...stepProps} /> },
   ];

@@ -1,4 +1,5 @@
-import { Input, RadioButton } from "@react95/core";
+import { Dropdown, Input, RadioButton } from "@react95/core";
+import { ITEM_TYPE_LABELS, ITEM_TYPE_LABEL_LIST, itemTypeFromLabel, type ItemType } from "@types";
 
 type PageType = "item" | "franchise" | "article" | "custom";
 
@@ -6,6 +7,7 @@ type PageType = "item" | "franchise" | "article" | "custom";
 export interface PageData {
   pageType: PageType;
   title: string;
+  itemType: ItemType | null;
 }
 
 export interface StepProps {
@@ -52,6 +54,7 @@ export function TypeStep({ data, update }: StepProps) {
 }
 
 export function DetailsStep({ data, update }: StepProps) {
+
   return (
     <>
       <div style={{ marginBottom: 4 }}>Title</div>
@@ -61,7 +64,14 @@ export function DetailsStep({ data, update }: StepProps) {
         value={data.title}
         onChange={(e) => update({ title: e.target.value })}
       />
-    </>
+
+      <div style={{ marginBottom: 4 }}>Item type</div>
+      <Dropdown
+        options={['', ...ITEM_TYPE_LABEL_LIST]}
+        value={data.itemType ? ITEM_TYPE_LABELS[data.itemType] : ''}
+        onChange={(e) => update({ itemType: itemTypeFromLabel(e.currentTarget.value) })}
+      />  
+</>
   );
 }
 
@@ -70,6 +80,7 @@ export function ReviewStep({ data }: StepProps) {
     <>
       <div>Type: {data.pageType}</div>
       <div>Title: {data.title}</div>
+      <div>Item type: {data.itemType ? ITEM_TYPE_LABELS[data.itemType] : ""}</div>
     </>
   );
 }

@@ -8,6 +8,9 @@
 // ============================================================
 // Reference data (GET /reference/...)
 // ============================================================
+
+import { ITEM_TYPE, type ItemType } from "./itemTypes";
+
 export interface LanguageRead {
   id: number;
   code: string;
@@ -77,45 +80,45 @@ export interface ConditionTypeRead {
 
 // ---------- read: references are expanded objects ----------
 export interface BookDetailsRead {
-  type_name: "book";
+  type_name: typeof ITEM_TYPE.book;
   page_count: number | null;
 }
 
 export interface GameDetailsRead {
-  type_name: "game";
+  type_name: typeof ITEM_TYPE.game;
   game_platform: GamePlatformRead | null;
 }
 
 export interface FilmDetailsRead {
-  type_name: "film";
+  type_name: typeof ITEM_TYPE.film;
   length: number | null; // minutes
 }
 
 export interface BoardGameDetailsRead {
-  type_name: "board_game";
+  type_name: typeof ITEM_TYPE.board_game;
 }
 
 export interface JournalIssueDetailsRead {
-  type_name: "journal_issue";
+  type_name: typeof ITEM_TYPE.journal_issue;
   journal: JournalRead | null;
   issue: string | null;
   page_count: number | null;
 }
 
 export interface FigurineDetailsRead {
-  type_name: "figurine";
+  type_name: typeof ITEM_TYPE.figurine;
   scale: ScaleRead | null;
 }
 
 export interface MiniatureDetailsRead {
-  type_name: "miniature";
+  type_name: typeof ITEM_TYPE.miniature;
   height: number | null;
   width: number | null;
   scale: ScaleRead | null;
 }
 
 export interface LegoSetDetailsRead {
-  type_name: "lego_set";
+  type_name: typeof ITEM_TYPE.lego_set;
   number_of_pieces: number | null;
 }
 
@@ -129,51 +132,50 @@ export type ItemDetailsRead =
   | MiniatureDetailsRead
   | LegoSetDetailsRead;
 
-export type ItemType = ItemDetailsRead["type_name"];
 
 // ---------- create / update: references are ids ----------
 // Used for POST and for PATCH. On PATCH only the keys you send are changed
 // (null clears), and type_name must match the item's current type (else 409).
 export interface BookDetailsCreate {
-  type_name: "book";
+  type_name: typeof ITEM_TYPE.book;
   page_count?: number | null; // >= 1
 }
 
 export interface GameDetailsCreate {
-  type_name: "game";
+  type_name: typeof ITEM_TYPE.game;
   game_platform_id?: number | null;
 }
 
 export interface FilmDetailsCreate {
-  type_name: "film";
+  type_name: typeof ITEM_TYPE.film;
   length?: number | null; // minutes, >= 1
 }
 
 export interface BoardGameDetailsCreate {
-  type_name: "board_game";
+  type_name: typeof ITEM_TYPE.board_game;
 }
 
 export interface JournalIssueDetailsCreate {
-  type_name: "journal_issue";
+  type_name: typeof ITEM_TYPE.journal_issue;
   journal_id?: number | null;
   issue?: string | null;
   page_count?: number | null; // >= 1
 }
 
 export interface FigurineDetailsCreate {
-  type_name: "figurine";
+  type_name: typeof ITEM_TYPE.figurine;
   scale_id?: number | null;
 }
 
 export interface MiniatureDetailsCreate {
-  type_name: "miniature";
+  type_name: typeof ITEM_TYPE.miniature;
   height?: number | null; // >= 0
   width?: number | null; // >= 0
   scale_id?: number | null;
 }
 
 export interface LegoSetDetailsCreate {
-  type_name: "lego_set";
+  type_name: typeof ITEM_TYPE.lego_set;
   number_of_pieces?: number | null; // >= 1
 }
 
