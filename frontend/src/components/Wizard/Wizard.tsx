@@ -5,6 +5,8 @@ import type { WizardProps } from "./types";
 import { useState } from "react";
 import { WizardBanner } from "./WizardBanner";
 import { WizardStepList } from "./WizardStepList";
+import { ConfirmDialog } from "@components";
+
 
 export function Wizard({
   title,
@@ -19,10 +21,21 @@ export function Wizard({
 }: WizardProps) {
   const [index, setIndex] = useState(0);
   const [error, setError] = useState("");
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
 
   const step = steps[index];
   const isFirstStep = index === 0;
   const isLastStep = index === steps.length - 1;
+
+  const handleCancel = () => {
+    if (confirmCancel) setConfirmingCancel(true);
+    else onCancel();
+  };
+
+  const confirmCancelYes = () => {
+    setConfirmingCancel(false);
+    onCancel();
+  };
 
   const goNext = () => {
     // Stay on this step if validation fails
@@ -42,6 +55,7 @@ export function Wizard({
   };
 
   return (
+    <>
     <Frame bgColor="$material" boxShadow="$out" className={styles.wizard_frame}>
       <TitleBar icon={icon} title={title}></TitleBar>
       <div className={styles.wizard_content_wrapper}>
@@ -65,11 +79,21 @@ export function Wizard({
             &lt; Back
           </Button>
           <Button onClick={goNext}>{isLastStep ? "Finish" : "Next >"}</Button>
-          <Button className={styles.cancel_button} onClick={onCancel}>
+          <Button className={styles.cancel_button} onClick={handleCancel}>
             Cancel
           </Button>
         </div>
       </div>
     </Frame>
+
+    {confirmingCancel && (
+      <ConfirmDialog
+        title="Cancel wizard"
+        message="Are you sure you want to cancel? All entered data will be lost."
+        onConfirm={confirmCancelYes}
+        onDismiss={() => setConfirmingCancel(false)}
+      />
+    )}
+    </>
   );
 }

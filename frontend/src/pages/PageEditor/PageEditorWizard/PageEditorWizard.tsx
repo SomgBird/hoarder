@@ -20,6 +20,12 @@ const BANNER =
     '</svg>',
   );
 
+const INITIAL_DATA: PageData = {
+  pageType: "item",
+  title: "",
+  itemType: null,
+};
+
 export function PageEditorWizard() {
   const [open, setOpen] = useState(true);
   const [result, setResult] = useState("");
@@ -30,8 +36,14 @@ export function PageEditorWizard() {
     title: "",
     itemType: null 
   });
+
+  const closeWizard = () => {
+    setData(INITIAL_DATA);
+    setOpen(false);
+  };
+
   const update = (changes: Partial<PageData>) =>
-    setData({ ...data, ...changes });
+    setData((prev) => ({ ...prev, ...changes }));
 
   // Each step is now one short entry: title, component, optional rule
   const stepProps = { data, update };
@@ -65,9 +77,9 @@ export function PageEditorWizard() {
             imageSrc={BANNER}
             showImage={true}
             showSteps={true}
-            onFinish={() => { setResult(JSON.stringify(data, null, 2)); setOpen(false); }}
-            onCancel={() => setOpen(false)}
-            confirmCancel={false}
+            onFinish={() => { setResult(JSON.stringify(data, null, 2)); closeWizard(); }}
+            onCancel={closeWizard}
+            confirmCancel={true}
           />
         </div>
       )}
