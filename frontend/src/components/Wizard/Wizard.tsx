@@ -6,7 +6,7 @@ import { useState } from "react";
 import { WizardBanner } from "./WizardBanner";
 import { WizardStepList } from "./WizardStepList";
 import { ConfirmDialog } from "@components";
-
+import { Icwdial101 } from "@react95/icons";
 
 export function Wizard({
   title,
@@ -56,44 +56,52 @@ export function Wizard({
 
   return (
     <>
-    <Frame bgColor="$material" boxShadow="$out" className={styles.wizard_frame}>
-      <TitleBar icon={icon} title={title}></TitleBar>
-      <div className={styles.wizard_content_wrapper}>
-        <div className={styles.wizard_inner_content_wrapper}>
-          {showImage && <WizardBanner bannerImage={imageSrc} />}
-          {showSteps && <WizardStepList steps={steps} currentIndex={index} />}
+      <Frame
+        bgColor="$material"
+        boxShadow="$out"
+        className={styles.wizard_frame}
+      >
+        <TitleBar icon={icon} title={title}></TitleBar>
+        <div className={styles.wizard_content_wrapper}>
+          <div className={styles.wizard_inner_content_wrapper}>
+            {showImage && <WizardBanner bannerImage={imageSrc} />}
+            {showSteps && <WizardStepList steps={steps} currentIndex={index} />}
 
-          {/* Content column: heading, step content */}
-          <div className={styles.content_column}>
-            <h3 className={styles.step_title}>{step.title}</h3>
-            <div className={styles.step_content} onChange={() => setError("")}>
-              {step.content}
-              {error && <div className={styles.error_text}>{error}</div>}
+            {/* Content column: heading, step content */}
+            <div className={styles.content_column}>
+              <h3 className={styles.step_title}>{step.title}</h3>
+              <div
+                className={styles.step_content}
+                onChange={() => setError("")}
+              >
+                {step.content}
+                {error && <div className={styles.error_text}>{error}</div>}
+              </div>
             </div>
           </div>
-        </div>
 
-        <Separator />
-        <div className={styles.buttons_section}>
-          <Button onClick={goBack} disabled={isFirstStep}>
-            &lt; Back
-          </Button>
-          <Button onClick={goNext}>{isLastStep ? "Finish" : "Next >"}</Button>
-          <Button className={styles.cancel_button} onClick={handleCancel}>
-            Cancel
-          </Button>
+          <Separator />
+          <div className={styles.buttons_section}>
+            <Button onClick={goBack} disabled={isFirstStep}>
+              &lt; Back
+            </Button>
+            <Button onClick={goNext}>{isLastStep ? "Finish" : "Next >"}</Button>
+            <Button className={styles.cancel_button} onClick={handleCancel}>
+              Cancel
+            </Button>
+          </div>
         </div>
-      </div>
-    </Frame>
+      </Frame>
 
-    {confirmingCancel && (
-      <ConfirmDialog
-        title="Cancel wizard"
-        message="Are you sure you want to cancel? All entered data will be lost."
-        onConfirm={confirmCancelYes}
-        onDismiss={() => setConfirmingCancel(false)}
-      />
-    )}
+      {confirmingCancel && (
+        <ConfirmDialog
+          title="Cancel wizard"
+          message="Are you sure you want to cancel? All entered data will be lost."
+          onConfirm={confirmCancelYes}
+          onDismiss={() => setConfirmingCancel(false)}
+          icon={<Icwdial101 variant="32x32_4" />}
+        />
+      )}
     </>
   );
 }

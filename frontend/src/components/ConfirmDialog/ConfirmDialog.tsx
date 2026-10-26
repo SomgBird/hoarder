@@ -5,6 +5,7 @@ import styles from "./ConfirmDialog.module.css";
 interface ConfirmDialogProps {
   title: string;
   message: ReactNode;
+  titlebar_icon?: ReactElement;
   icon?: ReactElement;
   confirmLabel?: string;
   dismissLabel?: string;
@@ -15,6 +16,7 @@ interface ConfirmDialogProps {
 export function ConfirmDialog({
   title,
   message,
+  titlebar_icon,
   icon,
   confirmLabel = "Yes",
   dismissLabel = "No",
@@ -40,7 +42,7 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-label={title}
       >
-        <TitleBar icon={icon} title={title} />
+        <TitleBar icon={titlebar_icon} title={title} />
         <div className={styles.body}>
           {icon && <div className={styles.icon}>{icon}</div>}
           <div>{message}</div>
