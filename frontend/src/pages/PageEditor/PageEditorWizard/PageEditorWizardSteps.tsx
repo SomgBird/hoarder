@@ -84,3 +84,12 @@ export function ReviewStep({ data }: StepProps) {
     </>
   );
 }
+
+export function NotImplementedStep({ data }: StepProps) {
+  return (
+    <p>
+      Pages of type "{data.pageType}" are not implemented yet. Go back and
+      choose "Item page" to continue.
+    </p>
+  );
+}

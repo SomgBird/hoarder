@@ -85,7 +85,7 @@ export function Wizard({
             <Button onClick={goBack} disabled={isFirstStep}>
               &lt; Back
             </Button>
-            <Button onClick={goNext}>{isLastStep ? "Finish" : "Next >"}</Button>
+            <Button onClick={goNext} disabled={step.nextDisabled}>{isLastStep ? "Finish" : "Next >"}</Button>
             <Button className={styles.cancel_button} onClick={handleCancel}>
               Cancel
             </Button>

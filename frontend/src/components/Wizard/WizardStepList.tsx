@@ -11,7 +11,7 @@ export function WizardStepList({ steps, currentIndex }: WizardStepListProps) {
     <div aria-label="Steps" className={styles.list_wrapper}>
       {steps.map((s, i) => (
         <div
-          key={s.title}
+          key={i}
           aria-current={i === currentIndex ? "step" : undefined}
           className={styles.step_list}
           style={{ fontWeight: i === currentIndex ? "bold" : "normal" }}

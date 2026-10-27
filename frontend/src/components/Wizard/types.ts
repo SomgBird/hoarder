@@ -9,6 +9,7 @@ export interface WizardStep {
     title: string;
     content: ReactNode;
     validate?: () => string | null; // Return an empty object when valid.
+    nextDisabled?: boolean;         // For dead-end steps: the button stays disabled
 }
 
 

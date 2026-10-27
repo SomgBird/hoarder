@@ -5,6 +5,7 @@ import { Mshtml32541 } from "@react95/icons";
 import { useState } from "react";
 import {
   DetailsStep,
+  NotImplementedStep,
   ReviewStep,
   TypeStep,
   type PageData,
@@ -52,16 +53,26 @@ export function PageEditorWizard() {
 
   const steps: WizardStep[] = [
     { title: "Page type", content: <TypeStep {...stepProps} /> },
-    {
-      title: "Details",
-      content: <DetailsStep {...stepProps} />,
-      validate: () => { 
-        if (!data.title.trim()) return "Title is required."
-        if (!data.itemType) return "Item type is requiered."
-        return null;
-      },
-    },
-    { title: "Review", content: <ReviewStep {...stepProps} /> },
+      ...(data.pageType === "item"
+        ? [
+            {
+              title: "Details",
+              content: <DetailsStep {...stepProps} />,
+              validate: () => {
+                if (!data.title.trim()) return "Title is required.";
+                if (!data.itemType) return "Item type is required.";
+                return null;
+              },
+            },
+            { title: "Review", content: <ReviewStep {...stepProps} /> },
+          ]
+        : [
+            {
+              title: "Not available",
+              content: <NotImplementedStep {...stepProps} />,
+              nextDisabled: true,
+            },
+          ]),
   ];
 
   return (
