@@ -1,0 +1,62 @@
+.frame {
+    width: 640px;
+    padding: 3px;
+    display: flex;
+    flex-direction: column;
+}
+
+.body {
+    max-height: 70vh;
+    overflow-y: auto;
+    margin: 0;
+    padding: 12px;
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.section {
+    margin: 0;
+    padding: 8px 10px 10px;
+    border: 2px groove;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.textarea {
+    font: inherit;
+    resize: vertical;
+    padding: 4px;
+    background: #fff;
+    border: 2px inset;
+}
+
+.row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 8px;
+    border-bottom: 1px dotted gray;
+}
+
+.footer {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+}
+
+.status {
+    flex: 1;
+}
+
+.error { color: #a00000; }
+.success { color: #006000; }

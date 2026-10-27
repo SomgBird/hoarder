@@ -1,4 +1,4 @@
-import type { WizardStep } from "./types";
+import type { WizardStep } from "./wizardTypes";
 import styles from "./WizardStepList.module.css";
 
 interface WizardStepListProps {

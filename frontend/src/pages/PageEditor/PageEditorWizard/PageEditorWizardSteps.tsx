@@ -1,14 +1,6 @@
 import { Dropdown, Input, RadioButton } from "@react95/core";
-import { ITEM_TYPE_LABELS, ITEM_TYPE_LABEL_LIST, itemTypeFromLabel, type ItemType } from "@types";
-
-type PageType = "item" | "franchise" | "article" | "custom";
-
-/** Everything the "new page" wizard collects. */
-export interface PageData {
-  pageType: PageType;
-  title: string;
-  itemType: ItemType | null;
-}
+import { ITEM_TYPE_LABELS, ITEM_TYPE_LABEL_LIST, itemTypeFromLabel } from "@types";
+import type { PageData, PageType } from "../pageTypes";
 
 export interface StepProps {
   data: PageData;
@@ -18,21 +10,11 @@ export interface StepProps {
 const PAGE_TYPES: { value: PageType; label: string }[] = [
   {
     value: "item",
-    label:
-      "Item page — a page about speciffic item stored in collection or tracked by Hoarder.",
+    label: "Item page — a page about a specific item stored in collection or tracked by Hoarder.",
   },
-  {
-    value: "franchise",
-    label: "Franchise page — a dedicated page about certain franchise.",
-  },
-  {
-    value: "article",
-    label: "Article — an article page with arbitrary text and design.",
-  },
-  {
-    value: "custom",
-    label: "Custom page — a page with custom design and content.",
-  },
+  { value: "franchise", label: "Franchise page — a dedicated page about certain franchise." },
+  { value: "article", label: "Article — an article page with arbitrary text and design." },
+  { value: "custom", label: "Custom page — a page with custom design and content." },
 ];
 
 export function TypeStep({ data, update }: StepProps) {
@@ -54,7 +36,6 @@ export function TypeStep({ data, update }: StepProps) {
 }
 
 export function DetailsStep({ data, update }: StepProps) {
-
   return (
     <>
       <div style={{ marginBottom: 4 }}>Title</div>
@@ -67,11 +48,11 @@ export function DetailsStep({ data, update }: StepProps) {
 
       <div style={{ marginBottom: 4 }}>Item type</div>
       <Dropdown
-        options={['', ...ITEM_TYPE_LABEL_LIST]}
-        value={data.itemType ? ITEM_TYPE_LABELS[data.itemType] : ''}
+        options={["", ...ITEM_TYPE_LABEL_LIST]}
+        value={data.itemType ? ITEM_TYPE_LABELS[data.itemType] : ""}
         onChange={(e) => update({ itemType: itemTypeFromLabel(e.currentTarget.value) })}
-      />  
-</>
+      />
+    </>
   );
 }
 
@@ -88,8 +69,8 @@ export function ReviewStep({ data }: StepProps) {
 export function NotImplementedStep({ data }: StepProps) {
   return (
     <p>
-      Pages of type "{data.pageType}" are not implemented yet. Go back and
-      choose "Item page" to continue.
+      Pages of type "{data.pageType}" are not implemented yet. Go back and choose
+      "Item page" to continue.
     </p>
   );
 }

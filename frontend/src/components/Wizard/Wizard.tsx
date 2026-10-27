@@ -1,7 +1,7 @@
 import Separator from "@components/Separator";
 import { Button, Frame, TitleBar } from "@react95/core";
 import styles from "./Wizard.module.css";
-import type { WizardProps } from "./types";
+import type { WizardProps } from "./wizardTypes";
 import { useState } from "react";
 import { WizardBanner } from "./WizardBanner";
 import { WizardStepList } from "./WizardStepList";
