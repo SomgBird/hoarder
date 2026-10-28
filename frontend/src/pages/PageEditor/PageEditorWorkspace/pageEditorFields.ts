@@ -12,18 +12,24 @@ export interface FieldSpec {
 }
 
 // ---------- item-level fields ----------
-export const ITEM_FIELDS: FieldSpec[] = [
+// ---------- item-level fields, grouped by where they sit on the page ----------
+export const INFO_FIELDS: FieldSpec[] = [
   { key: "release_date", label: "Release date", kind: "date" },
-  { key: "cover_image_path", label: "Cover image path", kind: "text" },
-  { key: "icon_image_path", label: "Icon image path", kind: "text" },
   { key: "is_owned", label: "Owned", kind: "bool" },
-  { key: "description", label: "Description", kind: "textarea" },
   { key: "format_id", label: "Format ID", kind: "number" },
-  { key: "selected_language_code", label: "Selected language code", kind: "text" },
-  { key: "genre_ids", label: "Genre IDs (comma separated)", kind: "ids" },
-  { key: "franchise_ids", label: "Franchise IDs (comma separated)", kind: "ids" },
-  { key: "tags", label: "Tags (comma separated)", kind: "tags" },
+  { key: "selected_language_code", label: "Language code", kind: "text" },
+  { key: "genre_ids", label: "Genre IDs", kind: "ids" },
+  { key: "franchise_ids", label: "Franchise IDs", kind: "ids" },
 ];
+
+export const COVER_FIELDS: FieldSpec[] = [
+  { key: "cover_image_path", label: "Cover path", kind: "text" },
+  { key: "icon_image_path", label: "Icon path", kind: "text" },
+];
+
+export const DESCRIPTION_FIELD: FieldSpec = {
+  key: "description", label: "Description", kind: "textarea",
+};
 
 // ---------- repeatable lists ----------
 export const TITLE_FIELDS: FieldSpec[] = [
@@ -79,50 +85,12 @@ export const DETAILS_FIELDS: Record<ItemType, FieldSpec[]> = {
 };
 
 // ============================================================
-// Form values -> payload
+// Form values
 // ============================================================
-const splitList = (s: string) =>
-  s.split(",").map((x) => x.trim()).filter(Boolean);
-
-function toNumber(spec: FieldSpec, raw: string): number {
-  const n = Number(raw);
-  if (Number.isNaN(n)) throw new Error(`${spec.label} must be a number.`);
-  return n;
-}
-
-/** Converts string form values to the typed payload. Empty values are omitted. */
-function toPayload(specs: FieldSpec[], values: Values): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const spec of specs) {
-    const v = values[spec.key];
-
-    if (spec.kind === "bool") {
-      out[spec.key] = v === true;
-      continue;
-    }
-
-    const text = typeof v === "string" ? v.trim() : "";
-    if (!text) {
-      if (spec.required) throw new Error(`${spec.label} is required.`);
-      continue;
-    }
-
-    switch (spec.kind) {
-      case "number": out[spec.key] = toNumber(spec, text); break;
-      case "ids":    out[spec.key] = splitList(text).map((s) => toNumber(spec, s)); break;
-      case "tags":   out[spec.key] = splitList(text); break;
-      default:       out[spec.key] = text;
-    }
-  }
-  return out;
-}
 
 const isBlank = (row: Values) =>
   Object.values(row).every((v) => v === "" || v === false || v === undefined);
 
-/** Rows the user added but left empty are dropped. */
-const rowsPayload = (specs: FieldSpec[], rows: Values[]) =>
-  rows.filter((r) => !isBlank(r)).map((r) => toPayload(specs, r));
 
 export interface FormState {
   itemType: ItemType;
@@ -135,21 +103,110 @@ export interface FormState {
   companyCredits: Values[];
 }
 
-/** Throws an Error with a user-readable message when the form is invalid. */
+// ---------- small parsers ----------
+const text = (v: string | boolean | undefined): string | undefined => {
+  const s = typeof v === "string" ? v.trim() : "";
+  return s || undefined;
+};
+
+const num = (v: string | boolean | undefined, label: string): number | undefined => {
+  const s = text(v);
+  if (s === undefined) return undefined;
+  const n = Number(s);
+  if (Number.isNaN(n)) throw new Error(`${label} must be a number.`);
+  return n;
+};
+
+const list = (v: string | boolean | undefined) =>
+  (text(v)?.split(",").map((x) => x.trim()).filter(Boolean)) ?? [];
+
+const required = (v: string | boolean | undefined, label: string): string => {
+  const s = text(v);
+  if (!s) throw new Error(`${label} is required.`);
+  return s;
+};
+
+const nonBlank = (rows: Values[]) => rows.filter((r) => !isBlank(r));
+
+// ---------- subtype: the compiler checks each branch against its own type ----------
+function buildDetails(type: ItemType, v: Values): ItemDetailsCreate {
+  switch (type) {
+    case ITEM_TYPE.book:
+      return { type_name: type, page_count: num(v.page_count, "Page count") };
+    case ITEM_TYPE.game:
+      return { type_name: type, game_platform_id: num(v.game_platform_id, "Game platform ID") };
+    case ITEM_TYPE.film:
+      return { type_name: type, length: num(v.length, "Length") };
+    case ITEM_TYPE.board_game:
+      return { type_name: type };
+    case ITEM_TYPE.journal_issue:
+      return {
+        type_name: type,
+        journal_id: num(v.journal_id, "Journal ID"),
+        issue: text(v.issue),
+        page_count: num(v.page_count, "Page count"),
+      };
+    case ITEM_TYPE.figurine:
+      return { type_name: type, scale_id: num(v.scale_id, "Scale ID") };
+    case ITEM_TYPE.miniature:
+      return {
+        type_name: type,
+        height: num(v.height, "Height"),
+        width: num(v.width, "Width"),
+        scale_id: num(v.scale_id, "Scale ID"),
+      };
+    case ITEM_TYPE.lego_set:
+      return { type_name: type, number_of_pieces: num(v.number_of_pieces, "Number of pieces") };
+    default: {
+      const unreachable: never = type; // compile error if a new type is added and not handled here
+      throw new Error(`Unhandled item type: ${unreachable}`);
+    }
+  }
+}
+
 export function buildItemCreate(f: FormState): ItemCreate {
-  const titles = rowsPayload(TITLE_FIELDS, f.titles);
+  const titles = nonBlank(f.titles).map((r) => ({
+    title_text: required(r.title_text, "Title"),
+    short_text: text(r.short_text),
+    language_code: required(r.language_code, "Title language code"),
+  }));
   if (titles.length === 0) throw new Error("At least one title is required.");
 
+  const i = f.item;
   return {
-    ...toPayload(ITEM_FIELDS, f.item),
+    release_date: text(i.release_date),
+    cover_image_path: text(i.cover_image_path),
+    icon_image_path: text(i.icon_image_path),
+    is_owned: i.is_owned === true,
+    description: text(i.description),
+    format_id: num(i.format_id, "Format ID"),
+    selected_language_code: text(i.selected_language_code),
+    genre_ids: list(i.genre_ids).map((s) => num(s, "Genre ID")!),
+    franchise_ids: list(i.franchise_ids).map((s) => num(s, "Franchise ID")!),
+    tags: list(i.tags),
     titles,
-    languages: rowsPayload(LANGUAGE_FIELDS, f.languages),
-    barcodes: rowsPayload(BARCODE_FIELDS, f.barcodes),
-    author_credits: rowsPayload(AUTHOR_CREDIT_FIELDS, f.authorCredits),
-    company_credits: rowsPayload(COMPANY_CREDIT_FIELDS, f.companyCredits),
-    details: {
-      type_name: f.itemType,
-      ...toPayload(DETAILS_FIELDS[f.itemType], f.details),
-    } as unknown as ItemDetailsCreate,
-  }  as unknown as ItemCreate;
+    languages: nonBlank(f.languages).map((r) => ({
+      language_code: required(r.language_code, "Language code"),
+      ui: r.ui === true,
+      text: r.text === true,
+      voice: r.voice === true,
+    })),
+    barcodes: nonBlank(f.barcodes).map((r) => ({
+      code: required(r.code, "Barcode"),
+      barcode_type_id: num(r.barcode_type_id, "Barcode type ID"),
+    })),
+    author_credits: nonBlank(f.authorCredits).map((r) => ({
+      author_name: required(r.author_name, "Author name"),
+      role_name: required(r.role_name, "Author role"),
+      involvement_date: text(r.involvement_date),
+      comments: text(r.comments),
+    })),
+    company_credits: nonBlank(f.companyCredits).map((r) => ({
+      company_name: required(r.company_name, "Company name"),
+      role_name: required(r.role_name, "Company role"),
+      involvement_date: text(r.involvement_date),
+      comments: text(r.comments),
+    })),
+    details: buildDetails(f.itemType, f.details),
+  };
 }
