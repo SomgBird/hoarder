@@ -1,0 +1,70 @@
+import assert from "node:assert/strict";
+import { afterEach, test } from "node:test";
+import { saveNewItem } from "../src/pages/PageEditor/PageEditorWorkspace/saveNewItem.ts";
+
+const originalFetch = globalThis.fetch;
+afterEach(() => { globalThis.fetch = originalFetch; });
+const payload = { details: { type_name: "book" }, titles: [{ title_text: "Example", language_code: "en" }] };
+const cover = new File(["image"], "cover.png", { type: "image/png" });
+
+test("editor creates the item before attaching its selected cover", async () => {
+  const created = { id: 42, cover_image_path: null };
+  const saved = { ...created, cover_image_path: "/media/covers/42-cover.png" };
+  let knownItem = null;
+  let uploading = false;
+  globalThis.fetch = async (url, options) => {
+    if (new URL(url).pathname === "/items/") {
+      assert.deepEqual(JSON.parse(options.body), payload);
+      return Response.json(created, { status: 201 });
+    }
+    assert.equal(new URL(url).pathname, "/items/42/cover");
+    assert.deepEqual(knownItem, created);
+    assert.equal(uploading, true);
+    assert.equal(options.body.get("file").name, cover.name);
+    return Response.json(saved);
+  };
+  const result = await saveNewItem(payload, cover, null, (item) => { knownItem = item; }, () => { uploading = true; });
+  assert.deepEqual(result, saved);
+});
+
+test("retrying a failed cover upload reuses the created item", async () => {
+  let creates = 0;
+  let uploads = 0;
+  let knownItem = null;
+  globalThis.fetch = async (url) => {
+    if (new URL(url).pathname === "/items/") {
+      creates += 1;
+      return Response.json({ id: 42 }, { status: 201 });
+    }
+    uploads += 1;
+    assert.equal(new URL(url).pathname, "/items/42/cover");
+    return uploads === 1
+      ? Response.json({ detail: "Upload failed", code: "invalid_image" }, { status: 400 })
+      : Response.json({ id: 42, cover_image_path: "/media/covers/retry.png" });
+  };
+  const remember = (item) => { knownItem = item; };
+  await assert.rejects(saveNewItem(payload, cover, knownItem, remember, () => {}), /Upload failed/);
+  assert.equal(knownItem.id, 42);
+  const result = await saveNewItem(payload, cover, knownItem, remember, () => {});
+  assert.equal(result.cover_image_path, "/media/covers/retry.png");
+  assert.equal(creates, 1);
+  assert.equal(uploads, 2);
+});
+
+test("clearing a failed cover lets the editor finish without another request", async () => {
+  globalThis.fetch = async () => { throw new Error("No additional requests expected"); };
+  const created = { id: 42, cover_image_path: null };
+  const unexpected = () => assert.fail("The existing item must be reused without an upload");
+  assert.equal(await saveNewItem(payload, null, created, unexpected, unexpected), created);
+});
+
+test("creating without a cover sends only the item request", async () => {
+  let requests = 0;
+  globalThis.fetch = async (url) => {
+    requests += 1;
+    assert.equal(new URL(url).pathname, "/items/");
+    return Response.json({ id: 42 }, { status: 201 });
+  };
+  await saveNewItem(payload, null, null, () => {}, () => assert.fail("No cover selected"));
+  assert.equal(requests, 1);
+});

@@ -55,6 +55,9 @@ def seed_examples(session: Session) -> None:
     en = lambda *flags: ItemLanguageCreate(language_code="en", ui=True, text=True, voice=("voice" in flags) or None)
     dune = _named(session, Franchise, "Dune")
     zelda = _named(session, Franchise, "The Legend of Zelda")
+    # Explicit identities let several credits refer to the same person/company.
+    frank_herbert = crud.resolve_author(session, name="Frank Herbert").id
+    nintendo = crud.resolve_company(session, name="Nintendo").id
 
     items: list[tuple[ItemCreate, dict | None]] = [
         # ---- books
@@ -72,12 +75,12 @@ def seed_examples(session: Session) -> None:
             franchise_ids=[dune],
             tags=["favorites", "reread"],
             barcodes=[BarcodeCreate(code="978-0-441-01359-3", barcode_type_id=_id(session, BarcodeType, "ISBN-13"))],
-            author_credits=[AuthorCreditCreate(author_name="Frank Herbert", role_name="Writer")],
+            author_credits=[AuthorCreditCreate(author_id=frank_herbert, role_name="Writer")],
             company_credits=[CompanyCreditCreate(company_name="Ace Books", role_name="Publisher")],
             details=BookDetailsCreate(type_name="book", page_count=544),
         ), dict(condition="Good", notes="Bought second-hand", condition_notes="Spine slightly creased",
                 photos=("samples/dune_front.jpg", "samples/dune_spine.jpg"))),
-        # same author again: exercises get-or-create reuse instead of a duplicate row
+        # Same author again, selected explicitly by id.
         (ItemCreate(
             release_date=date(2008, 5, 1), is_owned=False,
             description="Sample: wishlist item (not owned) sharing author and franchise with Dune.",
@@ -87,7 +90,7 @@ def seed_examples(session: Session) -> None:
             selected_language_code="en",
             genre_ids=_ids(session, Genre, ["Science Fiction"]),
             franchise_ids=[dune], tags=["wishlist"],
-            author_credits=[AuthorCreditCreate(author_name="frank herbert", role_name="writer")],
+            author_credits=[AuthorCreditCreate(author_id=frank_herbert, role_name="writer")],
             details=BookDetailsCreate(type_name="book", page_count=256),
         ), None),
         # ---- video games
@@ -105,8 +108,8 @@ def seed_examples(session: Session) -> None:
             author_credits=[AuthorCreditCreate(author_name="Hidemaro Fujibayashi", role_name="Director"),
                             AuthorCreditCreate(author_name="Eiji Aonuma", role_name="Producer")],
             # one company in two roles is allowed: role_id is part of the link's PK
-            company_credits=[CompanyCreditCreate(company_name="Nintendo", role_name="Developer"),
-                             CompanyCreditCreate(company_name="Nintendo", role_name="Publisher")],
+            company_credits=[CompanyCreditCreate(company_id=nintendo, role_name="Developer"),
+                             CompanyCreditCreate(company_id=nintendo, role_name="Publisher")],
             details=GameDetailsCreate(type_name="game", game_platform_id=_id(session, GamePlatform, "Nintendo Switch")),
         ), dict(condition="Like New", notes="Launch copy", photos=("samples/botw_box.jpg",))),
         (ItemCreate(

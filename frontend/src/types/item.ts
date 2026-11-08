@@ -260,7 +260,7 @@ export interface AuthorCreditRead {
 // Backend requires exactly one of author_id / author_name; the union enforces it at compile time.
 type AuthorRef =
   | { author_id: number; author_name?: never } // existing author, picked from autocomplete
-  | { author_name: string; author_id?: never }; // new author, matched or created by name
+  | { author_name: string; author_id?: never }; // explicitly create a new author, even if the name exists
 
 export type AuthorCreditCreate = AuthorRef & {
   role_name: string; // matched or created by name
@@ -349,6 +349,7 @@ export interface ItemBase {
 
 export interface ItemRead extends ItemBase {
   id: number;
+  display_title: string;
   item_type: ItemTypeRead;
   format: FormatRead | null;
   selected_language: LanguageRead | null;

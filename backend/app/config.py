@@ -41,6 +41,7 @@ ALLOWED_IMAGE_TYPES = {
     "image/webp": ".webp",
 }
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024   # 5 MB
+MAX_COVER_PIXELS = 20_000_000
 
 # URL prefix under which MEDIA_DIR is served by StaticFiles in main.py
 MEDIA_URL_PREFIX = "/media"

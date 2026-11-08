@@ -40,6 +40,13 @@
     background: #dcdfb4;
 }
 
+.field_group {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
 .header {
     padding: 16px 30px 14px;
     border-bottom: 1px solid #a8a890;
@@ -170,6 +177,12 @@
     margin-bottom: 8px;
     padding-bottom: 8px;
     border-bottom: 1px dotted #a39574;
+}
+
+.credit_results {
+    max-height: 160px;
+    overflow-y: auto;
+    padding-left: 20px;
 }
 
 .button {

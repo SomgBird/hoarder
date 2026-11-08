@@ -10,7 +10,7 @@ interface Props {
 
 function ItemView({ item }: Props) {
   const cover = coverUrl(item.cover_image_path);
-  const title = item.titles[0]?.title_text || "Untitled";
+  const title = item.display_title;
 
   // Languages with ui/text/voice flags are only meaningful for some items
   // (games mostly). If any flag is set, show a table; otherwise a plain list.

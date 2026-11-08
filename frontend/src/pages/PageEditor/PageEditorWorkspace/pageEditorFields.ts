@@ -50,15 +50,7 @@ export const BARCODE_FIELDS: FieldSpec[] = [
   { key: "barcode_type_id", label: "Barcode type ID", kind: "number" },
 ];
 
-export const AUTHOR_CREDIT_FIELDS: FieldSpec[] = [
-  { key: "author_name", label: "Author name", kind: "text", required: true },
-  { key: "role_name", label: "Role", kind: "text", required: true },
-  { key: "involvement_date", label: "Involvement date", kind: "date" },
-  { key: "comments", label: "Comments", kind: "text" },
-];
-
-export const COMPANY_CREDIT_FIELDS: FieldSpec[] = [
-  { key: "company_name", label: "Company name", kind: "text", required: true },
+export const CREDIT_FIELDS: FieldSpec[] = [
   { key: "role_name", label: "Role", kind: "text", required: true },
   { key: "involvement_date", label: "Involvement date", kind: "date" },
   { key: "comments", label: "Comments", kind: "text" },
@@ -128,6 +120,12 @@ const required = (v: string | boolean | undefined, label: string): string => {
 
 const nonBlank = (rows: Values[]) => rows.filter((r) => !isBlank(r));
 
+const existingId = (row: Values, key: string, label: string): number => {
+  const id = num(row[key], label);
+  if (!Number.isSafeInteger(id) || id! < 1) throw new Error(`Select an existing ${label.toLowerCase()} or choose Create new.`);
+  return id!;
+};
+
 // ---------- subtype: the compiler checks each branch against its own type ----------
 function buildDetails(type: ItemType, v: Values): ItemDetailsCreate {
   switch (type) {
@@ -196,13 +194,17 @@ export function buildItemCreate(f: FormState): ItemCreate {
       barcode_type_id: num(r.barcode_type_id, "Barcode type ID"),
     })),
     author_credits: nonBlank(f.authorCredits).map((r) => ({
-      author_name: required(r.author_name, "Author name"),
+      ...(r.reference_mode === "new"
+        ? { author_name: required(r.author_name, "Author name") }
+        : { author_id: existingId(r, "author_id", "Author") }),
       role_name: required(r.role_name, "Author role"),
       involvement_date: text(r.involvement_date),
       comments: text(r.comments),
     })),
     company_credits: nonBlank(f.companyCredits).map((r) => ({
-      company_name: required(r.company_name, "Company name"),
+      ...(r.reference_mode === "new"
+        ? { company_name: required(r.company_name, "Company name") }
+        : { company_id: existingId(r, "company_id", "Company") }),
       role_name: required(r.role_name, "Company role"),
       involvement_date: text(r.involvement_date),
       comments: text(r.comments),

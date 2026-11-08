@@ -1,15 +1,15 @@
 import { Button, Frame, TitleBar } from "@react95/core";
 import { Mshtml32541 } from "@react95/icons";
-import { useState } from "react";
-import { ITEM_TYPE_LABELS, ITEM_TYPE_OPTIONS, type ItemType } from "@types";
-import { itemService } from "@services/itemService";
+import { useRef, useState, type ChangeEvent } from "react";
+import { ITEM_TYPE_LABELS, ITEM_TYPE_OPTIONS, type ItemRead, type ItemType } from "@types";
+import { ApiError, type ValidationIssue } from "@services/client";
 import ContentFrame from "@components/ContentFrame/ContentFrame";
 import type { PageData } from "../pageTypes";
 import { Box, FieldInput, InfoTable, RowsEditor } from "./FormControls";
+import { CreditsEditor } from "./CreditsEditor";
+import { saveNewItem } from "./saveNewItem";
 import {
-  AUTHOR_CREDIT_FIELDS,
   BARCODE_FIELDS,
-  COMPANY_CREDIT_FIELDS,
   COVER_FIELDS,
   DESCRIPTION_FIELD,
   DETAILS_FIELDS,
@@ -41,8 +41,13 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
   const [authorCredits, setAuthorCredits] = useState<Values[]>([]);
   const [companyCredits, setCompanyCredits] = useState<Values[]>([]);
 
-  const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [status, setStatus] = useState<"idle" | "creating" | "uploading" | "saved">("idle");
+  const [createdItem, setCreatedItem] = useState<ItemRead | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverError, setCoverError] = useState("");
+  const coverInput = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState<ValidationIssue[]>([]);
 
   // The header edits the first title; "Alternative titles" edits the rest.
   const [mainTitle = {}, ...otherTitles] = titles;
@@ -57,7 +62,27 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
     setDetails({}); // subtype fields differ per type, so old values don't apply
   };
 
+  const selectCover = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setCoverError("");
+    if (file && (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024)) {
+      setCoverFile(null);
+      event.target.value = "";
+      setCoverError("Choose a JPEG, PNG or WebP image no larger than 5 MB.");
+      return;
+    }
+    setCoverFile(file);
+  };
+
+  const clearCover = () => {
+    setCoverFile(null);
+    setCoverError("");
+    if (coverInput.current) coverInput.current.value = "";
+  };
+
   const save = async () => {
+    if (status !== "idle" || coverError) return;
+    setValidationErrors([]);
     if (!itemType) {
       setError("Item type is required.");
       return;
@@ -74,18 +99,30 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
       return;
     }
 
-    setStatus("saving");
+    setStatus(createdItem ? "uploading" : "creating");
+    let itemCreated = createdItem !== null;
     try {
-      await itemService.create(payload);
+      const saved = await saveNewItem(payload, coverFile, createdItem, (item) => {
+        itemCreated = true;
+        setCreatedItem(item);
+      }, () => setStatus("uploading"));
+      setCreatedItem(saved);
       setStatus("saved");
     } catch (e) {
       setStatus("idle");
-      setError(e instanceof Error ? e.message : "Failed to create item.");
+      const message = e instanceof Error ? e.message : "Failed to save item.";
+      setError(itemCreated ? `Item created, but its cover was not uploaded. Choose another image or retry. ${message}` : message);
+      if (e instanceof ApiError) setValidationErrors(e.errors);
     }
   };
 
   const locked = status !== "idle";
+  const busy = status === "creating" || status === "uploading";
   const detailSpecs = itemType ? DETAILS_FIELDS[itemType] : [];
+  const saveLabel = status === "creating" ? "Creating..."
+    : status === "uploading" ? "Uploading cover..."
+    : createdItem && status !== "saved" ? (coverFile ? "Retry cover upload" : "Finish")
+    : "Create";
 
   return (
     <Frame bgColor="$material" boxShadow="$out" className={styles.window}>
@@ -93,10 +130,10 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
 
       {/* Win95 chrome: toolbar */}
       <div className={styles.toolbar}>
-        <Button onClick={save} disabled={locked}>
-          {status === "saving" ? "Saving..." : "Create"}
+        <Button onClick={save} disabled={locked || !!coverError}>
+          {saveLabel}
         </Button>
-        <Button onClick={onClose}>{status === "saved" ? "Close" : "Cancel"}</Button>
+        <Button onClick={onClose} disabled={busy}>{createdItem ? "Close" : "Cancel"}</Button>
       </div>
 
       {/* Sunken viewport; ContentFrame resets styles for the web 1.0 page inside */}
@@ -105,37 +142,39 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
           {/* fieldset[disabled] locks every native control while saving */}
           <fieldset disabled={locked} className={styles.page}>
             <header className={styles.header}>
-              <div className={styles.title_row}>
-                <input
-                  className={styles.title_input}
-                  aria-label="Title"
-                  placeholder="Title"
-                  value={str(mainTitle.title_text)}
-                  onChange={(e) => setMainTitle("title_text", e.target.value)}
-                />
-                <input
-                  className={styles.lang_input}
-                  aria-label="Title language code"
-                  value={str(mainTitle.language_code)}
-                  onChange={(e) => setMainTitle("language_code", e.target.value)}
-                />
-              </div>
-              <div className={styles.tags_row}>
-                {tags.map((t) => (
-                  <span key={t} className={styles.tag}>{t}</span>
-                ))}
-                <input
-                  className={styles.tag_input}
-                  aria-label="Tags"
-                  placeholder="tags, comma separated"
-                  value={str(item.tags)}
-                  onChange={(e) => setItem({ ...item, tags: e.target.value })}
-                />
-              </div>
+              <fieldset disabled={createdItem !== null} className={styles.field_group}>
+                <div className={styles.title_row}>
+                  <input
+                    className={styles.title_input}
+                    aria-label="Title"
+                    placeholder="Title"
+                    value={str(mainTitle.title_text)}
+                    onChange={(e) => setMainTitle("title_text", e.target.value)}
+                  />
+                  <input
+                    className={styles.lang_input}
+                    aria-label="Title language code"
+                    value={str(mainTitle.language_code)}
+                    onChange={(e) => setMainTitle("language_code", e.target.value)}
+                  />
+                </div>
+                <div className={styles.tags_row}>
+                  {tags.map((t) => (
+                    <span key={t} className={styles.tag}>{t}</span>
+                  ))}
+                  <input
+                    className={styles.tag_input}
+                    aria-label="Tags"
+                    placeholder="tags, comma separated"
+                    value={str(item.tags)}
+                    onChange={(e) => setItem({ ...item, tags: e.target.value })}
+                  />
+                </div>
+              </fieldset>
             </header>
 
             <div className={styles.columns}>
-              <div className={styles.main}>
+              <fieldset disabled={createdItem !== null} className={`${styles.main} ${styles.field_group}`}>
                 <Box title="Info">
                   <InfoTable specs={INFO_FIELDS} values={item} onChange={setItem}>
                     <tr>
@@ -184,24 +223,36 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
                 </Box>
 
                 <Box title="Authors">
-                  <RowsEditor specs={AUTHOR_CREDIT_FIELDS} rows={authorCredits} onChange={setAuthorCredits} />
+                  <CreditsEditor kind="author" rows={authorCredits} onChange={setAuthorCredits} />
                 </Box>
 
                 <Box title="Companies">
-                  <RowsEditor specs={COMPANY_CREDIT_FIELDS} rows={companyCredits} onChange={setCompanyCredits} />
+                  <CreditsEditor kind="company" rows={companyCredits} onChange={setCompanyCredits} />
                 </Box>
-              </div>
+              </fieldset>
 
               <aside className={styles.side}>
                 <Box title="Cover">
-                  <InfoTable specs={COVER_FIELDS} values={item} onChange={setItem} />
+                  <label>
+                    Upload cover (JPEG, PNG or WebP, up to 5 MB)
+                    <input ref={coverInput} type="file" accept="image/jpeg,image/png,image/webp" onChange={selectCover} />
+                  </label>
+                  {(coverFile || coverError) && <button type="button" className={styles.link_button} onClick={clearCover}>Clear selection</button>}
+                  {coverError && <p role="alert" className={styles.error}>{coverError}</p>}
+                  <fieldset disabled={createdItem !== null} className={styles.field_group}>
+                    <InfoTable specs={COVER_FIELDS} values={item} onChange={setItem} />
+                  </fieldset>
                 </Box>
-                <Box title="Languages">
-                  <RowsEditor specs={LANGUAGE_FIELDS} rows={languages} onChange={setLanguages} />
-                </Box>
-                <Box title="Barcodes">
-                  <RowsEditor specs={BARCODE_FIELDS} rows={barcodes} onChange={setBarcodes} />
-                </Box>
+                <fieldset disabled={createdItem !== null} className={styles.field_group}>
+                  <Box title="Languages">
+                    <RowsEditor specs={LANGUAGE_FIELDS} rows={languages} onChange={setLanguages} />
+                  </Box>
+                </fieldset>
+                <fieldset disabled={createdItem !== null} className={styles.field_group}>
+                  <Box title="Barcodes">
+                    <RowsEditor specs={BARCODE_FIELDS} rows={barcodes} onChange={setBarcodes} />
+                  </Box>
+                </fieldset>
               </aside>
             </div>
           </fieldset>
@@ -210,8 +261,13 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
 
       {/* Win95 chrome: status bar */}
       <Frame bgColor="$material" boxShadow="in" className={styles.statusbar}>
-        {error && <span className={styles.error}>{error}</span>}
-        {status === "saved" && <span className={styles.success}>Item created.</span>}
+        {error && <div role="alert" className={styles.error}>
+          {error}
+          {validationErrors.length > 0 && <ul>{validationErrors.map((issue, index) => (
+            <li key={index}>{issue.loc.filter((part) => part !== "body").map((part) => typeof part === "number" ? `#${part + 1}` : part.replaceAll("_", " ")).join(" / ")}: {issue.msg}</li>
+          ))}</ul>}
+        </div>}
+        {status === "saved" && <span className={styles.success}>{coverFile ? "Item and cover saved." : "Item created."}</span>}
       </Frame>
     </Frame>
   );

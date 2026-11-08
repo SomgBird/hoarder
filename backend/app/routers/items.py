@@ -1,9 +1,13 @@
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, File, Query, Response, UploadFile, status
 from sqlmodel import Session
 
 from app.database import get_session
+from app.config import MAX_UPLOAD_BYTES
 from app.db import crud
+from app.db.models import Item
 from app.db.schemas import ItemCreate, ItemListEntryRead, ItemRead, ItemUpdate, Page
+from app.errors import NotFoundError, PayloadTooLargeError
+from app.media import remove_unused_cover, store_cover
 
 router = APIRouter(prefix="/items", tags=["items"])
 
@@ -39,5 +43,28 @@ def update_item(item_id: int, payload: ItemUpdate, session: Session = Depends(ge
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_item(item_id: int, session: Session = Depends(get_session)):
+    item = session.get(Item, item_id)
+    previous_cover = item.cover_image_path if item else None
     crud.delete_item(session, item_id)
+    remove_unused_cover(session, previous_cover)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{item_id}/cover", response_model=ItemRead)
+def upload_cover(item_id: int, file: UploadFile = File(...), session: Session = Depends(get_session)):
+    item = session.get(Item, item_id)
+    if item is None:
+        raise NotFoundError("item", item_id)
+    previous_cover = item.cover_image_path
+    content = file.file.read(MAX_UPLOAD_BYTES + 1)
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise PayloadTooLargeError("Cover must be no larger than 5 MB.")
+    path = store_cover(item_id, content, file.content_type)
+    try:
+        updated = crud.update_item(session, item_id, ItemUpdate(cover_image_path=path))
+    except Exception:
+        session.rollback()
+        remove_unused_cover(session, path)
+        raise
+    remove_unused_cover(session, previous_cover)
+    return updated

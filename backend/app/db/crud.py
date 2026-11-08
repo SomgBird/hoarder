@@ -60,6 +60,7 @@ from app.db.schemas import (
     MiniatureDetailsRead,
 )
 from app.errors import ConflictError, InvalidReferenceError, NotFoundError
+from app.names import clean_name, name_key
 
 
 # ============================================================
@@ -69,7 +70,7 @@ from app.errors import ConflictError, InvalidReferenceError, NotFoundError
 # ============================================================
 
 def _normalize(name: str | None) -> str:
-    return " ".join((name or "").split())
+    return clean_name(name)
 
 
 def _require(session: Session, model: type[SQLModel], pk: int, label: str):
@@ -114,7 +115,7 @@ def _get_or_create_named(session: Session, model, name: str | None):
     if not clean:
         raise InvalidReferenceError(model.__name__.lower(), name, f"{model.__name__} name is empty")
     obj = session.exec(
-        select(model).where(func.lower(model.name) == clean.lower())
+        select(model).where(func.hoarder_name_key(model.name) == name_key(clean)).order_by(model.id)
     ).first()
     if obj is None:
         obj = model(name=clean)
@@ -131,20 +132,33 @@ def get_or_create_company_role(session: Session, name: str) -> CompanyRole:
     return _get_or_create_named(session, CompanyRole, name)
 
 
-def get_or_create_author(
+def resolve_author(
     session: Session, *, author_id: int | None = None, name: str | None = None
 ) -> Author:
     if author_id is not None:
         return _require(session, Author, author_id, "author")
-    return _get_or_create_named(session, Author, name)
+    author = Author(name=_required_name(name, "author"))
+    session.add(author)
+    session.flush()
+    return author
 
 
-def get_or_create_company(
+def resolve_company(
     session: Session, *, company_id: int | None = None, name: str | None = None
 ) -> Company:
     if company_id is not None:
         return _require(session, Company, company_id, "company")
-    return _get_or_create_named(session, Company, name)
+    company = Company(name=_required_name(name, "company"))
+    session.add(company)
+    session.flush()
+    return company
+
+
+def _required_name(name: str | None, entity: str) -> str:
+    clean = clean_name(name)
+    if not clean:
+        raise InvalidReferenceError(entity, name, f"{entity.capitalize()} name is empty")
+    return clean
 
 
 def _language_or_none(session: Session, code: str | None) -> Language | None:
@@ -283,14 +297,14 @@ def _list_query():
     """One row per item: title in the selected language, else any title."""
     in_selected_language = (
         select(Title.title_text)
-        .where(Title.item_id == Item.id, Title.language_id == Item.selected_language_id)
+        .where(Title.item_id == Item.id, Title.language_id == Item.selected_language_id, func.hoarder_name_key(Title.title_text) != "")
         .order_by(Title.id)
         .limit(1)
         .scalar_subquery()
     )
     any_language = (
         select(Title.title_text)
-        .where(Title.item_id == Item.id)
+        .where(Title.item_id == Item.id, func.hoarder_name_key(Title.title_text) != "")
         .order_by(Title.id)
         .limit(1)
         .scalar_subquery()
@@ -300,7 +314,7 @@ def _list_query():
     )
     return select(
         Item.id,
-        func.coalesce(in_selected_language, any_language, "").label("title"),
+        func.coalesce(in_selected_language, any_language, "Untitled").label("title"),
         type_name.label("item_type"),
         Item.release_date,
         func.coalesce(Item.is_owned, False).label("is_owned"),
@@ -387,7 +401,7 @@ def _build_author_credits(
     out: list[AuthorRoleItemLink] = []
     seen: set[tuple[int, int]] = set()
     for c in credits:
-        author = get_or_create_author(session, author_id=c.author_id, name=c.author_name)
+        author = resolve_author(session, author_id=c.author_id, name=c.author_name)
         role = get_or_create_author_role(session, c.role_name)
         if (author.id, role.id) in seen:
             continue
@@ -409,7 +423,7 @@ def _build_company_credits(
     out: list[CompanyRoleItemLink] = []
     seen: set[tuple[int, int]] = set()
     for c in credits:
-        company = get_or_create_company(
+        company = resolve_company(
             session, company_id=c.company_id, name=c.company_name
         )
         role = get_or_create_company_role(session, c.role_name)

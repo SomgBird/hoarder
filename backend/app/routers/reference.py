@@ -1,5 +1,6 @@
 """Read-only reference data the frontend needs to build forms and dropdowns."""
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import func
 from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 
@@ -15,6 +16,7 @@ from app.db.schemas import (
     ItemTypeScopeRead, JournalRead, LanguageRead, ScaleRead, TagRead,
 )
 from app.errors import NotFoundError
+from app.names import name_key
 
 router = APIRouter(prefix="/reference", tags=["reference"])
 
@@ -87,10 +89,12 @@ def genres(item_type: str | None = Query(None, description="item type name"),
 @router.get("/authors", response_model=list[AuthorRead])
 def authors(q: str = Query("", description="name contains"), limit: int = Query(20, ge=1, le=100),
             session: Session = Depends(get_session)):
-    return session.exec(select(Author).where(Author.name.ilike(f"%{q}%")).order_by(Author.name).limit(limit)).all()
+    return session.exec(select(Author).where(func.instr(func.hoarder_name_key(Author.name), name_key(q)) > 0)
+                        .order_by(Author.name, Author.id).limit(limit)).all()
 
 
 @router.get("/companies", response_model=list[CompanyRead])
 def companies(q: str = Query("", description="name contains"), limit: int = Query(20, ge=1, le=100),
               session: Session = Depends(get_session)):
-    return session.exec(select(Company).where(Company.name.ilike(f"%{q}%")).order_by(Company.name).limit(limit)).all()
+    return session.exec(select(Company).where(func.instr(func.hoarder_name_key(Company.name), name_key(q)) > 0)
+                        .order_by(Company.name, Company.id).limit(limit)).all()

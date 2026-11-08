@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ItemRead } from "@types";
-import { itemService } from "@services";
+import { ApiError, itemService } from "@services";
 import { ErrorPage } from "../ErrorPage";
 import ItemView from "./ItemView";
 
@@ -9,7 +9,7 @@ type Result =
   | { id: number; status: "not-found" }
   | { id: number; status: "error"; message: string };
 
-const isNotFound = (e: unknown) => (e as { status?: number })?.status === 404;
+const isNotFound = (e: unknown) => e instanceof ApiError && e.status === 404;
 
 export function ItemPage({ id }: { id: number }) {
   const [result, setResult] = useState<Result | null>(null);
@@ -53,6 +53,6 @@ export function ItemPage({ id }: { id: number }) {
         <ErrorPage heading="Something went wrong" message={result.message} />
       );
     case "ready":
-      return <ItemView item={result.item} />;
+      return <ItemView key={id} item={result.item} />;
   }
 }

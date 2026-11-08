@@ -1,11 +1,13 @@
 from datetime import date
 from typing import Annotated, Generic, List, Literal, Optional, TypeVar, Union
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, StringConstraints, computed_field, field_validator, model_validator
 from pydantic import Field as PField
 from sqlmodel import SQLModel
 
 from app.db.base import ItemBase
+
+NonBlank = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 
 # Input schemas reject unknown fields. Without this, a misspelled or renamed key
@@ -245,7 +247,7 @@ class TitleRead(SQLModel):
 
 
 class TitleCreate(_Strict):
-    title_text: str
+    title_text: NonBlank
     short_text: str | None = None
     language_code: str
 
@@ -272,9 +274,10 @@ class AuthorCreditRead(SQLModel):
 
 
 class AuthorCreditCreate(_Strict):
-    author_id: int | None = None
-    author_name: str | None = None
-    role_name: str
+    # An id selects an existing person; a name explicitly creates a new one.
+    author_id: int | None = PField(default=None, ge=1)
+    author_name: NonBlank | None = None
+    role_name: NonBlank
     involvement_date: date | None = None
     comments: str | None = None
 
@@ -293,9 +296,9 @@ class CompanyCreditRead(SQLModel):
 
 
 class CompanyCreditCreate(_Strict):
-    company_id: int | None = None
-    company_name: str | None = None
-    role_name: str
+    company_id: int | None = PField(default=None, ge=1)
+    company_name: NonBlank | None = None
+    role_name: NonBlank
     involvement_date: date | None = None
     comments: str | None = None
 
@@ -362,12 +365,22 @@ class ItemRead(ItemBase):
 
     details: ItemDetailsRead | None = None
 
+    @computed_field
+    @property
+    def display_title(self) -> str:
+        ordered = sorted(self.titles, key=lambda title: title.id)
+        if self.selected_language is not None:
+            for title in ordered:
+                if title.language and title.language.id == self.selected_language.id and title.title_text.strip():
+                    return title.title_text
+        return next((title.title_text for title in ordered if title.title_text.strip()), "Untitled")
+
 
 class ItemCreate(ItemBase, _Strict):
     format_id: int | None = None
     selected_language_code: str | None = None
     languages: List[ItemLanguageCreate] = []
-    titles: List[TitleCreate] = []
+    titles: List[TitleCreate] = PField(min_length=1)
     genre_ids: List[int] = []
     franchise_ids: List[int] = []
     tags: List[str] = PField(default=[], description="tag names; created if missing")
@@ -391,7 +404,7 @@ class ItemUpdate(_Strict):
     format_id: int | None = None
     selected_language_code: str | None = None
     languages: List[ItemLanguageCreate] | None = None
-    titles: List[TitleCreate] | None = None
+    titles: List[TitleCreate] | None = PField(default=None, min_length=1)
     genre_ids: List[int] | None = None
     franchise_ids: List[int] | None = None
     tags: List[str] | None = None
@@ -400,6 +413,13 @@ class ItemUpdate(_Strict):
     company_credits: List[CompanyCreditCreate] | None = None
 
     details: ItemDetailsCreate | None = None
+
+    @field_validator("titles")
+    @classmethod
+    def _titles_cannot_be_null(cls, value):
+        if value is None:
+            raise ValueError("titles cannot be null; omit the field to keep existing titles")
+        return value
 
 
 # ============================================================
