@@ -8,12 +8,15 @@ import {
   Shell3217,
   Winhlp324001,
   Wmsui323934,
+  Write1,
 } from "@react95/icons";
+import { useNavigate } from "react-router-dom";
 import { useExplorer } from "../ExplorerContext";
 import styles from "./ExplorerToolbar.module.css";
 
 function ExplorerToolbar() {
-  const { back, forward, canBack, canForward, navigate } = useExplorer();
+  const { back, forward, canBack, canForward, navigate, current } = useExplorer();
+  const navigateTo = useNavigate();
 
   return (
     <div className={styles.container}>
@@ -51,6 +54,14 @@ function ExplorerToolbar() {
         <Toolbar.Separator />
 
         <Toolbar.Button icon={<Shell3217 variant="32x32_4" />} />
+        <Toolbar.Button
+          icon={<Write1 variant="32x32_4" />}
+          label="Edit"
+          disabled={current.page !== "item"}
+          onClick={() => {
+            if (current.page === "item") navigateTo(`/page-editor?itemId=${current.id}`);
+          }}
+        />
 
         <Toolbar.Separator />
 

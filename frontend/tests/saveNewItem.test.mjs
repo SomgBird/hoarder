@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
-import { saveNewItem } from "../src/pages/PageEditor/PageEditorWorkspace/saveNewItem.ts";
+import { saveExistingItem, saveNewItem } from "../src/pages/PageEditor/PageEditorWorkspace/saveNewItem.ts";
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
@@ -93,4 +93,33 @@ test("retry after icon failure remembers the uploaded cover and creates no dupli
   assert.equal(saved.cover_image_path, "/media/covers/cover.png");
   assert.equal(saved.icon_image_path, "/media/covers/icon.png");
   assert.deepEqual(paths, ["/items/", "/items/42/cover", "/items/42/icon", "/items/42/icon"]);
+});
+
+test("editing patches the same item and retries images without repeating the update", async () => {
+  let knownItem = null;
+  let pendingCover = cover;
+  const icon = new File(["icon"], "icon.png", { type: "image/png" });
+  const requests = [];
+  let failIcon = true;
+  globalThis.fetch = async (url, options) => {
+    const path = new URL(url).pathname;
+    requests.push([options.method, path]);
+    if (path === "/items/42") {
+      assert.equal(options.method, "PATCH");
+      assert.deepEqual(JSON.parse(options.body), payload);
+      return Response.json({ id: 42 });
+    }
+    if (path.endsWith("/cover")) return Response.json({ id: 42, cover_image_path: "/media/covers/updated.png" });
+    if (failIcon) return Response.json({ detail: "Icon upload failed" }, { status: 400 });
+    return Response.json({ ...knownItem, icon_image_path: "/media/covers/icon.png" });
+  };
+  const remember = (item) => { knownItem = item; };
+  const uploaded = (kind) => { if (kind === "cover") pendingCover = null; };
+  await assert.rejects(saveExistingItem(42, payload, pendingCover, knownItem, remember, () => {}, icon, uploaded), /Icon upload failed/);
+  assert.equal(pendingCover, null);
+  failIcon = false;
+  const saved = await saveExistingItem(42, payload, pendingCover, knownItem, remember, () => {}, icon, uploaded);
+  assert.equal(saved.id, 42);
+  assert.equal(saved.cover_image_path, "/media/covers/updated.png");
+  assert.deepEqual(requests, [["PATCH", "/items/42"], ["POST", "/items/42/cover"], ["POST", "/items/42/icon"], ["POST", "/items/42/icon"]]);
 });

@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import { JSDOM } from "jsdom";
 import { act, createElement, useState } from "react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { existingItem } from "./fixtures/item.mjs";
 
 const dom = new JSDOM("<!doctype html><html><body></body></html>", { url: "http://localhost", pretendToBeVisual: true });
 for (const key of ["window", "document", "HTMLElement", "HTMLInputElement", "Event", "MouseEvent", "FileReader", "File", "Blob", "FormData"]) {
@@ -14,23 +16,42 @@ const { ReferencePicker } = await import("../src/pages/PageEditor/PageEditorWork
 const { ReferenceContext, useReferenceData } = await import("../src/pages/PageEditor/PageEditorWorkspace/referenceData.ts");
 const { PageEditorWorkspace } = await import("../src/pages/PageEditor/PageEditorWorkspace/PageEditorWorkspace.tsx");
 const { ImageUpload } = await import("../src/pages/PageEditor/PageEditorWorkspace/ImageUpload.tsx");
+const { PageEditor } = await import("../src/pages/PageEditor/PageEditor.tsx");
+const { CollectionView } = await import("../src/pages/CollectionView/CollectionView.tsx");
 
 let root;
 let container;
 let calls;
 let savedPayload;
 let failCreate;
+let storedItem;
+let failLoad;
+let failUpdate;
 const originalFetch = globalThis.fetch;
 beforeEach(() => {
   calls = [];
   savedPayload = null;
   failCreate = false;
+  failLoad = false;
+  failUpdate = false;
+  storedItem = structuredClone(existingItem);
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
   globalThis.fetch = async (url, options = {}) => {
     const parsed = new URL(url);
     calls.push({ path: parsed.pathname, method: options.method ?? "GET", body: options.body });
+    if (parsed.pathname === "/items/itemlist") return Response.json({
+      items: [{ id: 42, title: storedItem.display_title, release_date: storedItem.release_date }], total: 1, offset: 0, limit: 20,
+    });
+    if (parsed.pathname === "/items/42") {
+      if (options.method === "PATCH") {
+        if (failUpdate) return Response.json({ detail: "Update failed" }, { status: 500 });
+        savedPayload = JSON.parse(options.body);
+        storedItem = { ...storedItem, display_title: savedPayload.titles[0].title_text, description: savedPayload.description, details: savedPayload.details };
+      } else if (failLoad) return Response.json({ detail: "Item not found" }, { status: 404 });
+      return Response.json(storedItem);
+    }
     if (parsed.pathname === "/items/") {
       savedPayload = JSON.parse(options.body);
       return Response.json({ id: 42, ...savedPayload });
@@ -45,6 +66,10 @@ beforeEach(() => {
       franchises: [{ id: 7, name: "Existing franchise" }],
       formats: parsed.searchParams.get("item_type") === "book" ? [{ id: 3, name: "Hardcover" }] : [{ id: 4, name: "Cartridge" }],
       genres: [{ id: 5, name: "Fantasy" }],
+      tags: [{ id: 8, name: "One, two" }],
+      "barcode-types": [{ id: 10, name: "EAN" }],
+      "author-roles": [{ id: 12, name: "Writer" }],
+      "company-roles": [{ id: 14, name: "Publisher" }],
     };
     return Response.json(lists[resource] ?? []);
   };
@@ -155,4 +180,72 @@ test("image controls reject invalid files and clear their selection", async () =
   assert.match(container.querySelector('[role="alert"]').textContent, /JPEG, PNG or WebP/);
   await click(button("Clear selection"));
   assert.equal(container.querySelector('[role="alert"]'), null);
+});
+
+const routed = (path) => createElement(MemoryRouter, { initialEntries: [path] },
+  createElement(Routes, null,
+    createElement(Route, { path: "/collection-view", element: createElement(CollectionView) }),
+    createElement(Route, { path: "/page-editor", element: createElement(PageEditor) })));
+const editButton = () => [...container.querySelectorAll('[role="toolbar"] button')].find((node) => node.textContent.trim() === "Edit");
+
+test("explorer enables Edit for an item, loads the full form, and displays saved changes", async () => {
+  await render(routed("/collection-view"));
+  assert.equal(editButton().disabled, true);
+  await click(container.querySelector('button[aria-current="false"]'));
+  assert.equal(editButton().disabled, false);
+  await click(editButton());
+  assert.equal(container.querySelector('input[aria-label="Title"]').value, "Original title");
+  assert.equal(container.querySelector('input[aria-label="Short title"]').value, "Original");
+  assert.equal(container.querySelector('[aria-label="Item type"]').disabled, true);
+  assert.equal(container.querySelector('[aria-label="Format"]').value, "3");
+  assert.equal(container.querySelector('[aria-label="Display language"]').value, "ru");
+  assert.equal(container.querySelector('[aria-label="Page count"]').value, "320");
+  assert.equal(container.querySelector('[aria-label="Description"]').value, "Original description");
+  assert.equal(section("Alternative titles").querySelector('[aria-label="Title"]').value, "Другой заголовок");
+  assert.equal(section("Languages").querySelector('[aria-label="UI"]').checked, true);
+  assert.equal(section("Barcodes").querySelector('[aria-label="Code"]').value, "123456");
+  assert.match(section("Authors").textContent, /Existing author/);
+  assert.match(section("Companies").textContent, /Existing company/);
+  assert.match(section("Cover").querySelector("img").src, /cover.png$/);
+  assert.match(section("Icon").querySelector("img").src, /icon.png$/);
+
+  await type(container.querySelector('input[aria-label="Title"]'), "Updated title");
+  await type(container.querySelector('input[aria-label="Short title"]'), "Updated");
+  await type(container.querySelector('[aria-label="Page count"]'), "");
+  await choose(container.querySelector('[aria-label="Format"]'), "");
+  await click(button("Save"));
+  assert.equal(savedPayload.titles[0].title_text, "Updated title");
+  assert.equal(savedPayload.titles[0].short_text, "Updated");
+  assert.equal(savedPayload.format_id, null);
+  assert.equal(savedPayload.details.page_count, null);
+  assert.deepEqual(savedPayload.author_credits.map((credit) => credit.author_id), [11]);
+  assert.equal(calls.some((call) => call.method === "POST"), false);
+  assert.equal(container.querySelector("h1").textContent, "Updated title");
+  assert.equal(editButton().disabled, false);
+});
+
+test("editor load and save failures retain a working retry and the entered values", async () => {
+  failLoad = true;
+  await render(routed("/page-editor?itemId=42"));
+  assert.match(container.querySelector('[role="alert"]').textContent, /Item not found/);
+  assert.equal(button("Save"), undefined);
+  failLoad = false;
+  await click(button("Retry"));
+  await type(container.querySelector('input[aria-label="Title"]'), "Retry title");
+  failUpdate = true;
+  await click(button("Save"));
+  assert.match(container.querySelector('[role="alert"]').textContent, /Update failed/);
+  assert.equal(container.querySelector('input[aria-label="Title"]').value, "Retry title");
+  assert.equal(button("Save").disabled, false);
+  failUpdate = false;
+  await click(button("Save"));
+  assert.equal(container.querySelector("h1").textContent, "Retry title");
+});
+
+test("cancelling an edit returns to the same item without writing", async () => {
+  await render(routed("/page-editor?itemId=42"));
+  await type(container.querySelector('input[aria-label="Title"]'), "Unsaved title");
+  await click(button("Cancel"));
+  assert.equal(container.querySelector("h1").textContent, "Original title");
+  assert.equal(calls.some((call) => call.method !== "GET"), false);
 });

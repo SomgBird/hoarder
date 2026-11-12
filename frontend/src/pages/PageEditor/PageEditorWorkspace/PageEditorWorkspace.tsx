@@ -7,7 +7,7 @@ import ContentFrame from "@components/ContentFrame/ContentFrame";
 import type { PageData } from "../pageTypes";
 import { Box, FieldInput, InfoTable, RowsEditor } from "./FormControls";
 import { CreditsEditor } from "./CreditsEditor";
-import { saveNewItem } from "./saveNewItem";
+import { saveExistingItem, saveNewItem } from "./saveNewItem";
 import { ImageUpload } from "./ImageUpload";
 import { ReferencePicker } from "./ReferencePicker";
 import { ReferenceContext, useReferenceData } from "./referenceData";
@@ -19,32 +19,35 @@ import {
   LANGUAGE_FIELDS,
   TITLE_FIELDS,
   buildItemCreate,
+  buildItemUpdate,
+  itemToFormState,
   type Values,
 } from "./pageEditorFields";
 import styles from "./PageEditorWorkspace.module.css";
 
-interface PageEditorWorkspaceProps {
-  initialData: PageData;
+type PageEditorWorkspaceProps = ({ initialData: PageData; existingItem?: never } | { initialData?: never; existingItem: ItemRead }) & {
   onClose: () => void;
-}
+  onSaved?: (item: ItemRead) => void;
+};
 
 const str = (v: Values[string] | undefined) => (typeof v === "string" ? v : "");
 
-export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspaceProps) {
-  // Wizard data only seeds the form; from here on the editor owns its values.
-  const [itemType, setItemType] = useState<ItemType | null>(initialData.itemType);
-  const [item, setItem] = useState<Values>({ is_owned: false });
-  const [details, setDetails] = useState<Values>({});
-  const [titles, setTitles] = useState<Values[]>([
-    { title_text: initialData.title, short_text: "", language_code: "en" },
+export function PageEditorWorkspace({ initialData, existingItem, onClose, onSaved }: PageEditorWorkspaceProps) {
+  const [initialForm] = useState(() => existingItem ? itemToFormState(existingItem) : null);
+  const [itemType, setItemType] = useState<ItemType | null>(initialForm?.itemType ?? initialData?.itemType ?? null);
+  const [item, setItem] = useState<Values>(initialForm?.item ?? { is_owned: false });
+  const [details, setDetails] = useState<Values>(initialForm?.details ?? {});
+  const [titles, setTitles] = useState<Values[]>(initialForm?.titles ?? [
+    { title_text: initialData?.title ?? "", short_text: "", language_code: "en" },
   ]);
-  const [languages, setLanguages] = useState<Values[]>([]);
-  const [barcodes, setBarcodes] = useState<Values[]>([]);
-  const [authorCredits, setAuthorCredits] = useState<Values[]>([]);
-  const [companyCredits, setCompanyCredits] = useState<Values[]>([]);
+  const [languages, setLanguages] = useState<Values[]>(initialForm?.languages ?? []);
+  const [barcodes, setBarcodes] = useState<Values[]>(initialForm?.barcodes ?? []);
+  const [authorCredits, setAuthorCredits] = useState<Values[]>(initialForm?.authorCredits ?? []);
+  const [companyCredits, setCompanyCredits] = useState<Values[]>(initialForm?.companyCredits ?? []);
 
-  const [status, setStatus] = useState<"idle" | "creating" | "uploading" | "saved">("idle");
-  const [createdItem, setCreatedItem] = useState<ItemRead | null>(null);
+  const [status, setStatus] = useState<"idle" | "creating" | "updating" | "uploading" | "saved">("idle");
+  // A successful write is a checkpoint if a later image upload needs a retry.
+  const [savedItem, setSavedItem] = useState<ItemRead | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverError, setCoverError] = useState("");
   const [iconFile, setIconFile] = useState<File | null>(null);
@@ -76,52 +79,62 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
     setError("");
 
     let payload;
+    let updatePayload;
     try {
-      payload = buildItemCreate({
+      const form = {
         itemType, item, details, titles, languages, barcodes, authorCredits, companyCredits,
-      });
+      };
+      payload = buildItemCreate(form);
+      if (existingItem) updatePayload = buildItemUpdate(form);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       return;
     }
 
-    setStatus(createdItem ? "uploading" : "creating");
-    let itemCreated = createdItem !== null;
+    setStatus(savedItem ? "uploading" : existingItem ? "updating" : "creating");
+    let itemSaved = savedItem !== null;
     try {
-      const saved = await saveNewItem(payload, coverFile, createdItem, (item) => {
-        itemCreated = true;
-        setCreatedItem(item);
-      }, (kind) => { setUploadKind(kind); setStatus("uploading"); }, iconFile,
-      (kind) => { if (kind === "cover") setCoverFile(null); else setIconFile(null); });
-      setCreatedItem(saved);
+      const remember = (item: ItemRead) => {
+        itemSaved = true;
+        setSavedItem(item);
+      };
+      const uploading = (kind: "cover" | "icon") => { setUploadKind(kind); setStatus("uploading"); };
+      const uploaded = (kind: "cover" | "icon") => { if (kind === "cover") setCoverFile(null); else setIconFile(null); };
+      const saved = existingItem && updatePayload
+        ? await saveExistingItem(existingItem.id, updatePayload, coverFile, savedItem, remember, uploading, iconFile, uploaded)
+        : await saveNewItem(payload, coverFile, savedItem, remember, uploading, iconFile, uploaded);
+      setSavedItem(saved);
       setStatus("saved");
+      onSaved?.(saved);
     } catch (e) {
       setStatus("idle");
       const message = e instanceof Error ? e.message : "Failed to save item.";
-      setError(itemCreated ? `Item created, but an image could not be uploaded. Choose another image or retry. ${message}` : message);
+      setError(itemSaved ? `Item ${existingItem ? "updated" : "created"}, but an image could not be uploaded. Choose another image or retry. ${message}` : message);
       if (e instanceof ApiError) setValidationErrors(e.errors);
     }
   };
 
   const locked = status !== "idle" || references.pending > 0;
-  const busy = status === "creating" || status === "uploading" || references.pending > 0;
+  const busy = status === "creating" || status === "updating" || status === "uploading" || references.pending > 0;
+  const imageItem = savedItem ?? existingItem;
   const detailSpecs = itemType ? DETAILS_FIELDS[itemType] : [];
   const saveLabel = status === "creating" ? "Creating..."
+    : status === "updating" ? "Saving..."
     : status === "uploading" ? `Uploading ${uploadKind}...`
-    : createdItem && status !== "saved" ? (coverFile || iconFile ? "Retry image upload" : "Finish")
-    : "Create";
+    : savedItem && status !== "saved" ? (coverFile || iconFile ? "Retry image upload" : "Finish")
+    : existingItem ? "Save" : "Create";
 
   return (
     <ReferenceContext.Provider value={references}>
     <Frame bgColor="$material" boxShadow="$out" className={styles.window}>
-      <TitleBar icon={<Mshtml32541 variant="16x16_4" />} title="Page editor - new item" />
+      <TitleBar icon={<Mshtml32541 variant="16x16_4" />} title={existingItem ? "Page editor - edit item" : "Page editor - new item"} />
 
       {/* Win95 chrome: toolbar */}
       <div className={styles.toolbar}>
         <Button onClick={save} disabled={locked || !!coverError || !!iconError || references.loading || !!references.error}>
           {saveLabel}
         </Button>
-        <Button onClick={onClose} disabled={busy}>{createdItem ? "Close" : "Cancel"}</Button>
+        <Button onClick={onClose} disabled={busy}>{savedItem ? "Close" : "Cancel"}</Button>
       </div>
       {references.loading && <p role="status" className={styles.reference_status}>Loading selection lists…</p>}
       {references.pending > 0 && <p role="status" className={styles.reference_status}>Adding entry…</p>}
@@ -136,7 +149,7 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
           {/* fieldset[disabled] locks every native control while saving */}
           <fieldset disabled={locked} className={styles.page}>
             <header className={styles.header}>
-              <fieldset disabled={createdItem !== null} className={styles.field_group}>
+              <fieldset disabled={savedItem !== null} className={styles.field_group}>
                 <div className={styles.title_row}>
                   <input
                     className={styles.title_input}
@@ -150,6 +163,11 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
                       value={mainTitle.language_code} onChange={(value) => setMainTitle("language_code", String(value))} />
                   </div>
                 </div>
+                <label>
+                  Short title
+                  <FieldInput spec={TITLE_FIELDS[1]} value={mainTitle.short_text}
+                    onChange={(value) => setMainTitle("short_text", String(value))} />
+                </label>
                 <div className={styles.tags_row}>
                   <span className={styles.tags_label}>Tags</span>
                   <ReferencePicker resource="tags" label="Tags" multiple
@@ -160,7 +178,7 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
             </header>
 
             <div className={styles.columns}>
-              <fieldset disabled={createdItem !== null} className={`${styles.main} ${styles.field_group}`}>
+              <fieldset disabled={savedItem !== null} className={`${styles.main} ${styles.field_group}`}>
                 <Box title="Info">
                   <InfoTable specs={INFO_FIELDS} values={item} onChange={setItem}>
                     <tr>
@@ -169,6 +187,7 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
                         <select
                           className={styles.input}
                           aria-label="Item type"
+                          disabled={!!existingItem}
                           value={itemType ?? ""}
                           onChange={(e) =>
                             changeItemType(
@@ -220,19 +239,19 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
 
               <aside className={styles.side}>
                 <Box title="Cover">
-                  <ImageUpload label="Cover" file={coverFile} savedPath={createdItem?.cover_image_path ?? null} error={coverError}
+                  <ImageUpload label="Cover" file={coverFile} savedPath={imageItem?.cover_image_path ?? null} error={coverError}
                     onSelect={(file, message) => { setCoverFile(file); setCoverError(message); }} />
                 </Box>
                 <Box title="Icon">
-                  <ImageUpload label="Icon" file={iconFile} savedPath={createdItem?.icon_image_path ?? null} error={iconError}
+                  <ImageUpload label="Icon" file={iconFile} savedPath={imageItem?.icon_image_path ?? null} error={iconError}
                     onSelect={(file, message) => { setIconFile(file); setIconError(message); }} />
                 </Box>
-                <fieldset disabled={createdItem !== null} className={styles.field_group}>
+                <fieldset disabled={savedItem !== null} className={styles.field_group}>
                   <Box title="Languages">
                     <RowsEditor specs={LANGUAGE_FIELDS} rows={languages} onChange={setLanguages} />
                   </Box>
                 </fieldset>
-                <fieldset disabled={createdItem !== null} className={styles.field_group}>
+                <fieldset disabled={savedItem !== null} className={styles.field_group}>
                   <Box title="Barcodes">
                     <RowsEditor specs={BARCODE_FIELDS} rows={barcodes} onChange={setBarcodes} />
                   </Box>
@@ -251,7 +270,7 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
             <li key={index}>{issue.loc.filter((part) => part !== "body").map((part) => typeof part === "number" ? `#${part + 1}` : part.replaceAll("_", " ")).join(" / ")}: {issue.msg}</li>
           ))}</ul>}
         </div>}
-        {status === "saved" && <span className={styles.success}>{createdItem?.cover_image_path || createdItem?.icon_image_path ? "Item and images saved." : "Item created."}</span>}
+        {status === "saved" && <span className={styles.success}>{savedItem?.cover_image_path || savedItem?.icon_image_path ? "Item and images saved." : existingItem ? "Item updated." : "Item created."}</span>}
       </Frame>
     </Frame>
     </ReferenceContext.Provider>

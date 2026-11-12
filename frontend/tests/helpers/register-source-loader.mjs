@@ -7,9 +7,10 @@ import ts from "typescript";
 const source = new URL("../../src/", import.meta.url);
 registerHooks({
   resolve(specifier, context, nextResolve) {
-    const alias = /^@(types|services|components)(?:\/(.*))?$/.exec(specifier);
+    const alias = /^@(types|services|components|pages|config)(?:\/(.*))?$/.exec(specifier);
     let candidate;
-    if (alias) candidate = new URL(`${alias[1]}/${alias[2] ?? "index"}`, source);
+    if (specifier.startsWith("@/")) candidate = new URL(specifier.slice(2), source);
+    else if (alias) candidate = new URL(`${alias[1]}/${alias[2] ?? "index"}`, source);
     else if (specifier.startsWith(".") && context.parentURL?.startsWith("file:")) {
       candidate = new URL(specifier, context.parentURL);
     }
@@ -22,6 +23,9 @@ registerHooks({
     return nextResolve(specifier, context);
   },
   load(url, context, nextLoad) {
+    if (url.startsWith(source.href) && url.endsWith(".png")) return {
+      format: "module", shortCircuit: true, source: `export default ${JSON.stringify(url)};`,
+    };
     if (url.endsWith(".css")) return {
       format: "module", shortCircuit: true,
       source: "export default new Proxy({}, { get: (_, key) => String(key) });",

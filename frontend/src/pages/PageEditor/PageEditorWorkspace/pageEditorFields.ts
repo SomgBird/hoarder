@@ -1,4 +1,4 @@
-import { ITEM_TYPE, type ItemCreate, type ItemDetailsCreate, type ItemType } from "@types";
+import { ITEM_TYPE, ITEM_TYPES, type ItemCreate, type ItemDetailsCreate, type ItemRead, type ItemType, type ItemUpdate } from "@types";
 import type { ReferenceResource } from "../../../services/referenceService";
 
 export type Values = Record<string, string | boolean | string[]>;
@@ -91,6 +91,50 @@ export interface FormState {
   barcodes: Values[];
   authorCredits: Values[];
   companyCredits: Values[];
+}
+
+/** Convert API references and nullable values to the controls' string values. */
+export function itemToFormState(source: ItemRead): FormState {
+  const itemType = ITEM_TYPES.find((type) => type === source.item_type.name);
+  if (!itemType) throw new Error(`Unsupported item type: ${source.item_type.name}`);
+  const details: Values = {};
+  for (const [key, value] of Object.entries(source.details ?? {})) {
+    if (typeof value === "number" || typeof value === "string") details[key] = String(value);
+  }
+  if (source.details && "game_platform" in source.details) details.game_platform_id = String(source.details.game_platform?.id ?? "");
+  if (source.details && "journal" in source.details) details.journal_id = String(source.details.journal?.id ?? "");
+  if (source.details && "scale" in source.details) details.scale_id = String(source.details.scale?.id ?? "");
+  return {
+    itemType,
+    item: {
+      release_date: source.release_date ?? "",
+      is_owned: source.is_owned === true,
+      description: source.description ?? "",
+      format_id: String(source.format?.id ?? ""),
+      selected_language_code: source.selected_language?.code ?? "",
+      genre_ids: source.genres.map((value) => String(value.id)),
+      franchise_ids: source.franchises.map((value) => String(value.id)),
+      tags: source.tags.map((value) => value.name),
+    },
+    details,
+    titles: [...source.titles].sort((a, b) => a.id - b.id).map((title) => ({
+      title_text: title.title_text,
+      short_text: title.short_text ?? "",
+      language_code: title.language?.code ?? "",
+    })),
+    languages: source.languages.map((entry) => ({
+      language_code: entry.language.code, ui: entry.ui === true, text: entry.text === true, voice: entry.voice === true,
+    })),
+    barcodes: source.barcodes.map((entry) => ({ code: entry.code, barcode_type_id: String(entry.barcode_type?.id ?? "") })),
+    authorCredits: source.author_credits.map((entry, index) => ({
+      row_key: `author-${index}`, reference_mode: "existing", author_id: String(entry.author.id), selected_name: entry.author.name,
+      role_name: entry.role.name, involvement_date: entry.involvement_date ?? "", comments: entry.comments ?? "",
+    })),
+    companyCredits: source.company_credits.map((entry, index) => ({
+      row_key: `company-${index}`, reference_mode: "existing", company_id: String(entry.company.id), selected_name: entry.company.name,
+      role_name: entry.role.name, involvement_date: entry.involvement_date ?? "", comments: entry.comments ?? "",
+    })),
+  };
 }
 
 // ---------- small parsers ----------
@@ -206,5 +250,21 @@ export function buildItemCreate(f: FormState): ItemCreate {
       comments: text(r.comments),
     })),
     details: buildDetails(f.itemType, f.details),
+  };
+}
+
+/** PATCH distinguishes a cleared field (null) from an omitted field (unchanged). */
+export function buildItemUpdate(f: FormState): ItemUpdate {
+  const payload = buildItemCreate(f);
+  return {
+    ...payload,
+    release_date: payload.release_date ?? null,
+    description: payload.description ?? null,
+    format_id: payload.format_id ?? null,
+    selected_language_code: payload.selected_language_code ?? null,
+    details: {
+      ...payload.details,
+      ...Object.fromEntries(Object.entries(payload.details).map(([key, value]) => [key, value ?? null])),
+    },
   };
 }

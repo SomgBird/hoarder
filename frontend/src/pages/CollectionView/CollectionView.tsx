@@ -5,6 +5,7 @@ import {
   useExplorer,
 } from "@components";
 import styles from "./CollectionView.module.css";
+import { useSearchParams } from "react-router-dom";
 
 function CollectionViewContent() {
   const { current, navigate } = useExplorer();
@@ -30,8 +31,10 @@ function CollectionViewContent() {
 }
 
 export function CollectionView() {
+  const [searchParams] = useSearchParams();
+  const itemId = Number(searchParams.get("itemId"));
   return (
-    <ExplorerProvider>
+    <ExplorerProvider initial={Number.isSafeInteger(itemId) && itemId > 0 ? { page: "item", id: itemId } : { page: "home" }}>
       <CollectionViewContent />
     </ExplorerProvider>
   );
