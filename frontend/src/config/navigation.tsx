@@ -32,7 +32,7 @@ export const navigation: readonly NavEntry[] = [
     icon: <Defrag9 variant="32x32_4" />,
     children: [
       {
-        path: "/",
+        path: "/collection-view",
         label: "Collection Manager",
         icon: <Inetcpl1319 variant="32x32_4" />,
         Component: lazy(() =>
@@ -42,8 +42,14 @@ export const navigation: readonly NavEntry[] = [
         ),
       },
       {
+        path: "/page-editor",
         label: "Page Editor",
         icon: <Progman17 variant="32x32_4" />,
+        Component: lazy(() =>
+          import("@pages").then(({ PageEditor }) => ({
+            default: PageEditor,
+          })),
+        ),
       },
       {
         label: "Media Viewer",
@@ -72,7 +78,7 @@ export const navigation: readonly NavEntry[] = [
     icon: <Winhlp324001 variant="32x32_4" />,
   },
   {
-    path: "/about",
+    path: "/",
     label: "About",
     icon: <Winhlp324000 variant="32x32_4" />,
     Component: lazy(() =>

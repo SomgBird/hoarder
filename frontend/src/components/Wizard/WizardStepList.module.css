@@ -1,0 +1,15 @@
+.list_wrapper {
+    width: 150px;
+    flex-shrink: 0;
+    padding: 8px;
+}
+
+.step_list {
+    display: flex;
+    gap: 6;
+    padding: 2px 0;
+}
+
+.list_element_marker {
+    width: 12px;
+}

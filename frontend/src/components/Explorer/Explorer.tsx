@@ -1,53 +1,57 @@
+import { useState } from "react";
 import { Frame, TitleBar } from "@react95/core";
-
-import {
-  Separator,
-  AddressBar,
-  ContentFrame,
-  ItemView,
-  EtchedBox,
-} from "@components";
 import { HtmlPage, Ie } from "@react95/icons";
+
+import { Separator, AddressBar, ContentFrame, EtchedBox } from "@components";
 import styles from "./Explorer.module.css";
-import ExplorerToolbar from "./ExplorerToolbar";
-import { ExplorerMenuBar } from "./ExplorerMenuBar";
+import ExplorerToolbar from "./ExplorerToolbar/ExplorerToolbar";
+import { ExplorerMenuBar } from "./ExplorerMenuBar/ExplorerMenuBar";
+import { useExplorer } from "./ExplorerContext";
+import { parseUrl, toUrl } from "./locations";
+import { renderPage } from "./explorer_pages";
 
-interface Props {
-  id: number | null;
-}
+function Explorer() {
+  const { current, navigate, revision } = useExplorer();
 
-function Explorer({ id }: Props) {
+  // What's typed in the address bar before Enter; reset whenever we navigate.
+  // Resetting during render (instead of in an effect) avoids a second,
+  // cascading render with a stale address bar in between.
+  const [draft, setDraft] = useState(toUrl(current));
+  const [draftFor, setDraftFor] = useState(current);
+  if (draftFor !== current) {
+    setDraftFor(current);
+    setDraft(toUrl(current));
+  }
+
   return (
-    <Frame bgColor="$material" boxShadow="$out" padding="$2">
+    <Frame
+      bgColor="$material"
+      boxShadow="$out"
+      padding="$2"
+      className={styles.explorer}
+    >
       <TitleBar icon={<Ie variant="16x16_8" />} title="Explorer">
         <TitleBar.OptionsBox>
           <TitleBar.Close />
         </TitleBar.OptionsBox>
       </TitleBar>
+
       <EtchedBox>
         <ExplorerMenuBar />
-        <Separator className={styles.explorerSeparator} />
+        <Separator className={styles.explorer_separator} />
         <ExplorerToolbar />
-        <Separator className={styles.explorerSeparator} />
+        <Separator className={styles.explorer_separator} />
         <AddressBar
-          value={"Test URL"}
-          onChange={() => {}}
-          onSubmit={() => {}}
+          value={draft}
+          onChange={setDraft}
+          onSubmit={() => navigate(parseUrl(draft))}
           icon={<HtmlPage variant="16x16_8" />}
         />
       </EtchedBox>
 
-      <Frame bgColor="$material" padding="$4">
-        <Frame
-          h="650px"
-          bgColor="white"
-          boxShadow="$in"
-          paddingTop="$1"
-          paddingLeft="$1"
-        >
-          <ContentFrame>
-            <ItemView id={id} />
-          </ContentFrame>
+      <Frame bgColor="$material" className={styles.outer_content_wrapper}>
+        <Frame boxShadow="$in" className={styles.inner_content_wrapper}>
+          <ContentFrame key={revision}>{renderPage(current)}</ContentFrame>
         </Frame>
       </Frame>
     </Frame>

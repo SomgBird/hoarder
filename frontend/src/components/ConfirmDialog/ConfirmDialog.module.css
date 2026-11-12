@@ -1,0 +1,38 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.dialog {
+    width: 320px;
+    padding: 3px;
+    display: flex;
+    flex-direction: column;
+}
+
+.body {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+}
+
+.icon {
+    flex-shrink: 0;
+}
+
+.buttons {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 16px 16px;
+}
+
+.buttons button {
+    min-width: 75px;
+}

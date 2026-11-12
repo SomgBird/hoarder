@@ -13,7 +13,7 @@ interface AppInfo {
 
 const APP: AppInfo = {
   name: "Hoarder",
-  version: "pre-alpha",
+  version: __APP_VERSION__,
   author: "SomgBird",
   year: 2026,
   description:
@@ -24,7 +24,7 @@ const APP: AppInfo = {
 export default function About() {
   return (
     <div className={styles.root}>
-      <Frame w="320px" bgColor="$material" boxShadow="$out" padding="$4">
+      <Frame bgColor="$material" boxShadow="$out" padding="$2">
         <TitleBar icon={<Winhlp324000 variant="16x16_4" />} title="About">
           <TitleBar.OptionsBox>
             <TitleBar.Close />

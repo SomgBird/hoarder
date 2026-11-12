@@ -1,0 +1,47 @@
+.wizard_frame {
+    width: fit-content;
+    padding: 3px;
+    display: flex;
+    flex-direction: column;
+}
+
+.wizard_content_wrapper {
+    display: flex;
+    padding: 12px;
+    gap: 12px;
+    flex-direction: column;
+}
+
+.wizard_inner_content_wrapper {
+    display: flex;
+    flex-direction: row;
+}
+
+.content_column {
+    width: 500px;
+    height: 300px;
+}
+
+.step_title {
+    margin: 0 0 12px;
+}
+
+.step_content {
+    padding: 12px;
+}
+
+.buttons_section {
+    display: flex;
+    gap: 2px;
+    justify-content: flex-end;
+    padding-top: 10px;
+}
+
+.cancel_button {
+    margin-left: 10px;
+}
+
+.error_text {
+    color: #a00000;
+    margin-top: 4px;
+}

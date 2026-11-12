@@ -1,0 +1,88 @@
+import type { WizardStep } from "@components/Wizard/wizardTypes";
+import { Wizard } from "@components/Wizard/Wizard";
+import { Button } from "@react95/core";
+import { Mshtml32541 } from "@react95/icons";
+import { useState } from "react";
+import type { PageData } from "../pageTypes";
+import {
+  DetailsStep,
+  NotImplementedStep,
+  ReviewStep,
+  TypeStep,
+} from "./PageEditorWizardSteps";
+
+const BANNER =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="150" height="290">' +
+      '<rect width="150" height="290" fill="#008080"/>' +
+      '<rect x="25" y="40" width="100" height="70" fill="#c0c0c0" stroke="#000"/>' +
+      '<rect x="25" y="40" width="100" height="12" fill="#000080"/>' +
+      "</svg>",
+  );
+
+const INITIAL_DATA: PageData = { pageType: "item", title: "", itemType: null };
+
+interface PageEditorWizardProps {
+  onFinish: (data: PageData) => void;
+}
+
+export function PageEditorWizard({ onFinish }: PageEditorWizardProps) {
+  const [open, setOpen] = useState(true);
+  const [data, setData] = useState<PageData>(INITIAL_DATA);
+
+  const update = (changes: Partial<PageData>) =>
+    setData((prev) => ({ ...prev, ...changes }));
+
+  const cancelWizard = () => {
+    setData(INITIAL_DATA);
+    setOpen(false);
+  };
+
+  const stepProps = { data, update };
+
+  const steps: WizardStep[] = [
+    { title: "Page type", content: <TypeStep {...stepProps} /> },
+    ...(data.pageType === "item"
+      ? [
+          {
+            title: "Details",
+            content: <DetailsStep {...stepProps} />,
+            validate: () => {
+              if (!data.title.trim()) return "Title is required.";
+              if (!data.itemType) return "Item type is required.";
+              return null;
+            },
+          },
+          { title: "Review", content: <ReviewStep {...stepProps} /> },
+        ]
+      : [
+          {
+            title: "Not available",
+            content: <NotImplementedStep {...stepProps} />,
+            nextDisabled: true,
+          },
+        ]),
+  ];
+
+  return (
+    <div style={{ padding: 24 }}>
+      <Button onClick={() => setOpen(true)}>New page...</Button>
+      {open && (
+        <div style={{ marginTop: 16 }}>
+          <Wizard
+            title="New page"
+            icon={<Mshtml32541 variant="16x16_4" />}
+            steps={steps}
+            imageSrc={BANNER}
+            showImage
+            showSteps
+            onFinish={() => onFinish(data)}
+            onCancel={cancelWizard}
+            confirmCancel
+          />
+        </div>
+      )}
+    </div>
+  );
+}

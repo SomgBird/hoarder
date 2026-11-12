@@ -14,7 +14,7 @@ DATA_DIR = BASE_DIR / "data"
 
 MEDIA_DIR = DATA_DIR / "media"
 COVERS_DIR = MEDIA_DIR / "covers"
-DB_PATH = DATA_DIR / "books.db"
+DB_PATH = DATA_DIR / "collection.db"
 
 # Ensure directories exist at import time.
 # Doing this here means main.py / routers / seed.py never need to.
@@ -41,6 +41,7 @@ ALLOWED_IMAGE_TYPES = {
     "image/webp": ".webp",
 }
 MAX_UPLOAD_BYTES = 5 * 1024 * 1024   # 5 MB
+MAX_COVER_PIXELS = 20_000_000
 
 # URL prefix under which MEDIA_DIR is served by StaticFiles in main.py
 MEDIA_URL_PREFIX = "/media"

@@ -1,0 +1,77 @@
+// ExplorerToolbar/ExplorerToolbar.tsx
+import { Icon, Separator } from "@components";
+import { Toolbar } from "@components";
+import {
+  Progman44,
+  Progman45,
+  Shell32134,
+  Shell3217,
+  Winhlp324001,
+  Wmsui323934,
+  Write1,
+} from "@react95/icons";
+import { useNavigate } from "react-router-dom";
+import { useExplorer } from "../ExplorerContext";
+import styles from "./ExplorerToolbar.module.css";
+
+function ExplorerToolbar() {
+  const { back, forward, canBack, canForward, navigate, current, refresh } = useExplorer();
+  const navigateTo = useNavigate();
+
+  return (
+    <div className={styles.container}>
+      <Separator orientation="vertical" variant="grip" />
+      <Toolbar>
+        <Toolbar.Button
+          icon={<Progman44 variant="32x32_4" />}
+          label="Back"
+          onClick={back}
+          disabled={!canBack}
+        />
+        <Toolbar.Button
+          icon={<Progman45 variant="32x32_4" />}
+          onClick={forward}
+          disabled={!canForward}
+        />
+        <Toolbar.Button icon={<Icon name="stop" />} />
+        <Toolbar.Button icon={<Icon name="refresh_page" />} aria-label="Refresh" onClick={refresh} />
+        <Toolbar.Button
+          icon={<Icon name="home" />}
+          onClick={() => navigate({ page: "home" })}
+        />
+
+        <Toolbar.Separator />
+
+        <Toolbar.Button
+          icon={<Shell32134 variant="32x32_4" />}
+          label="Search"
+        />
+        <Toolbar.Button
+          icon={<Wmsui323934 variant="32x32_4" />}
+          label="Favorites"
+        />
+
+        <Toolbar.Separator />
+
+        <Toolbar.Button icon={<Shell3217 variant="32x32_4" />} />
+        <Toolbar.Button
+          icon={<Write1 variant="32x32_4" />}
+          label="Edit"
+          disabled={current.page !== "item"}
+          onClick={() => {
+            if (current.page === "item") navigateTo(`/page-editor?itemId=${current.id}`);
+          }}
+        />
+
+        <Toolbar.Separator />
+
+        <Toolbar.Button
+          icon={<Winhlp324001 variant="32x32_4" />}
+          label="Help"
+        />
+      </Toolbar>
+    </div>
+  );
+}
+
+export default ExplorerToolbar;

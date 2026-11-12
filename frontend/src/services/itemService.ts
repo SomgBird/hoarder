@@ -1,31 +1,41 @@
-import type { Item, ItemCreate, ItemInfo, Page } from '../types/item.ts';
+import type { ItemRead, ItemCreate, ItemUpdate, ItemListPage } from '../types/item.ts';
 import { request } from './client.ts'
 
-const PATH = "/books";
+const PATH = "/items";
 
 export const itemService = {
-  all: () => request<Item[]>(`${PATH}`),
+  list: (offset = 0, limit = 20, signal?: AbortSignal) =>
+    request<ItemListPage>(`${PATH}/itemlist?offset=${offset}&limit=${limit}`, { signal }),
 
-  list: () => request<Page<ItemInfo>>(`${PATH}/booklist`),
-
-  get: (id: number) => request<Item>(`${PATH}/${id}`),
+  get: (id: number, signal?: AbortSignal) => request<ItemRead>(`${PATH}/${id}`, { signal }),
 
   create: (data: ItemCreate)  =>
-    request(`${PATH}/`, {
+    request<ItemRead>(`${PATH}/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
 
+  update: (id: number, data: ItemUpdate) =>
+    request<ItemRead>(`${PATH}/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
   delete: (id: number) =>
-    request(`${PATH}/${id}`, { method: "DELETE" }),
+    request<void>(`${PATH}/${id}`, { method: "DELETE" }),
 
   uploadCover: (id: number, file: File) => {
     const form = new FormData();
     form.append("file", file);
-    return request(`${PATH}/${id}/cover`, {
+    return request<ItemRead>(`${PATH}/${id}/cover`, {
       method: "POST",
       body: form,   // do NOT set Content-Type — the browser sets the boundary
     });
+  },
+  uploadIcon: (id: number, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<ItemRead>(`${PATH}/${id}/icon`, { method: "POST", body: form });
   },
 };

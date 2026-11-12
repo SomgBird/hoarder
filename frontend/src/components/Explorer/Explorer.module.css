@@ -1,3 +1,27 @@
-.explorerSeparator {
-  margin: 0 1px 1px 0 !important; /* inline style from Separator would otherwise win */
+.explorer {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.explorer_separator {
+  margin: 0 1px 1px 0 !important;
+}
+
+.outer_content_wrapper {
+  flex: 1;
+  min-height: 0;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.inner_content_wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background-color: white;
+  padding-top: 1px;
+  padding-left: 1px;
 }

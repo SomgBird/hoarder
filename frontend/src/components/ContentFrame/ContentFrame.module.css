@@ -7,9 +7,12 @@
 
 .reset {
   all: initial;
-  display: flow-root;   /* block + BFC: stops margin collapse, keeps baseline fix */
+  /* Flex column instead of height: 100%: the wrapper is at least as tall as the
+     viewport, but grows with its content instead of overflowing it. */
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
   box-sizing: border-box;
-  height: 100%;
   font-size: 16px;
   line-height: 1.4;
   color: #000;
