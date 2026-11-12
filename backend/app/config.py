@@ -14,12 +14,14 @@ DATA_DIR = BASE_DIR / "data"
 
 MEDIA_DIR = DATA_DIR / "media"
 COVERS_DIR = MEDIA_DIR / "covers"
+ICONS_DIR = MEDIA_DIR / "icons"
 DB_PATH = DATA_DIR / "collection.db"
 
 # Ensure directories exist at import time.
 # Doing this here means main.py / routers / seed.py never need to.
 MEDIA_DIR.mkdir(parents=True, exist_ok=True)
 COVERS_DIR.mkdir(parents=True, exist_ok=True)
+ICONS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---------- Database ----------
 DATABASE_URL = f"sqlite:///{DB_PATH}"
@@ -46,3 +48,4 @@ MAX_COVER_PIXELS = 20_000_000
 # URL prefix under which MEDIA_DIR is served by StaticFiles in main.py
 MEDIA_URL_PREFIX = "/media"
 COVERS_URL_PREFIX = f"{MEDIA_URL_PREFIX}/covers"
+ICONS_URL_PREFIX = f"{MEDIA_URL_PREFIX}/icons"

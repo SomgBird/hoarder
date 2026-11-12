@@ -9,6 +9,7 @@ from app.database import create_db_and_tables, engine
 from app.config import CORS_ORIGINS, MEDIA_DIR, MEDIA_URL_PREFIX
 from app.db.seed import seed_builtin
 from app.errors import register_exception_handlers
+from app.media import migrate_icons
 from app.routers import items, reference
 
 
@@ -16,6 +17,7 @@ from app.routers import items, reference
 async def lifespan(app: FastAPI):
     create_db_and_tables()          # 1. tables first
     with Session(engine) as session:
+        migrate_icons(session)
         seed_builtin(session)       # 2. builtin reference data (idempotent, every startup)
     yield
 

@@ -21,6 +21,7 @@ from app.db.models import (
     OwnedCopy, Title,
 )
 from app.errors import AppError, register_exception_handlers
+from app.media import migrate_icons
 from app.db.seed import seed_builtin, seed_examples
 from app.routers import items, reference
 
@@ -42,8 +43,12 @@ class ItemApiTests(unittest.TestCase):
         media_dir = Path(self.directory.name)
         self.covers = media_dir / "covers"
         self.covers.mkdir()
+        self.icons = media_dir / "icons"
+        self.icons.mkdir()
         self.cover_patch = patch("app.media.COVERS_DIR", self.covers)
         self.cover_patch.start()
+        self.icon_patch = patch("app.media.ICONS_DIR", self.icons)
+        self.icon_patch.start()
         app = FastAPI()
         app.dependency_overrides[get_session] = session_override
         register_exception_handlers(app)
@@ -55,6 +60,7 @@ class ItemApiTests(unittest.TestCase):
     def tearDown(self):
         self.client.close()
         self.cover_patch.stop()
+        self.icon_patch.stop()
         self.engine.dispose()
         self.directory.cleanup()
 
@@ -323,7 +329,9 @@ class ItemApiTests(unittest.TestCase):
         first = icon()
         self.assertEqual(first.status_code, 200, first.text)
         path = first.json()["icon_image_path"]
-        self.assertTrue(path.startswith(f"/media/covers/{item['id']}-"))
+        self.assertTrue(path.startswith(f"/media/icons/{item['id']}-"))
+        self.assertTrue((self.icons / Path(path).name).is_file())
+        self.assertFalse((self.covers / Path(path).name).exists())
         self.assertEqual(first.json()["cover_image_path"], cover)
         self.assertEqual(self.client.get(path).status_code, 200)
         self.assertEqual(icon(b"invalid").status_code, 400)
@@ -336,6 +344,7 @@ class ItemApiTests(unittest.TestCase):
         self.assertEqual(self.client.get(cover).status_code, 200)
         self.assertEqual(self.client.delete(f"/items/{item['id']}").status_code, 204)
         self.assertEqual(list(self.covers.iterdir()), [])
+        self.assertEqual(list(self.icons.iterdir()), [])
 
     def test_generate_icon_from_cover_contains_all_sizes_and_preserves_aspect_ratio(self):
         item = self.create()
@@ -343,7 +352,10 @@ class ItemApiTests(unittest.TestCase):
         response = self.client.post(f"/items/{item['id']}/icon/from-cover")
         self.assertEqual(response.status_code, 200, response.text)
         path = response.json()["icon_image_path"]
+        self.assertTrue(path.startswith(f"/media/icons/{item['id']}-"))
         self.assertTrue(path.endswith(".ico"))
+        self.assertEqual(len(list(self.icons.iterdir())), 1)
+        self.assertEqual(len(list(self.covers.iterdir())), 1)
         self.assertEqual(response.json()["cover_image_path"], cover)
         media = self.client.get(path)
         self.assertEqual(media.status_code, 200)
@@ -375,6 +387,7 @@ class ItemApiTests(unittest.TestCase):
         self.client.delete(f"/items/{item['id']}")
         self.assertEqual(self.client.get(final).status_code, 404)
         self.assertEqual(list(self.covers.iterdir()), [])
+        self.assertEqual(list(self.icons.iterdir()), [])
 
     def test_generate_requires_an_existing_item_and_a_managed_cover(self):
         self.assertEqual(self.client.post("/items/99999/icon/from-cover").status_code, 404)
@@ -393,17 +406,71 @@ class ItemApiTests(unittest.TestCase):
         item = self.create()
         cover = self.upload(item["id"]).json()["cover_image_path"]
         icon = self.client.post(f"/items/{item['id']}/icon/from-cover").json()["icon_image_path"]
-        original_files = set(self.covers.iterdir())
+        original_files = set(self.covers.iterdir()) | set(self.icons.iterdir())
         with patch("app.routers.items.crud.update_item", side_effect=AppError("Save failed", code="save_failed")):
             response = self.client.post(f"/items/{item['id']}/icon/from-cover")
         self.assertEqual(response.status_code, 400, response.text)
-        self.assertEqual(set(self.covers.iterdir()), original_files)
+        self.assertEqual(set(self.covers.iterdir()) | set(self.icons.iterdir()), original_files)
         self.assertEqual(self.client.get(f"/items/{item['id']}").json()["icon_image_path"], icon)
         (self.covers / Path(cover).name).write_bytes(b"invalid image")
         response = self.client.post(f"/items/{item['id']}/icon/from-cover")
         self.assertEqual(response.status_code, 400, response.text)
         self.assertEqual(response.json()["code"], "invalid_image")
-        self.assertEqual(set(self.covers.iterdir()), original_files)
+        self.assertEqual(set(self.covers.iterdir()) | set(self.icons.iterdir()), original_files)
+
+    def test_legacy_icons_migrate_to_icons_folder_and_keep_all_embedded_sizes(self):
+        item = self.create()
+        cover = self.upload(item["id"]).json()["cover_image_path"]
+        generated = self.client.post(f"/items/{item['id']}/icon/from-cover").json()["icon_image_path"]
+        filename = Path(generated).name
+        original = (self.icons / filename).read_bytes()
+        (self.icons / filename).replace(self.covers / filename)
+        legacy = f"/media/covers/{filename}"
+        self.client.patch(f"/items/{item['id']}", json={"icon_image_path": legacy})
+        shared = self.create(icon_image_path=legacy)
+        with Session(self.engine) as session:
+            migrate_icons(session)
+            migrate_icons(session)
+        updated = self.client.get(f"/items/{item['id']}").json()
+        path = updated["icon_image_path"]
+        self.assertTrue(path.startswith("/media/icons/"))
+        self.assertEqual(updated["cover_image_path"], cover)
+        self.assertEqual(self.client.get(path).content, original)
+        self.assertEqual(self.client.get(legacy).status_code, 404)
+        self.assertEqual(self.client.get(f"/items/{shared['id']}").json()["icon_image_path"], path)
+        self.assertEqual(len(list(self.icons.iterdir())), 1)
+        with Image.open(BytesIO(self.client.get(path).content)) as icon:
+            self.assertEqual(icon.ico.sizes(), {(16, 16), (32, 32), (64, 64)})
+        self.client.delete(f"/items/{item['id']}")
+        self.assertEqual(self.client.get(path).status_code, 200)
+        self.client.delete(f"/items/{shared['id']}")
+        self.assertEqual(list(self.icons.iterdir()), [])
+
+    def test_legacy_icon_migration_keeps_shared_cover_and_skips_missing_and_unmanaged_files(self):
+        item = self.create()
+        cover = self.upload(item["id"]).json()["cover_image_path"]
+        self.client.patch(f"/items/{item['id']}", json={"icon_image_path": cover})
+        missing = self.create(icon_image_path="/media/covers/1-" + "a" * 32 + ".png")
+        unmanaged = self.create(icon_image_path="/media/covers/../../outside.png")
+        with Session(self.engine) as session, self.assertLogs("app.media", level="WARNING"):
+            migrate_icons(session)
+        path = self.client.get(f"/items/{item['id']}").json()["icon_image_path"]
+        self.assertTrue(path.startswith("/media/icons/"))
+        self.assertEqual(self.client.get(path).content, self.client.get(cover).content)
+        self.assertEqual(self.client.get(cover).status_code, 200)
+        for unchanged in (missing, unmanaged):
+            self.assertEqual(self.client.get(f"/items/{unchanged['id']}").json()["icon_image_path"], unchanged["icon_image_path"])
+
+    def test_icon_migration_failure_retains_legacy_paths_and_cleans_new_copies(self):
+        item = self.create()
+        cover = self.upload(item["id"]).json()["cover_image_path"]
+        self.client.patch(f"/items/{item['id']}", json={"icon_image_path": cover})
+        with Session(self.engine) as session, patch.object(session, "commit", side_effect=RuntimeError("Commit failed")):
+            with self.assertRaisesRegex(RuntimeError, "Commit failed"):
+                migrate_icons(session)
+        self.assertEqual(self.client.get(f"/items/{item['id']}").json()["icon_image_path"], cover)
+        self.assertEqual(self.client.get(cover).status_code, 200)
+        self.assertEqual(list(self.icons.iterdir()), [])
 
 
 if __name__ == "__main__":
