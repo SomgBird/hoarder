@@ -1,4 +1,6 @@
 .manager {
+  --icon-row-height: 88px;
+  --item-gap: 8px;
   min-width: 0;
 }
 
@@ -71,7 +73,8 @@
 }
 
 .list,
-.icons {
+.icons,
+.minipages {
   display: grid;
   gap: 4px;
   padding: 0;
@@ -85,15 +88,25 @@
 
 .icons {
   grid-template-columns: repeat(auto-fill, minmax(min(88px, 100%), 1fr));
-  gap: 8px;
+  grid-auto-rows: var(--icon-row-height);
+  gap: var(--item-gap);
+}
+
+.minipages {
+  grid-template-columns: minmax(0, 1fr);
+  /* One card occupies exactly two icon rows, including their gap. */
+  grid-auto-rows: calc(var(--icon-row-height) + var(--icon-row-height) + var(--item-gap));
+  gap: var(--item-gap);
 }
 
 .list li,
-.icons li {
+.icons li,
+.minipages li {
   min-width: 0;
 }
 
 .item {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -108,6 +121,62 @@
   justify-content: flex-start;
   padding: 8px 4px;
   text-align: center;
+}
+
+.icons .itemTitle {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  line-height: 16px;
+}
+
+.minipages .item {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--r95-color-borderDark, #808080);
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+}
+
+.summaryTitle {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.summaryDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summaryDescription {
+  grid-column: 1 / -1;
+  align-self: end;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 18px;
 }
 
 .itemIcon {

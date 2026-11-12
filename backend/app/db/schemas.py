@@ -470,6 +470,7 @@ class ItemListEntryRead(_Read):
     date_added: date | None = None
     is_owned: bool
     icon_image_path: str | None = None
+    description: str | None = None
 
 
 T = TypeVar("T")

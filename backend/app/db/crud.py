@@ -320,6 +320,7 @@ def _list_query():
         Item.date_added,
         func.coalesce(Item.is_owned, False).label("is_owned"),
         Item.icon_image_path,
+        Item.description,
     )
 
 

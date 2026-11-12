@@ -11,7 +11,7 @@ import {
   Shdocvw272,
 } from "@react95/icons";
 
-export type CollectionViewMode = "table" | "list" | "icons";
+export type CollectionViewMode = "table" | "list" | "icons" | "minipages";
 
 interface Props {
   view: CollectionViewMode;
@@ -23,6 +23,7 @@ function CollectionManagerToolbar({ view, onViewChange }: Props) {
     { value: "table", label: "Table", icon: <Detlicon variant="16x16_4" /> },
     { value: "list", label: "List", icon: <FolderFile variant="16x16_4" /> },
     { value: "icons", label: "Icons", icon: <Shdocvw272 variant="16x16_4" /> },
+    { value: "minipages", label: "Mini pages", icon: <Mailnews20 variant="16x16_4" /> },
   ] as const;
 
   return (
@@ -54,10 +55,6 @@ function CollectionManagerToolbar({ view, onViewChange }: Props) {
         <Toolbar.MenuDivider />
         <Toolbar.MenuItem icon={<FolderFile variant="16x16_4" />}>
           Categories
-        </Toolbar.MenuItem>
-        <Toolbar.MenuDivider />
-        <Toolbar.MenuItem icon={<Mailnews20 variant="16x16_4" />}>
-          Mini pages
         </Toolbar.MenuItem>
       </Toolbar.Menu>
     </Toolbar>

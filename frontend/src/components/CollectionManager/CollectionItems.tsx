@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FileText } from "@react95/icons";
-import type { ItemListEntryRead } from "@types";
+import { ITEM_TYPES, ITEM_TYPE_LABELS, type ItemListEntryRead } from "@types";
 import { coverUrl } from "@services";
 import type { CollectionViewMode } from "./CollectionManagerToolbar";
 import styles from "./CollectionManager.module.css";
@@ -12,7 +12,7 @@ interface Props {
   onSelectItem: (id: number) => void;
 }
 
-function ItemIcon({ path, size }: { path: string | null; size: 16 | 32 }) {
+function ItemIcon({ path, size }: { path: string | null; size: 16 | 32 | 64 }) {
   const src = coverUrl(path);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   return (
@@ -20,7 +20,7 @@ function ItemIcon({ path, size }: { path: string | null; size: 16 | 32 }) {
       {src && src !== failedSrc ? (
         <img src={src} alt="" width={size} height={size} onError={() => setFailedSrc(src)} />
       ) : (
-        <FileText variant={size === 16 ? "16x16_4" : "32x32_4"} />
+        <FileText variant={size === 16 ? "16x16_4" : "32x32_4"} width={size} height={size} />
       )}
     </span>
   );
@@ -28,6 +28,24 @@ function ItemIcon({ path, size }: { path: string | null; size: 16 | 32 }) {
 
 function ItemDate({ value }: { value: string | null }) {
   return value ? <time dateTime={value}>{value}</time> : <>—</>;
+}
+
+function ItemSummary({ item }: { item: ItemListEntryRead }) {
+  const type = ITEM_TYPES.find((type) => type === item.item_type);
+  return (
+    <span className={styles.summary}>
+      <span className={styles.summaryTitle}>{item.title}</span>
+      <span>
+        <span>{type ? ITEM_TYPE_LABELS[type] : item.item_type}</span>
+        <span aria-hidden="true"> · </span>
+        <span>{item.is_owned ? "Owned" : "Not owned"}</span>
+      </span>
+      <span className={styles.summaryDetails}>
+        <span>Release date: <ItemDate value={item.release_date} /></span>
+        <span>Date added: <ItemDate value={item.date_added} /></span>
+      </span>
+    </span>
+  );
 }
 
 export default function CollectionItems({ items, view, selectedItemId, onSelectItem }: Props) {
@@ -56,13 +74,16 @@ export default function CollectionItems({ items, view, selectedItemId, onSelectI
   }
 
   return (
-    <ul className={view === "icons" ? styles.icons : styles.list} aria-label="Collection items">
+    <ul className={view === "minipages" ? styles.minipages : view === "icons" ? styles.icons : styles.list} aria-label="Collection items">
       {items.map((item) => (
         <li key={item.id}>
           <button type="button" className={styles.item} aria-current={item.id === selectedItemId}
             onClick={() => onSelectItem(item.id)} title={item.title}>
-            <ItemIcon path={item.icon_image_path} size={view === "icons" ? 32 : 16} />
-            <span className={styles.itemTitle}>{item.title}</span>
+            <ItemIcon path={item.icon_image_path} size={view === "minipages" ? 64 : view === "icons" ? 32 : 16} />
+            {view === "minipages" ? <ItemSummary item={item} /> : <span className={styles.itemTitle}>{item.title}</span>}
+            {view === "minipages" && item.description?.trim() && (
+              <span className={styles.summaryDescription}>{item.description.trim()}</span>
+            )}
           </button>
         </li>
       ))}

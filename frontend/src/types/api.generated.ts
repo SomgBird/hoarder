@@ -755,6 +755,8 @@ export interface components {
         ItemListEntryRead: {
             /** Date Added */
             date_added: string | null;
+            /** Description */
+            description: string | null;
             /** Icon Image Path */
             icon_image_path: string | null;
             /** Id */

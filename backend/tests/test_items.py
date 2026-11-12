@@ -141,6 +141,15 @@ class ItemApiTests(unittest.TestCase):
         self.client.patch(f"/items/{item['id']}", json={"description": "Updated"})
         self.assertEqual(self.client.get("/items/itemlist").json()["items"][0]["date_added"], listed["date_added"])
 
+    def test_list_includes_current_description_and_allows_no_description(self):
+        first = self.create(description="A description for the mini page.")
+        second = self.create()
+        listed = self.client.get("/items/itemlist").json()["items"]
+        self.assertEqual(listed[0]["description"], first["description"])
+        self.assertIsNone(listed[1]["description"])
+        self.client.patch(f"/items/{second['id']}", json={"description": "Updated description"})
+        self.assertEqual(self.client.get("/items/itemlist").json()["items"][1]["description"], "Updated description")
+
     def test_existing_database_adds_nullable_date_without_losing_items(self):
         legacy = create_engine("sqlite://", poolclass=StaticPool)
         try:

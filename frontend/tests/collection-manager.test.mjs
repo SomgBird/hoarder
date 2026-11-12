@@ -131,3 +131,69 @@ test("load errors can retry and an empty collection keeps view choices available
   assert.equal(collection(), null);
   assert.equal(option("Icons").getAttribute("aria-checked"), "true");
 });
+
+test("mini pages show a 64px icon, item type, ownership and dates while keeping selection", async () => {
+  await render();
+  await click(button("First item"));
+  await click(option("Mini pages"));
+  assert.equal(option("Mini pages").getAttribute("aria-checked"), "true");
+  assert.equal(option("Icons").getAttribute("aria-checked"), "false");
+  const cards = collection().querySelectorAll("li > button");
+  assert.equal(cards.length, 2);
+  assert.equal(cards[0].getAttribute("aria-current"), "true");
+  assert.equal(cards[0].querySelector("img").width, 64);
+  assert.equal(cards[0].querySelector("img").height, 64);
+  assert.match(cards[0].textContent, /First item/);
+  assert.match(cards[0].textContent, /Book · Owned/);
+  assert.match(cards[0].textContent, /Release date: 2001-02-03/);
+  assert.match(cards[0].textContent, /Date added: 2026-11-12/);
+  assert.match(cards[1].textContent, /Video game · Not owned/);
+  assert.match(cards[1].textContent, /Release date: —/);
+  assert.match(cards[1].textContent, /Date added: —/);
+  assert.equal(cards[1].querySelector("svg").getAttribute("width"), "64");
+  await click(cards[1]);
+  assert.equal(selectedItemId, 2);
+  await click(option("Icons"));
+  assert.equal(button("Second item").getAttribute("aria-current"), "true");
+  assert.equal(calls.length, 1);
+});
+
+test("mini pages keep their layout during pagination and refresh, with a fallback for broken icons", async () => {
+  items = Array.from({ length: 23 }, (_, index) => ({ ...items[0], id: index + 1, title: `Item ${index + 1}` }));
+  await render();
+  await act(async () => option("Mini pages").dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true })));
+  await click(button("Next"));
+  assert.equal(collection().querySelectorAll("li").length, 3);
+  const card = collection().querySelector("button");
+  assert.match(card.textContent, /Item 21/);
+  await act(async () => card.querySelector("img").dispatchEvent(new Event("error")));
+  assert.equal(card.querySelector("img"), null);
+  assert.equal(card.querySelector("svg").getAttribute("width"), "64");
+  items[20] = { ...items[20], is_owned: false, release_date: "2002-03-04" };
+  refreshKey++;
+  await render();
+  assert.equal(option("Mini pages").getAttribute("aria-checked"), "true");
+  assert.match(collection().querySelector("button").textContent, /Not owned/);
+  assert.match(collection().querySelector("button").textContent, /2002-03-04/);
+  assert.equal(button("Next").disabled, true);
+});
+
+test("mini pages show descriptions at the bottom, omit blank ones, and refresh their text", async () => {
+  items[0].description = "A long description. ".repeat(100);
+  items[1].description = "   ";
+  await render();
+  assert.equal(collection().querySelector(".summaryDescription"), null);
+  await click(option("Mini pages"));
+  const cards = collection().querySelectorAll("li > button");
+  assert.equal(cards[0].lastElementChild.className, "summaryDescription");
+  assert.equal(cards[0].lastElementChild.textContent, items[0].description.trim());
+  assert.equal(cards[1].querySelector(".summaryDescription"), null);
+  items[0].description = "Updated description";
+  refreshKey++;
+  await render();
+  assert.equal(collection().querySelector(".summaryDescription").textContent, "Updated description");
+  for (const view of ["List", "Icons", "Table"]) {
+    await click(option(view));
+    assert.equal(collection().querySelector(".summaryDescription"), null);
+  }
+});
