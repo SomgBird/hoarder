@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button, Frame, TitleBar } from "@react95/core";
 import { Notepad } from "@react95/icons";
-import type { ItemListEntryRead, Page } from "@types";
+import type { ItemListPage } from "@types";
 import { itemService } from "@services";
 import CollectionManagerToolbar from "./CollectionManagerToolbar";
 
@@ -11,7 +11,7 @@ interface Props {
 }
 
 const PAGE_SIZE = 20;
-type Result = { key: string; page?: Page<ItemListEntryRead>; error?: string };
+type Result = { key: string; page?: ItemListPage; error?: string };
 
 function CollectionManager({ selectedItemId, onSelectItem }: Props) {
   const [offset, setOffset] = useState(0);

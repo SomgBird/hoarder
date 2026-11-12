@@ -1,417 +1,62 @@
-// Mirrors backend app/db/schemas.py. Dates are ISO strings ("1937-09-21").
-//
-// Read types: every field is present in the JSON, so nullable fields are `T | null`.
-// Create/update types: fields the backend defaults are optional (`?`).
-// Create and update payloads are strict: the backend rejects unknown keys with a 422,
-// so build them field by field instead of spreading an ItemRead into one.
+// Public aliases for the generated API contract. Dates are ISO strings.
+// Keep API fields in backend/app/db/schemas.py and run npm run generate:types.
+import type { components } from "./api.generated";
 
-// ============================================================
-// Reference data (GET /reference/...)
-// ============================================================
+type Schemas = components["schemas"];
 
-import { ITEM_TYPE, type ItemType } from "./itemTypes";
-
-export interface LanguageRead {
-  id: number;
-  code: string;
-  name: string;
-}
-
-export interface FormatRead {
-  id: number;
-  name: string;
-  short_name: string | null;
-  description: string | null;
-}
-
-export interface GenreRead {
-  id: number;
-  name: string;
-  description: string | null;
-  parent_genre_id: number | null; // build the genre tree from this
-}
-
-export interface FranchiseRead {
-  id: number;
-  name: string;
-  description: string | null;
-  parent_franchise_id: number | null;
-}
-
-export interface TagRead {
-  id: number;
-  name: string;
-  description: string | null;
-}
-
-export interface ScaleRead {
-  id: number;
-  scale: string; // "1:7", "28 mm"
-}
-
-export interface JournalRead {
-  id: number;
-  name: string;
-  description: string | null;
-}
-
-export interface GamePlatformRead {
-  id: number;
-  name: string;
-  short_name: string | null;
-  description: string | null;
-}
-
-export interface BarcodeTypeRead {
-  id: number;
-  name: string;
-  description: string | null;
-}
-
-export interface ConditionTypeRead {
-  id: number;
-  name: string;
-  description: string | null;
-}
-
-// ============================================================
-// Subtype details (discriminated on type_name)
-// ============================================================
-
-// ---------- read: references are expanded objects ----------
-export interface BookDetailsRead {
-  type_name: typeof ITEM_TYPE.book;
-  page_count: number | null;
-}
-
-export interface GameDetailsRead {
-  type_name: typeof ITEM_TYPE.game;
-  game_platform: GamePlatformRead | null;
-}
-
-export interface FilmDetailsRead {
-  type_name: typeof ITEM_TYPE.film;
-  length: number | null; // minutes
-}
-
-export interface BoardGameDetailsRead {
-  type_name: typeof ITEM_TYPE.board_game;
-}
-
-export interface JournalIssueDetailsRead {
-  type_name: typeof ITEM_TYPE.journal_issue;
-  journal: JournalRead | null;
-  issue: string | null;
-  page_count: number | null;
-}
-
-export interface FigurineDetailsRead {
-  type_name: typeof ITEM_TYPE.figurine;
-  scale: ScaleRead | null;
-}
-
-export interface MiniatureDetailsRead {
-  type_name: typeof ITEM_TYPE.miniature;
-  height: number | null;
-  width: number | null;
-  scale: ScaleRead | null;
-}
-
-export interface LegoSetDetailsRead {
-  type_name: typeof ITEM_TYPE.lego_set;
-  number_of_pieces: number | null;
-}
-
-export type ItemDetailsRead =
-  | BookDetailsRead
-  | GameDetailsRead
-  | FilmDetailsRead
-  | BoardGameDetailsRead
-  | JournalIssueDetailsRead
-  | FigurineDetailsRead
-  | MiniatureDetailsRead
-  | LegoSetDetailsRead;
-
-
-// ---------- create / update: references are ids ----------
-// Used for POST and for PATCH. On PATCH only the keys you send are changed
-// (null clears), and type_name must match the item's current type (else 409).
-export interface BookDetailsCreate {
-  type_name: typeof ITEM_TYPE.book;
-  page_count?: number | null; // >= 1
-}
-
-export interface GameDetailsCreate {
-  type_name: typeof ITEM_TYPE.game;
-  game_platform_id?: number | null;
-}
-
-export interface FilmDetailsCreate {
-  type_name: typeof ITEM_TYPE.film;
-  length?: number | null; // minutes, >= 1
-}
-
-export interface BoardGameDetailsCreate {
-  type_name: typeof ITEM_TYPE.board_game;
-}
-
-export interface JournalIssueDetailsCreate {
-  type_name: typeof ITEM_TYPE.journal_issue;
-  journal_id?: number | null;
-  issue?: string | null;
-  page_count?: number | null; // >= 1
-}
-
-export interface FigurineDetailsCreate {
-  type_name: typeof ITEM_TYPE.figurine;
-  scale_id?: number | null;
-}
-
-export interface MiniatureDetailsCreate {
-  type_name: typeof ITEM_TYPE.miniature;
-  height?: number | null; // >= 0
-  width?: number | null; // >= 0
-  scale_id?: number | null;
-}
-
-export interface LegoSetDetailsCreate {
-  type_name: typeof ITEM_TYPE.lego_set;
-  number_of_pieces?: number | null; // >= 1
-}
-
-export type ItemDetailsCreate =
-  | BookDetailsCreate
-  | GameDetailsCreate
-  | FilmDetailsCreate
-  | BoardGameDetailsCreate
-  | JournalIssueDetailsCreate
-  | FigurineDetailsCreate
-  | MiniatureDetailsCreate
-  | LegoSetDetailsCreate;
-
-// ============================================================
-// Item types with their scope (GET /reference/item-types)
-// ============================================================
-export interface ItemTypeRead {
-  id: number;
-  name: ItemType;
-  description: string | null;
-}
-
-// Formats and genres that apply to this type: use these to fill the form dropdowns.
-// The backend rejects a format/genre outside the item type's scope with a 422.
-export interface ItemTypeScopeRead extends ItemTypeRead {
-  formats: FormatRead[];
-  genres: GenreRead[];
-}
-
-// ============================================================
-// Titles / languages
-// ============================================================
-export interface TitleRead {
-  id: number;
-  title_text: string;
-  short_text: string | null;
-  language: LanguageRead | null;
-}
-
-export interface TitleCreate {
-  title_text: string;
-  short_text?: string | null;
-  language_code: string;
-}
-
-// Language an item is available in, and for what (UI, text, voice).
-export interface ItemLanguageRead {
-  language: LanguageRead;
-  ui: boolean | null;
-  text: boolean | null;
-  voice: boolean | null;
-}
-
-export interface ItemLanguageCreate {
-  language_code: string;
-  ui?: boolean | null;
-  text?: boolean | null;
-  voice?: boolean | null;
-}
-
-// ============================================================
-// Author credits
-// ============================================================
-export interface AuthorRead {
-  id: number;
-  name: string;
-}
-
-export interface AuthorRoleRead {
-  id: number;
-  name: string;
-  description: string | null;
-}
-
-export interface AuthorCreditRead {
-  author: AuthorRead;
-  role: AuthorRoleRead;
-  involvement_date: string | null;
-  comments: string | null;
-}
-
-// Backend requires exactly one of author_id / author_name; the union enforces it at compile time.
-type AuthorRef =
-  | { author_id: number; author_name?: never } // existing author, picked from autocomplete
-  | { author_name: string; author_id?: never }; // explicitly create a new author, even if the name exists
-
-export type AuthorCreditCreate = AuthorRef & {
-  role_name: string; // matched or created by name
-  involvement_date?: string | null;
-  comments?: string | null;
-};
-
-// ============================================================
-// Company credits
-// ============================================================
-export interface CompanyRead {
-  id: number;
-  name: string;
-}
-
-export interface CompanyRoleRead {
-  id: number;
-  name: string;
-  description: string | null;
-}
-
-export interface CompanyCreditRead {
-  company: CompanyRead;
-  role: CompanyRoleRead;
-  involvement_date: string | null;
-  comments: string | null;
-}
-
-type CompanyRef =
-  | { company_id: number; company_name?: never }
-  | { company_name: string; company_id?: never };
-
-export type CompanyCreditCreate = CompanyRef & {
-  role_name: string;
-  involvement_date?: string | null;
-  comments?: string | null;
-};
-
-// ============================================================
-// Barcodes
-// ============================================================
-export interface BarcodeRead {
-  id: number;
-  code: string;
-  barcode_type: BarcodeTypeRead | null;
-}
-
-export interface BarcodeCreate {
-  code: string; // whitespace is stripped by the backend
-  barcode_type_id?: number | null;
-}
-
-// ============================================================
-// Owned copies (read only for now: no create/edit endpoints yet)
-// ============================================================
-export interface ConditionRead {
-  condition_type: ConditionTypeRead | null;
-  notes: string | null;
-}
-
-export interface CopyPhotoRead {
-  id: number;
-  file_path: string;
-  name: string | null;
-  description: string | null;
-}
-
-export interface OwnedCopyRead {
-  id: number;
-  notes: string | null;
-  condition: ConditionRead | null;
-  photos: CopyPhotoRead[];
-}
-
-// ============================================================
-// Items
-// ============================================================
-// Mirrors backend ItemBase.
-export interface ItemBase {
-  release_date: string | null;
-  cover_image_path: string | null; // relative path to the cover image file
-  icon_image_path: string | null;
-  is_owned: boolean | null;
-  description: string | null;
-}
-
-export interface ItemRead extends ItemBase {
-  id: number;
-  display_title: string;
-  item_type: ItemTypeRead;
-  format: FormatRead | null;
-  selected_language: LanguageRead | null;
-  titles: TitleRead[];
-  languages: ItemLanguageRead[];
-  genres: GenreRead[];
-  franchises: FranchiseRead[];
-  tags: TagRead[];
-  barcodes: BarcodeRead[];
-  owned_copies: OwnedCopyRead[];
-  author_credits: AuthorCreditRead[];
-  company_credits: CompanyCreditRead[];
-  details: ItemDetailsRead | null; // null only if the subtype row is missing
-}
-
-export interface ItemCreate extends Partial<ItemBase> {
-  format_id?: number | null; // must belong to the item type's scope
-  selected_language_code?: string | null;
-  languages?: ItemLanguageCreate[];
-  titles?: TitleCreate[];
-  genre_ids?: number[]; // must belong to the item type's scope
-  franchise_ids?: number[];
-  tags?: string[]; // tag names; created if missing
-  barcodes?: BarcodeCreate[];
-  author_credits?: AuthorCreditCreate[];
-  company_credits?: CompanyCreditCreate[];
-  details: ItemDetailsCreate; // decides the item type
-}
-
-// PATCH payload. Omit a key to leave it unchanged.
-//   - scalar fields: null clears the value
-//   - list fields: an array replaces the whole collection ([] clears it); don't send null
-//   - details: partial, only the keys sent change; type_name must match the item's type
-export interface ItemUpdate extends Partial<ItemBase> {
-  format_id?: number | null;
-  selected_language_code?: string | null;
-  languages?: ItemLanguageCreate[];
-  titles?: TitleCreate[];
-  genre_ids?: number[];
-  franchise_ids?: number[];
-  tags?: string[];
-  barcodes?: BarcodeCreate[];
-  author_credits?: AuthorCreditCreate[];
-  company_credits?: CompanyCreditCreate[];
-  details?: ItemDetailsCreate;
-}
-
-export interface ItemListEntryRead {
-  id: number;
-  title: string;
-  item_type: ItemType;
-  release_date: string | null;
-  is_owned: boolean;
-  icon_image_path: string | null;
-}
-
-// ============================================================
-// Pagination
-// ============================================================
-export interface Page<T> {
-  items: T[];
-  total: number;
-  offset: number;
-  limit: number;
-}
+export type LanguageRead = Schemas["LanguageRead"];
+export type FormatRead = Schemas["FormatRead"];
+export type GenreRead = Schemas["GenreRead"];
+export type FranchiseRead = Schemas["FranchiseRead"];
+export type TagRead = Schemas["TagRead"];
+export type ScaleRead = Schemas["ScaleRead"];
+export type JournalRead = Schemas["JournalRead"];
+export type GamePlatformRead = Schemas["GamePlatformRead"];
+export type BarcodeTypeRead = Schemas["BarcodeTypeRead"];
+export type ConditionTypeRead = Schemas["ConditionTypeRead"];
+export type BookDetailsRead = Schemas["BookDetailsRead"];
+export type GameDetailsRead = Schemas["GameDetailsRead"];
+export type FilmDetailsRead = Schemas["FilmDetailsRead"];
+export type BoardGameDetailsRead = Schemas["BoardGameDetailsRead"];
+export type JournalIssueDetailsRead = Schemas["JournalIssueDetailsRead"];
+export type FigurineDetailsRead = Schemas["FigurineDetailsRead"];
+export type MiniatureDetailsRead = Schemas["MiniatureDetailsRead"];
+export type LegoSetDetailsRead = Schemas["LegoSetDetailsRead"];
+export type ItemDetailsRead = NonNullable<ItemRead["details"]>;
+export type BookDetailsCreate = Schemas["BookDetailsCreate"];
+export type GameDetailsCreate = Schemas["GameDetailsCreate"];
+export type FilmDetailsCreate = Schemas["FilmDetailsCreate"];
+export type BoardGameDetailsCreate = Schemas["BoardGameDetailsCreate"];
+export type JournalIssueDetailsCreate = Schemas["JournalIssueDetailsCreate"];
+export type FigurineDetailsCreate = Schemas["FigurineDetailsCreate"];
+export type MiniatureDetailsCreate = Schemas["MiniatureDetailsCreate"];
+export type LegoSetDetailsCreate = Schemas["LegoSetDetailsCreate"];
+export type ItemDetailsCreate = ItemCreate["details"];
+export type ItemTypeRead = Schemas["ItemTypeRead"];
+export type ItemTypeScopeRead = Schemas["ItemTypeScopeRead"];
+export type TitleRead = Schemas["TitleRead"];
+export type TitleCreate = Schemas["TitleCreate"];
+export type ItemLanguageRead = Schemas["ItemLanguageRead"];
+export type ItemLanguageCreate = Schemas["ItemLanguageCreate"];
+export type AuthorRead = Schemas["AuthorRead"];
+export type AuthorRoleRead = Schemas["AuthorRoleRead"];
+export type AuthorCreditRead = Schemas["AuthorCreditRead"];
+export type AuthorCreditCreate = Schemas["AuthorCreditCreate"];
+export type CompanyRead = Schemas["CompanyRead"];
+export type CompanyRoleRead = Schemas["CompanyRoleRead"];
+export type CompanyCreditRead = Schemas["CompanyCreditRead"];
+export type CompanyCreditCreate = Schemas["CompanyCreditCreate"];
+export type BarcodeRead = Schemas["BarcodeRead"];
+export type BarcodeCreate = Schemas["BarcodeCreate"];
+export type ConditionRead = Schemas["ConditionRead"];
+export type CopyPhotoRead = Schemas["CopyPhotoRead"];
+export type OwnedCopyRead = Schemas["OwnedCopyRead"];
+export type ItemBase = Pick<ItemRead,
+  "release_date" | "cover_image_path" | "icon_image_path" | "is_owned" | "description"
+>;
+export type ItemRead = Schemas["ItemRead"];
+export type ItemCreate = Schemas["ItemCreate"];
+export type ItemUpdate = Schemas["ItemUpdate"];
+export type ItemListEntryRead = Schemas["ItemListEntryRead"];
+export type Page<T> = Omit<ItemListPage, "items"> & { items: T[] };
+export type ItemListPage = Schemas["Page_ItemListEntryRead_"];

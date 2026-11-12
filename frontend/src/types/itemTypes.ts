@@ -1,10 +1,9 @@
-/**
- * Single source of truth for item type names.
- * Must match the names the backend returns in GET /reference/item-types.
- *
- * Add a new type in two places only: here, and in ITEM_TYPE_LABELS below
- * (the compiler will refuse to build until the label exists).
- */
+import type { ItemDetailsCreate } from "./item";
+
+/** Supported names come from the backend's discriminated details union. */
+export type ItemType = ItemDetailsCreate["type_name"];
+
+/** UI constants: the compiler requires a matching entry for each API subtype. */
 export const ITEM_TYPE = {
   book: "book",
   game: "game",
@@ -14,10 +13,7 @@ export const ITEM_TYPE = {
   figurine: "figurine",
   miniature: "miniature",
   lego_set: "lego_set",
-} as const;
-
-/** "book" | "game" | "film" | ... derived from ITEM_TYPE, never written by hand. */
-export type ItemType = (typeof ITEM_TYPE)[keyof typeof ITEM_TYPE];
+} as const satisfies { [K in ItemType]: K };
 
 /** All type names as a runtime array, in the order above. Use it for dropdowns. */
 export const ITEM_TYPES: readonly ItemType[] = Object.values(ITEM_TYPE);

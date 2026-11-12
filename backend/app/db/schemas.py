@@ -3,6 +3,7 @@ from typing import Annotated, Generic, List, Literal, Optional, TypeVar, Union
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, StringConstraints, computed_field, field_validator, model_validator
 from pydantic import Field as PField
+from pydantic.json_schema import SkipJsonSchema
 from sqlmodel import SQLModel
 
 from app.db.base import ItemBase
@@ -16,30 +17,36 @@ class _Strict(SQLModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class _Read(SQLModel):
+    # Responses include defaulted fields (including nulls). Publish them as
+    # required in OpenAPI so generated clients match the serialized JSON.
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
+
+
 # ============================================================
 # Reference data (read only)
 # ============================================================
-class LanguageRead(SQLModel):
+class LanguageRead(_Read):
     id: int
     code: str
     name: str
 
 
-class FormatRead(SQLModel):
+class FormatRead(_Read):
     id: int
     name: str
     short_name: str | None = None
     description: str | None = None
 
 
-class GenreRead(SQLModel):
+class GenreRead(_Read):
     id: int
     name: str
     description: str | None = None
     parent_genre_id: int | None = None
 
 
-class ItemTypeRead(SQLModel):
+class ItemTypeRead(_Read):
     id: int
     name: str
     description: str | None = None
@@ -51,66 +58,66 @@ class ItemTypeScopeRead(ItemTypeRead):
     genres: List[GenreRead]
 
 
-class FranchiseRead(SQLModel):
+class FranchiseRead(_Read):
     id: int
     name: str
     description: str | None = None
     parent_franchise_id: int | None = None
 
 
-class TagRead(SQLModel):
+class TagRead(_Read):
     id: int
     name: str
     description: str | None = None
 
 
-class ScaleRead(SQLModel):
+class ScaleRead(_Read):
     id: int
     scale: str
 
 
-class JournalRead(SQLModel):
+class JournalRead(_Read):
     id: int
     name: str
     description: str | None = None
 
 
-class GamePlatformRead(SQLModel):
+class GamePlatformRead(_Read):
     id: int
     name: str
     short_name: str | None = None
     description: str | None = None
 
 
-class BarcodeTypeRead(SQLModel):
+class BarcodeTypeRead(_Read):
     id: int
     name: str
     description: str | None = None
 
 
-class ConditionTypeRead(SQLModel):
+class ConditionTypeRead(_Read):
     id: int
     name: str
     description: str | None = None
 
 
-class AuthorRead(SQLModel):
+class AuthorRead(_Read):
     id: int
     name: str
 
 
-class AuthorRoleRead(SQLModel):
+class AuthorRoleRead(_Read):
     id: int
     name: str
     description: str | None = None
 
 
-class CompanyRead(SQLModel):
+class CompanyRead(_Read):
     id: int
     name: str
 
 
-class CompanyRoleRead(SQLModel):
+class CompanyRoleRead(_Read):
     id: int
     name: str
     description: str | None = None
@@ -178,45 +185,45 @@ ItemDetailsCreate = Annotated[
 ]
 
 
-class BookDetailsRead(SQLModel):
+class BookDetailsRead(_Read):
     type_name: Literal["book"] = "book"
     page_count: int | None = None
 
 
-class GameDetailsRead(SQLModel):
+class GameDetailsRead(_Read):
     type_name: Literal["game"] = "game"
     game_platform: Optional[GamePlatformRead] = None
 
 
-class FilmDetailsRead(SQLModel):
+class FilmDetailsRead(_Read):
     type_name: Literal["film"] = "film"
     length: int | None = None
 
 
-class BoardGameDetailsRead(SQLModel):
+class BoardGameDetailsRead(_Read):
     type_name: Literal["board_game"] = "board_game"
 
 
-class JournalIssueDetailsRead(SQLModel):
+class JournalIssueDetailsRead(_Read):
     type_name: Literal["journal_issue"] = "journal_issue"
     journal: Optional[JournalRead] = None
     issue: str | None = None
     page_count: int | None = None
 
 
-class FigurineDetailsRead(SQLModel):
+class FigurineDetailsRead(_Read):
     type_name: Literal["figurine"] = "figurine"
     scale: Optional[ScaleRead] = None
 
 
-class MiniatureDetailsRead(SQLModel):
+class MiniatureDetailsRead(_Read):
     type_name: Literal["miniature"] = "miniature"
     height: float | None = None
     width: float | None = None
     scale: Optional[ScaleRead] = None
 
 
-class LegoSetDetailsRead(SQLModel):
+class LegoSetDetailsRead(_Read):
     type_name: Literal["lego_set"] = "lego_set"
     number_of_pieces: int | None = None
 
@@ -239,7 +246,7 @@ ItemDetailsRead = Annotated[
 # ============================================================
 # Item parts: titles, languages, credits, barcodes, copies
 # ============================================================
-class TitleRead(SQLModel):
+class TitleRead(_Read):
     id: int
     title_text: str
     short_text: str | None = None
@@ -252,7 +259,7 @@ class TitleCreate(_Strict):
     language_code: str
 
 
-class ItemLanguageRead(SQLModel):
+class ItemLanguageRead(_Read):
     language: LanguageRead
     ui: bool | None = None
     text: bool | None = None
@@ -266,7 +273,7 @@ class ItemLanguageCreate(_Strict):
     voice: bool | None = None
 
 
-class AuthorCreditRead(SQLModel):
+class AuthorCreditRead(_Read):
     author: AuthorRead
     role: AuthorRoleRead
     involvement_date: date | None = None
@@ -274,6 +281,19 @@ class AuthorCreditRead(SQLModel):
 
 
 class AuthorCreditCreate(_Strict):
+    # Publish the same exclusive choice enforced by the validator below so
+    # generated clients can reject missing or conflicting references too.
+    model_config = ConfigDict(json_schema_extra={
+        "oneOf": [
+            {"required": ["author_id"], "properties": {
+                "author_id": {"type": "integer"}, "author_name": {"type": "null"},
+            }},
+            {"required": ["author_name"], "properties": {
+                "author_name": {"type": "string"}, "author_id": {"type": "null"},
+            }},
+        ],
+    })
+
     # An id selects an existing person; a name explicitly creates a new one.
     author_id: int | None = PField(default=None, ge=1)
     author_name: NonBlank | None = None
@@ -288,7 +308,7 @@ class AuthorCreditCreate(_Strict):
         return self
 
 
-class CompanyCreditRead(SQLModel):
+class CompanyCreditRead(_Read):
     company: CompanyRead
     role: CompanyRoleRead
     involvement_date: date | None = None
@@ -296,6 +316,17 @@ class CompanyCreditRead(SQLModel):
 
 
 class CompanyCreditCreate(_Strict):
+    model_config = ConfigDict(json_schema_extra={
+        "oneOf": [
+            {"required": ["company_id"], "properties": {
+                "company_id": {"type": "integer"}, "company_name": {"type": "null"},
+            }},
+            {"required": ["company_name"], "properties": {
+                "company_name": {"type": "string"}, "company_id": {"type": "null"},
+            }},
+        ],
+    })
+
     company_id: int | None = PField(default=None, ge=1)
     company_name: NonBlank | None = None
     role_name: NonBlank
@@ -309,7 +340,7 @@ class CompanyCreditCreate(_Strict):
         return self
 
 
-class BarcodeRead(SQLModel):
+class BarcodeRead(_Read):
     id: int
     code: str
     barcode_type: Optional[BarcodeTypeRead] = None
@@ -320,19 +351,19 @@ class BarcodeCreate(_Strict):
     barcode_type_id: int | None = None
 
 
-class ConditionRead(SQLModel):
+class ConditionRead(_Read):
     condition_type: Optional[ConditionTypeRead] = None
     notes: str | None = None
 
 
-class CopyPhotoRead(SQLModel):
+class CopyPhotoRead(_Read):
     id: int
     file_path: str
     name: str | None = None
     description: str | None = None
 
 
-class OwnedCopyRead(SQLModel):
+class OwnedCopyRead(_Read):
     id: int
     notes: str | None = None
     condition: Optional[ConditionRead] = None
@@ -342,7 +373,7 @@ class OwnedCopyRead(SQLModel):
 # ============================================================
 # Items
 # ============================================================
-class ItemRead(ItemBase):
+class ItemRead(ItemBase, _Read):
     id: int
     item_type: ItemTypeRead
     format: Optional[FormatRead] = None
@@ -404,7 +435,8 @@ class ItemUpdate(_Strict):
     format_id: int | None = None
     selected_language_code: str | None = None
     languages: List[ItemLanguageCreate] | None = None
-    titles: List[TitleCreate] | None = PField(default=None, min_length=1)
+    # Omission keeps existing titles; explicit null is rejected by the validator.
+    titles: Annotated[List[TitleCreate], PField(min_length=1)] | SkipJsonSchema[None] = None
     genre_ids: List[int] | None = None
     franchise_ids: List[int] | None = None
     tags: List[str] | None = None
@@ -425,7 +457,7 @@ class ItemUpdate(_Strict):
 # ============================================================
 # List + pagination
 # ============================================================
-class ItemListEntryRead(SQLModel):
+class ItemListEntryRead(_Read):
     id: int
     title: str
     item_type: str

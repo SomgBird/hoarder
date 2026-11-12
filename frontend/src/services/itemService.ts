@@ -1,11 +1,11 @@
-import type { ItemRead, ItemCreate, ItemListEntryRead, Page } from '../types/item.ts';
+import type { ItemRead, ItemCreate, ItemListPage } from '../types/item.ts';
 import { request } from './client.ts'
 
 const PATH = "/items";
 
 export const itemService = {
   list: (offset = 0, limit = 20, signal?: AbortSignal) =>
-    request<Page<ItemListEntryRead>>(`${PATH}/itemlist?offset=${offset}&limit=${limit}`, { signal }),
+    request<ItemListPage>(`${PATH}/itemlist?offset=${offset}&limit=${limit}`, { signal }),
 
   get: (id: number) => request<ItemRead>(`${PATH}/${id}`),
 
