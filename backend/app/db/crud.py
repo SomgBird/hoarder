@@ -317,6 +317,7 @@ def _list_query():
         func.coalesce(in_selected_language, any_language, "Untitled").label("title"),
         type_name.label("item_type"),
         Item.release_date,
+        Item.date_added,
         func.coalesce(Item.is_owned, False).label("is_owned"),
         Item.icon_image_path,
     )

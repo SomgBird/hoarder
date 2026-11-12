@@ -12,6 +12,10 @@
   min-height: 0;
 }
 
+.manager_column {
+  min-width: 0;
+}
+
 .explorer_wrapper {
   flex: 1;
   min-width: 0;

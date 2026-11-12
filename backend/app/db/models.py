@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import List, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
@@ -65,6 +65,8 @@ class ItemTypeGenreLink(SQLModel, table=True):
 # ─────────────────────────────────────────────────────────────
 class Item(ItemBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    # Older collections have no recorded creation date; keep that unknown.
+    date_added: date | None = Field(default_factory=lambda: datetime.now(timezone.utc).date())
 
     item_type_id: int | None = Field(
         default=None, foreign_key="item_type.id", nullable=False, index=True

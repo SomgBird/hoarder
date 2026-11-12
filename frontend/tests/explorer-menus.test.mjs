@@ -101,7 +101,7 @@ test("Go navigates explorer history and Refresh reloads both the page and collec
   await run("View", "Refresh");
   assert.equal(container.querySelector("h1").textContent, "Refreshed item");
   assert.equal(calls.filter((call) => call.path === "/items/itemlist").length, listsBefore + 1);
-  assert.ok(button("Refreshed item2001-02-03"));
+  assert.ok(button("Refreshed item"));
   await run("Go", "Home");
   assert.equal(container.querySelector("h1").textContent, "Welcome to your collection");
 });

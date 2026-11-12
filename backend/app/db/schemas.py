@@ -467,6 +467,7 @@ class ItemListEntryRead(_Read):
     title: str
     item_type: str
     release_date: date | None = None
+    date_added: date | None = None
     is_owned: bool
     icon_image_path: str | None = None
 

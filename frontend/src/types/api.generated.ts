@@ -736,6 +736,8 @@ export interface components {
         };
         /** ItemListEntryRead */
         ItemListEntryRead: {
+            /** Date Added */
+            date_added: string | null;
             /** Icon Image Path */
             icon_image_path: string | null;
             /** Id */

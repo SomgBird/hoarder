@@ -1,4 +1,5 @@
 from contextlib import redirect_stdout
+from datetime import datetime, timezone
 from io import BytesIO, StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -13,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine, select
 
-from app.database import get_session
+from app.database import create_db_and_tables, get_session
 from app.db.models import (
     Author, AuthorRoleItemLink, Book, Company, CompanyRoleItemLink, Condition,
     CopyPhoto, Item, ItemLanguageLink, ItemTag, ItemTagLink, ItemType, Language,
@@ -126,6 +127,27 @@ class ItemApiTests(unittest.TestCase):
         self.assertEqual((len(first["items"]), len(second["items"]), second["total"]), (20, 3, 23))
         self.assertEqual([item["id"] for item in first["items"] + second["items"]], ids)
         self.assertEqual(self.client.get("/items/itemlist?limit=101").status_code, 422)
+
+    def test_list_records_date_added_and_preserves_it_on_edit(self):
+        item = self.create()
+        listed = self.client.get("/items/itemlist").json()["items"][0]
+        self.assertEqual(listed["date_added"], datetime.now(timezone.utc).date().isoformat())
+        self.client.patch(f"/items/{item['id']}", json={"description": "Updated"})
+        self.assertEqual(self.client.get("/items/itemlist").json()["items"][0]["date_added"], listed["date_added"])
+
+    def test_existing_database_adds_nullable_date_without_losing_items(self):
+        legacy = create_engine("sqlite://", poolclass=StaticPool)
+        try:
+            with legacy.begin() as connection:
+                connection.exec_driver_sql("CREATE TABLE item (id INTEGER PRIMARY KEY)")
+                connection.exec_driver_sql("INSERT INTO item (id) VALUES (42)")
+            with patch("app.database.engine", legacy):
+                create_db_and_tables()
+                create_db_and_tables()
+            with legacy.connect() as connection:
+                self.assertEqual(connection.exec_driver_sql("SELECT id, date_added FROM item").all(), [(42, None)])
+        finally:
+            legacy.dispose()
 
     def test_display_title_matches_list_and_falls_back(self):
         item = self.create(selected_language_code="ru", titles=[

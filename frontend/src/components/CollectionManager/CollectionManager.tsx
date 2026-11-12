@@ -3,7 +3,9 @@ import { Button, Frame, TitleBar } from "@react95/core";
 import { Notepad } from "@react95/icons";
 import type { ItemListPage } from "@types";
 import { itemService } from "@services";
-import CollectionManagerToolbar from "./CollectionManagerToolbar";
+import CollectionManagerToolbar, { type CollectionViewMode } from "./CollectionManagerToolbar";
+import CollectionItems from "./CollectionItems";
+import styles from "./CollectionManager.module.css";
 
 interface Props {
   selectedItemId: number | null;
@@ -15,6 +17,7 @@ const PAGE_SIZE = 20;
 type Result = { key: string; page?: ItemListPage; error?: string };
 
 function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Props) {
+  const [view, setView] = useState<CollectionViewMode>("table");
   const [offset, setOffset] = useState(0);
   const [retry, setRetry] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
@@ -44,7 +47,7 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
 
   return (
     <>
-      <Frame bgColor="$material" boxShadow="$out" padding="$3">
+      <Frame className={styles.manager} bgColor="$material" boxShadow="$out" padding="$3">
         <TitleBar
           title="Collection Manager"
           icon={<Notepad variant="16x16_4" />}
@@ -56,37 +59,17 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
             <TitleBar.Close />
           </TitleBar.OptionsBox>
         </TitleBar>
-        <CollectionManagerToolbar></CollectionManagerToolbar>
-        <Frame bgColor="$inputBackground" boxShadow="$in" padding="$2" aria-busy={loading}>
+        <CollectionManagerToolbar view={view} onViewChange={setView} />
+        <Frame className={styles.content} bgColor="$inputBackground" boxShadow="$in" padding="$2" aria-busy={loading}>
           {loading && <p role="status">Loading collection…</p>}
           {current?.error && <div role="alert">
             <p>{current.error}</p>
             <Button onClick={() => setRetry((value) => value + 1)}>Retry</Button>
           </div>}
           {page?.total === 0 && <p style={{ margin: 4 }}>No items yet.</p>}
-          {page?.items.map((item, i) => (
-            <button
-              type="button"
-              key={item.id}
-              aria-current={item.id === selectedItemId}
-              onClick={() => onSelectItem(item.id)}
-              style={{
-                display: "flex",
-                width: "100%",
-                border: 0,
-                font: "inherit",
-                textAlign: "left",
-                justifyContent: "space-between",
-                padding: "3px 4px",
-                cursor: "pointer",
-                backgroundColor:
-                  item.id === selectedItemId ? "rgba(0,0,128,0.15)" : i % 2 === 0 ? "transparent" : "rgba(0,0,0,0.04)",
-              }}
-            >
-              <span>{item.title}</span>
-              <span>{item.release_date}</span>
-            </button>
-          ))}
+          {page && page.total > 0 && (
+            <CollectionItems items={page.items} view={view} selectedItemId={selectedItemId} onSelectItem={onSelectItem} />
+          )}
         </Frame>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
           <Button disabled={loading || offset === 0} onClick={() => setOffset((value) => Math.max(0, value - PAGE_SIZE))}>

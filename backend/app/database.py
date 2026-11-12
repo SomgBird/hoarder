@@ -1,7 +1,7 @@
 # backend/app/database.py
 import sqlite3
 
-from sqlalchemy import event
+from sqlalchemy import event, inspect
 from sqlalchemy.engine import Engine
 from sqlmodel import SQLModel, Session, create_engine
 
@@ -25,6 +25,11 @@ engine = create_engine(
 
 def create_db_and_tables() -> None:
     SQLModel.metadata.create_all(engine)
+    # create_all does not add columns to existing SQLite tables.
+    with engine.begin() as connection:
+        columns = {column["name"] for column in inspect(connection).get_columns("item")}
+        if "date_added" not in columns:
+            connection.exec_driver_sql("ALTER TABLE item ADD COLUMN date_added DATE")
 
 
 def get_session():
