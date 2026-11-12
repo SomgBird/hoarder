@@ -107,6 +107,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/media/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Media */
+        get: operations["list_media_media__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reference/author-roles": {
         parameters: {
             query?: never;
@@ -939,6 +956,17 @@ export interface components {
              */
             type_name: "lego_set";
         };
+        /** MediaFileRead */
+        MediaFileRead: {
+            /** Name */
+            name: string;
+            /** Path */
+            path: string;
+            /** Relative Path */
+            relative_path: string;
+            /** Size Bytes */
+            size_bytes: number;
+        };
         /** MiniatureDetailsCreate */
         MiniatureDetailsCreate: {
             /** Height */
@@ -1308,6 +1336,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_media_media__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaFileRead"][];
                 };
             };
         };

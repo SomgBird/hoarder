@@ -52,8 +52,12 @@ export const navigation: readonly NavEntry[] = [
         ),
       },
       {
+        path: "/media-viewer",
         label: "Media Viewer",
         icon: <Wangimg128 variant="32x32_4" />,
+        Component: lazy(() =>
+          import("@pages").then(({ MediaViewer }) => ({ default: MediaViewer })),
+        ),
       },
     ],
   },
