@@ -3,6 +3,7 @@
 import type { components } from "./api.generated";
 
 type Schemas = components["schemas"];
+export type ReferenceCreate = Schemas["ReferenceCreate"];
 
 export type LanguageRead = Schemas["LanguageRead"];
 export type FormatRead = Schemas["FormatRead"];

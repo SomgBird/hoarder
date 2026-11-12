@@ -68,3 +68,29 @@ test("creating without a cover sends only the item request", async () => {
   await saveNewItem(payload, null, null, () => {}, () => assert.fail("No cover selected"));
   assert.equal(requests, 1);
 });
+
+test("retry after icon failure remembers the uploaded cover and creates no duplicate item", async () => {
+  const icon = new File(["icon"], "icon.png", { type: "image/png" });
+  let knownItem = null;
+  let pendingCover = cover;
+  const paths = [];
+  let failIcon = true;
+  globalThis.fetch = async (url) => {
+    const path = new URL(url).pathname;
+    paths.push(path);
+    if (path === "/items/") return Response.json({ id: 42 });
+    if (path.endsWith("/cover")) return Response.json({ id: 42, cover_image_path: "/media/covers/cover.png" });
+    if (failIcon) return Response.json({ detail: "Icon upload failed" }, { status: 400 });
+    return Response.json({ ...knownItem, icon_image_path: "/media/covers/icon.png" });
+  };
+  const remember = (item) => { knownItem = item; };
+  const uploaded = (kind) => { if (kind === "cover") pendingCover = null; };
+  await assert.rejects(saveNewItem(payload, pendingCover, knownItem, remember, () => {}, icon, uploaded), /Icon upload failed/);
+  assert.equal(pendingCover, null);
+  assert.equal(knownItem.cover_image_path, "/media/covers/cover.png");
+  failIcon = false;
+  const saved = await saveNewItem(payload, pendingCover, knownItem, remember, () => {}, icon, uploaded);
+  assert.equal(saved.cover_image_path, "/media/covers/cover.png");
+  assert.equal(saved.icon_image_path, "/media/covers/icon.png");
+  assert.deepEqual(paths, ["/items/", "/items/42/cover", "/items/42/icon", "/items/42/icon"]);
+});

@@ -44,24 +44,35 @@ def update_item(item_id: int, payload: ItemUpdate, session: Session = Depends(ge
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_item(item_id: int, session: Session = Depends(get_session)):
     item = session.get(Item, item_id)
-    previous_cover = item.cover_image_path if item else None
+    previous_images = (item.cover_image_path, item.icon_image_path) if item else ()
     crud.delete_item(session, item_id)
-    remove_unused_cover(session, previous_cover)
+    for path in set(previous_images):
+        remove_unused_cover(session, path)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/{item_id}/cover", response_model=ItemRead)
 def upload_cover(item_id: int, file: UploadFile = File(...), session: Session = Depends(get_session)):
+    return _upload_image(item_id, file, session, "cover")
+
+
+@router.post("/{item_id}/icon", response_model=ItemRead)
+def upload_icon(item_id: int, file: UploadFile = File(...), session: Session = Depends(get_session)):
+    return _upload_image(item_id, file, session, "icon")
+
+
+def _upload_image(item_id: int, file: UploadFile, session: Session, kind: str):
     item = session.get(Item, item_id)
     if item is None:
         raise NotFoundError("item", item_id)
-    previous_cover = item.cover_image_path
+    field = f"{kind}_image_path"
+    previous_cover = getattr(item, field)
     content = file.file.read(MAX_UPLOAD_BYTES + 1)
     if len(content) > MAX_UPLOAD_BYTES:
-        raise PayloadTooLargeError("Cover must be no larger than 5 MB.")
+        raise PayloadTooLargeError("Image must be no larger than 5 MB.")
     path = store_cover(item_id, content, file.content_type)
     try:
-        updated = crud.update_item(session, item_id, ItemUpdate(cover_image_path=path))
+        updated = crud.update_item(session, item_id, ItemUpdate(**{field: path}))
     except Exception:
         session.rollback()
         remove_unused_cover(session, path)

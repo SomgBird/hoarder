@@ -82,3 +82,19 @@ test("reference search encodes Unicode and literal special characters", async ()
   };
   assert.equal((await referenceService.authors("ПУШ % &"))[0].name, "Пушкин");
 });
+
+test("reference lists preserve item type scope and creation sends a name instead of an ID", async () => {
+  globalThis.fetch = async (url, options) => {
+    const parsed = new URL(url);
+    if (options.method === "POST") {
+      assert.equal(parsed.pathname, "/reference/franchises");
+      assert.deepEqual(JSON.parse(options.body), { name: "A new franchise" });
+      return Response.json({ id: 12, name: "A new franchise" });
+    }
+    assert.equal(parsed.pathname, "/reference/formats");
+    assert.equal(parsed.searchParams.get("item_type"), "game");
+    return Response.json([{ id: 3, name: "Cartridge" }]);
+  };
+  assert.equal((await referenceService.list("formats", "game"))[0].name, "Cartridge");
+  assert.equal((await referenceService.create("franchises", { name: "A new franchise" })).id, 12);
+});

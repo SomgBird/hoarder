@@ -1,6 +1,6 @@
 import { Button, Frame, TitleBar } from "@react95/core";
 import { Mshtml32541 } from "@react95/icons";
-import { useRef, useState, type ChangeEvent } from "react";
+import { useState } from "react";
 import { ITEM_TYPE_LABELS, ITEM_TYPE_OPTIONS, type ItemRead, type ItemType } from "@types";
 import { ApiError, type ValidationIssue } from "@services/client";
 import ContentFrame from "@components/ContentFrame/ContentFrame";
@@ -8,9 +8,11 @@ import type { PageData } from "../pageTypes";
 import { Box, FieldInput, InfoTable, RowsEditor } from "./FormControls";
 import { CreditsEditor } from "./CreditsEditor";
 import { saveNewItem } from "./saveNewItem";
+import { ImageUpload } from "./ImageUpload";
+import { ReferencePicker } from "./ReferencePicker";
+import { ReferenceContext, useReferenceData } from "./referenceData";
 import {
   BARCODE_FIELDS,
-  COVER_FIELDS,
   DESCRIPTION_FIELD,
   DETAILS_FIELDS,
   INFO_FIELDS,
@@ -26,7 +28,7 @@ interface PageEditorWorkspaceProps {
   onClose: () => void;
 }
 
-const str = (v: string | boolean | undefined) => (typeof v === "string" ? v : "");
+const str = (v: Values[string] | undefined) => (typeof v === "string" ? v : "");
 
 export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspaceProps) {
   // Wizard data only seeds the form; from here on the editor owns its values.
@@ -45,43 +47,27 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
   const [createdItem, setCreatedItem] = useState<ItemRead | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverError, setCoverError] = useState("");
-  const coverInput = useRef<HTMLInputElement>(null);
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [iconError, setIconError] = useState("");
+  const [uploadKind, setUploadKind] = useState<"cover" | "icon">("cover");
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState<ValidationIssue[]>([]);
+  const references = useReferenceData(itemType);
 
   // The header edits the first title; "Alternative titles" edits the rest.
   const [mainTitle = {}, ...otherTitles] = titles;
   const setMainTitle = (key: string, v: string) =>
     setTitles([{ ...mainTitle, [key]: v }, ...otherTitles]);
 
-  const tags = str(item.tags).split(",").map((t) => t.trim()).filter(Boolean);
-
   const changeItemType = (next: ItemType | null) => {
     if (!next || next === itemType) return;
     setItemType(next);
     setDetails({}); // subtype fields differ per type, so old values don't apply
-  };
-
-  const selectCover = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
-    setCoverError("");
-    if (file && (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024)) {
-      setCoverFile(null);
-      event.target.value = "";
-      setCoverError("Choose a JPEG, PNG or WebP image no larger than 5 MB.");
-      return;
-    }
-    setCoverFile(file);
-  };
-
-  const clearCover = () => {
-    setCoverFile(null);
-    setCoverError("");
-    if (coverInput.current) coverInput.current.value = "";
+    setItem((previous) => ({ ...previous, format_id: "", genre_ids: [] }));
   };
 
   const save = async () => {
-    if (status !== "idle" || coverError) return;
+    if (status !== "idle" || coverError || iconError || references.loading || references.error || references.pending) return;
     setValidationErrors([]);
     if (!itemType) {
       setError("Item type is required.");
@@ -105,36 +91,44 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
       const saved = await saveNewItem(payload, coverFile, createdItem, (item) => {
         itemCreated = true;
         setCreatedItem(item);
-      }, () => setStatus("uploading"));
+      }, (kind) => { setUploadKind(kind); setStatus("uploading"); }, iconFile,
+      (kind) => { if (kind === "cover") setCoverFile(null); else setIconFile(null); });
       setCreatedItem(saved);
       setStatus("saved");
     } catch (e) {
       setStatus("idle");
       const message = e instanceof Error ? e.message : "Failed to save item.";
-      setError(itemCreated ? `Item created, but its cover was not uploaded. Choose another image or retry. ${message}` : message);
+      setError(itemCreated ? `Item created, but an image could not be uploaded. Choose another image or retry. ${message}` : message);
       if (e instanceof ApiError) setValidationErrors(e.errors);
     }
   };
 
-  const locked = status !== "idle";
-  const busy = status === "creating" || status === "uploading";
+  const locked = status !== "idle" || references.pending > 0;
+  const busy = status === "creating" || status === "uploading" || references.pending > 0;
   const detailSpecs = itemType ? DETAILS_FIELDS[itemType] : [];
   const saveLabel = status === "creating" ? "Creating..."
-    : status === "uploading" ? "Uploading cover..."
-    : createdItem && status !== "saved" ? (coverFile ? "Retry cover upload" : "Finish")
+    : status === "uploading" ? `Uploading ${uploadKind}...`
+    : createdItem && status !== "saved" ? (coverFile || iconFile ? "Retry image upload" : "Finish")
     : "Create";
 
   return (
+    <ReferenceContext.Provider value={references}>
     <Frame bgColor="$material" boxShadow="$out" className={styles.window}>
       <TitleBar icon={<Mshtml32541 variant="16x16_4" />} title="Page editor - new item" />
 
       {/* Win95 chrome: toolbar */}
       <div className={styles.toolbar}>
-        <Button onClick={save} disabled={locked || !!coverError}>
+        <Button onClick={save} disabled={locked || !!coverError || !!iconError || references.loading || !!references.error}>
           {saveLabel}
         </Button>
         <Button onClick={onClose} disabled={busy}>{createdItem ? "Close" : "Cancel"}</Button>
       </div>
+      {references.loading && <p role="status" className={styles.reference_status}>Loading selection lists…</p>}
+      {references.pending > 0 && <p role="status" className={styles.reference_status}>Adding entry…</p>}
+      {references.error && <div role="alert" className={styles.reference_status}>
+        Could not load selection lists. {references.error}{" "}
+        <button type="button" onClick={references.retry}>Retry</button>
+      </div>}
 
       {/* Sunken viewport; ContentFrame resets styles for the web 1.0 page inside */}
       <Frame bgColor="canvas" boxShadow="in" className={styles.viewport}>
@@ -151,24 +145,16 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
                     value={str(mainTitle.title_text)}
                     onChange={(e) => setMainTitle("title_text", e.target.value)}
                   />
-                  <input
-                    className={styles.lang_input}
-                    aria-label="Title language code"
-                    value={str(mainTitle.language_code)}
-                    onChange={(e) => setMainTitle("language_code", e.target.value)}
-                  />
+                  <div className={styles.title_language}>
+                    <FieldInput spec={{ key: "language_code", label: "Title language", kind: "reference", reference: "languages", required: true }}
+                      value={mainTitle.language_code} onChange={(value) => setMainTitle("language_code", String(value))} />
+                  </div>
                 </div>
                 <div className={styles.tags_row}>
-                  {tags.map((t) => (
-                    <span key={t} className={styles.tag}>{t}</span>
-                  ))}
-                  <input
-                    className={styles.tag_input}
-                    aria-label="Tags"
-                    placeholder="tags, comma separated"
-                    value={str(item.tags)}
-                    onChange={(e) => setItem({ ...item, tags: e.target.value })}
-                  />
+                  <span className={styles.tags_label}>Tags</span>
+                  <ReferencePicker resource="tags" label="Tags" multiple
+                    value={Array.isArray(item.tags) ? item.tags : []}
+                    onChange={(value) => setItem({ ...item, tags: value })} />
                 </div>
               </fieldset>
             </header>
@@ -182,6 +168,7 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
                       <td>
                         <select
                           className={styles.input}
+                          aria-label="Item type"
                           value={itemType ?? ""}
                           onChange={(e) =>
                             changeItemType(
@@ -233,15 +220,12 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
 
               <aside className={styles.side}>
                 <Box title="Cover">
-                  <label>
-                    Upload cover (JPEG, PNG or WebP, up to 5 MB)
-                    <input ref={coverInput} type="file" accept="image/jpeg,image/png,image/webp" onChange={selectCover} />
-                  </label>
-                  {(coverFile || coverError) && <button type="button" className={styles.link_button} onClick={clearCover}>Clear selection</button>}
-                  {coverError && <p role="alert" className={styles.error}>{coverError}</p>}
-                  <fieldset disabled={createdItem !== null} className={styles.field_group}>
-                    <InfoTable specs={COVER_FIELDS} values={item} onChange={setItem} />
-                  </fieldset>
+                  <ImageUpload label="Cover" file={coverFile} savedPath={createdItem?.cover_image_path ?? null} error={coverError}
+                    onSelect={(file, message) => { setCoverFile(file); setCoverError(message); }} />
+                </Box>
+                <Box title="Icon">
+                  <ImageUpload label="Icon" file={iconFile} savedPath={createdItem?.icon_image_path ?? null} error={iconError}
+                    onSelect={(file, message) => { setIconFile(file); setIconError(message); }} />
                 </Box>
                 <fieldset disabled={createdItem !== null} className={styles.field_group}>
                   <Box title="Languages">
@@ -267,8 +251,9 @@ export function PageEditorWorkspace({ initialData, onClose }: PageEditorWorkspac
             <li key={index}>{issue.loc.filter((part) => part !== "body").map((part) => typeof part === "number" ? `#${part + 1}` : part.replaceAll("_", " ")).join(" / ")}: {issue.msg}</li>
           ))}</ul>}
         </div>}
-        {status === "saved" && <span className={styles.success}>{coverFile ? "Item and cover saved." : "Item created."}</span>}
+        {status === "saved" && <span className={styles.success}>{createdItem?.cover_image_path || createdItem?.icon_image_path ? "Item and images saved." : "Item created."}</span>}
       </Frame>
     </Frame>
+    </ReferenceContext.Provider>
   );
 }

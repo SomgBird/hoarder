@@ -77,7 +77,9 @@ function CreditRow({ kind, row, onChange }: {
               </ul>}
         </div>
       )}
-      <InfoTable specs={CREDIT_FIELDS} values={row} onChange={onChange} />
+      <InfoTable specs={CREDIT_FIELDS.map((spec) => spec.key === "role_name"
+        ? { ...spec, reference: kind === "author" ? "author-roles" : "company-roles" } : spec)}
+        values={row} onChange={onChange} />
     </>
   );
 }

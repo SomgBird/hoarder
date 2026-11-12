@@ -27,4 +27,9 @@ export const itemService = {
       body: form,   // do NOT set Content-Type — the browser sets the boundary
     });
   },
+  uploadIcon: (id: number, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<ItemRead>(`${PATH}/${id}/icon`, { method: "POST", body: form });
+  },
 };

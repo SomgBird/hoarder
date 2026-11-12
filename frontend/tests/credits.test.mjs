@@ -41,3 +41,23 @@ test("existing mode requires a selected, positive integer ID", () => {
 test("new mode requires a nonblank name", () => {
   assert.throws(() => buildItemCreate(form({ companyCredits: [{ reference_mode: "new", company_name: "  ", role_name: "Publisher" }] })), /Company name is required/);
 });
+
+test("selected references use IDs internally and preserve tags containing commas", () => {
+  const payload = buildItemCreate(form({
+    itemType: "game", details: { game_platform_id: "8" },
+    item: { format_id: "3", selected_language_code: "ru", genre_ids: ["1", "2"], franchise_ids: ["5"],
+      tags: ["One, two", "Other"], cover_image_path: "/manual/path", icon_image_path: "/manual/icon" },
+    languages: [{ language_code: "ru", text: true }],
+    barcodes: [{ code: "123", barcode_type_id: "9" }],
+  }));
+  assert.equal(payload.format_id, 3);
+  assert.deepEqual(payload.genre_ids, [1, 2]);
+  assert.deepEqual(payload.franchise_ids, [5]);
+  assert.deepEqual(payload.tags, ["One, two", "Other"]);
+  assert.deepEqual(payload.details, { type_name: "game", game_platform_id: 8 });
+  assert.equal(payload.selected_language_code, "ru");
+  assert.equal(payload.languages[0].language_code, "ru");
+  assert.equal(payload.barcodes[0].barcode_type_id, 9);
+  assert.equal("cover_image_path" in payload, false);
+  assert.equal("icon_image_path" in payload, false);
+});

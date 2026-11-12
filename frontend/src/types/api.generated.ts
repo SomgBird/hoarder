@@ -56,6 +56,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/items/{item_id}/icon": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Icon */
+        post: operations["upload_icon_items__item_id__icon_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/items/itemlist": {
         parameters: {
             query?: never;
@@ -83,7 +100,8 @@ export interface paths {
         /** Handler */
         get: operations["handler_reference_author_roles_get"];
         put?: never;
-        post?: never;
+        /** Create Author Roles */
+        post: operations["create_author_roles_reference_author_roles_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -117,7 +135,8 @@ export interface paths {
         /** Handler */
         get: operations["handler_reference_barcode_types_get"];
         put?: never;
-        post?: never;
+        /** Create Barcode Types */
+        post: operations["create_barcode_types_reference_barcode_types_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -151,7 +170,8 @@ export interface paths {
         /** Handler */
         get: operations["handler_reference_company_roles_get"];
         put?: never;
-        post?: never;
+        /** Create Company Roles */
+        post: operations["create_company_roles_reference_company_roles_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -185,7 +205,8 @@ export interface paths {
         /** Formats */
         get: operations["formats_reference_formats_get"];
         put?: never;
-        post?: never;
+        /** Create Formats */
+        post: operations["create_formats_reference_formats_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -202,7 +223,8 @@ export interface paths {
         /** Handler */
         get: operations["handler_reference_franchises_get"];
         put?: never;
-        post?: never;
+        /** Create Franchises */
+        post: operations["create_franchises_reference_franchises_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -219,7 +241,8 @@ export interface paths {
         /** Handler */
         get: operations["handler_reference_game_platforms_get"];
         put?: never;
-        post?: never;
+        /** Create Game Platforms */
+        post: operations["create_game_platforms_reference_game_platforms_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -236,7 +259,8 @@ export interface paths {
         /** Genres */
         get: operations["genres_reference_genres_get"];
         put?: never;
-        post?: never;
+        /** Create Genres */
+        post: operations["create_genres_reference_genres_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -273,7 +297,8 @@ export interface paths {
         /** Handler */
         get: operations["handler_reference_journals_get"];
         put?: never;
-        post?: never;
+        /** Create Journals */
+        post: operations["create_journals_reference_journals_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -307,7 +332,8 @@ export interface paths {
         /** Handler */
         get: operations["handler_reference_scales_get"];
         put?: never;
-        post?: never;
+        /** Create Scales */
+        post: operations["create_scales_reference_scales_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -324,7 +350,8 @@ export interface paths {
         /** Handler */
         get: operations["handler_reference_tags_get"];
         put?: never;
-        post?: never;
+        /** Create Tags */
+        post: operations["create_tags_reference_tags_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -421,6 +448,11 @@ export interface components {
         };
         /** Body_upload_cover_items__item_id__cover_post */
         Body_upload_cover_items__item_id__cover_post: {
+            /** File */
+            file: string;
+        };
+        /** Body_upload_icon_items__item_id__icon_post */
+        Body_upload_icon_items__item_id__icon_post: {
             /** File */
             file: string;
         };
@@ -934,6 +966,13 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** ReferenceCreate */
+        ReferenceCreate: {
+            /** Item Type */
+            item_type?: string | null;
+            /** Name */
+            name: string;
+        };
         /** ScaleRead */
         ScaleRead: {
             /** Id */
@@ -1154,6 +1193,41 @@ export interface operations {
             };
         };
     };
+    upload_icon_items__item_id__icon_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_icon_items__item_id__icon_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     item_list_items_itemlist_get: {
         parameters: {
             query?: {
@@ -1202,6 +1276,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuthorRoleRead"][];
+                };
+            };
+        };
+    };
+    create_author_roles_reference_author_roles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthorRoleRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1259,6 +1366,39 @@ export interface operations {
             };
         };
     };
+    create_barcode_types_reference_barcode_types_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BarcodeTypeRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     companies_reference_companies_get: {
         parameters: {
             query?: {
@@ -1308,6 +1448,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CompanyRoleRead"][];
+                };
+            };
+        };
+    };
+    create_company_roles_reference_company_roles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyRoleRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1364,6 +1537,39 @@ export interface operations {
             };
         };
     };
+    create_formats_reference_formats_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormatRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     handler_reference_franchises_get: {
         parameters: {
             query?: never;
@@ -1380,6 +1586,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FranchiseRead"][];
+                };
+            };
+        };
+    };
+    create_franchises_reference_franchises_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FranchiseRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -1404,6 +1643,39 @@ export interface operations {
             };
         };
     };
+    create_game_platforms_reference_game_platforms_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GamePlatformRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     genres_reference_genres_get: {
         parameters: {
             query?: {
@@ -1423,6 +1695,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GenreRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_genres_reference_genres_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenreRead"];
                 };
             };
             /** @description Validation Error */
@@ -1476,6 +1781,39 @@ export interface operations {
             };
         };
     };
+    create_journals_reference_journals_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JournalRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     handler_reference_languages_get: {
         parameters: {
             query?: never;
@@ -1516,6 +1854,39 @@ export interface operations {
             };
         };
     };
+    create_scales_reference_scales_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScaleRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     handler_reference_tags_get: {
         parameters: {
             query?: never;
@@ -1532,6 +1903,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TagRead"][];
+                };
+            };
+        };
+    };
+    create_tags_reference_tags_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

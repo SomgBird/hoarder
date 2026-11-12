@@ -23,6 +23,11 @@ class _Read(SQLModel):
     model_config = ConfigDict(json_schema_serialization_defaults_required=True)
 
 
+class ReferenceCreate(_Strict):
+    name: NonBlank
+    item_type: str | None = None
+
+
 # ============================================================
 # Reference data (read only)
 # ============================================================

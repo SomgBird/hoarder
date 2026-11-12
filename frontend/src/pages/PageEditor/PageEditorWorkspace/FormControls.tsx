@@ -1,17 +1,22 @@
 import type { ReactNode } from "react";
 import type { FieldSpec, Values } from "./pageEditorFields";
+import { ReferencePicker } from "./ReferencePicker";
 import styles from "./PageEditorWorkspace.module.css";
 
-type Cell = string | boolean | undefined;
+type Cell = Values[string] | undefined;
 
 interface FieldInputProps {
   spec: FieldSpec;
   value: Cell;
-  onChange: (value: string | boolean) => void;
+  onChange: (value: Values[string]) => void;
 }
 
 /** One native control, chosen by the spec's kind. The label comes from the surrounding table. */
 export function FieldInput({ spec, value, onChange }: FieldInputProps) {
+  if (spec.kind === "reference" && spec.reference) {
+    return <ReferencePicker resource={spec.reference} label={spec.label} multiple={spec.multiple}
+      value={typeof value === "string" || Array.isArray(value) ? value : ""} onChange={onChange} />;
+  }
   if (spec.kind === "bool") {
     return (
       <input
@@ -43,7 +48,6 @@ export function FieldInput({ spec, value, onChange }: FieldInputProps) {
       aria-label={spec.label}
       type={spec.kind === "number" ? "number" : spec.kind === "date" ? "date" : "text"}
       step={spec.kind === "number" ? "any" : undefined}
-      placeholder={spec.kind === "ids" ? "comma separated" : undefined}
       value={text}
       onChange={(e) => onChange(e.target.value)}
     />

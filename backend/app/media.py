@@ -1,4 +1,4 @@
-"""Validate and store covers under generated, server-owned filenames."""
+"""Validate and store item images under generated, server-owned filenames."""
 from io import BytesIO
 import logging
 import re

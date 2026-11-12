@@ -236,6 +236,85 @@ class ItemApiTests(unittest.TestCase):
             self.assertEqual(response.status_code, 200, response.text)
             self.assertEqual(response.json()["display_title"], entry["title"])
 
+    def test_inline_reference_creation_reuses_names_and_languages_stay_predefined(self):
+        for path in ("franchises", "journals", "game-platforms", "scales", "barcode-types",
+                     "tags", "author-roles", "company-roles"):
+            with self.subTest(path=path):
+                response = self.client.post(f"/reference/{path}", json={"name": "  Новое имя  "})
+                self.assertEqual(response.status_code, 200, response.text)
+                entity = response.json()
+                self.assertEqual(entity["scale" if path == "scales" else "name"], "Новое имя")
+                repeated = self.client.post(f"/reference/{path}", json={"name": "НОВОЕ ИМЯ"})
+                self.assertEqual(repeated.json()["id"], entity["id"])
+                listed = self.client.get(f"/reference/{path}").json()
+                self.assertEqual([entry["id"] for entry in listed], [entity["id"]])
+                for invalid in ({"name": " \t"}, {"name": "Other", "unknown": True}):
+                    self.assertEqual(self.client.post(f"/reference/{path}", json=invalid).status_code, 422)
+        before = self.client.get("/reference/languages").json()
+        self.assertEqual(self.client.post("/reference/languages", json={"name": "Custom", "code": "xx"}).status_code, 405)
+        self.assertEqual(self.client.get("/reference/languages").json(), before)
+
+    def test_inline_formats_and_genres_keep_item_type_scope(self):
+        for resource in ("formats", "genres"):
+            self.assertEqual(self.client.post(f"/reference/{resource}", json={"name": "New"}).status_code, 422)
+            created = self.client.post(f"/reference/{resource}", json={"name": "New", "item_type": "book"})
+            self.assertEqual(created.status_code, 200, created.text)
+            entity = created.json()
+            self.assertEqual(self.client.get(f"/reference/{resource}?item_type=game").json(), [])
+            reused = self.client.post(f"/reference/{resource}", json={"name": "new", "item_type": "game"})
+            self.assertEqual(reused.json()["id"], entity["id"])
+            for item_type in ("book", "game"):
+                self.assertEqual(self.client.get(f"/reference/{resource}?item_type={item_type}").json()[0]["id"], entity["id"])
+            invalid = self.client.post(f"/reference/{resource}", json={"name": "Must not persist", "item_type": "missing"})
+            self.assertEqual(invalid.status_code, 404)
+            self.assertEqual(len(self.client.get(f"/reference/{resource}").json()), 1)
+
+    def test_item_can_use_new_references_selected_in_the_editor(self):
+        def add(resource, name, **fields):
+            response = self.client.post(f"/reference/{resource}", json={"name": name, **fields})
+            self.assertEqual(response.status_code, 200, response.text)
+            return response.json()
+
+        franchise = add("franchises", "A franchise")
+        genre = add("genres", "A genre", item_type="game")
+        fmt = add("formats", "A format", item_type="game")
+        platform = add("game-platforms", "A platform")
+        barcode_type = add("barcode-types", "A barcode type")
+        tag = add("tags", "A tag, with punctuation")
+        item = self.create(details={"type_name": "game", "game_platform_id": platform["id"]},
+                           format_id=fmt["id"], genre_ids=[genre["id"]], franchise_ids=[franchise["id"]],
+                           tags=[tag["name"]], selected_language_code="ru", languages=[{"language_code": "ru", "text": True}],
+                           barcodes=[{"code": "123", "barcode_type_id": barcode_type["id"]}])
+        self.assertEqual(item["franchises"][0]["name"], franchise["name"])
+        self.assertEqual(item["genres"][0]["name"], genre["name"])
+        self.assertEqual(item["format"]["name"], fmt["name"])
+        self.assertEqual(item["details"]["game_platform"]["name"], platform["name"])
+        self.assertEqual(item["tags"][0]["name"], tag["name"])
+        self.assertEqual(item["languages"][0]["language"]["code"], "ru")
+        self.assertEqual(item["barcodes"][0]["barcode_type"]["name"], barcode_type["name"])
+
+    def test_icon_upload_replace_and_delete_preserves_cover(self):
+        item = self.create()
+        cover = self.upload(item["id"]).json()["cover_image_path"]
+        def icon(content=None, mime="image/png"):
+            return self.client.post(f"/items/{item['id']}/icon", files={"file": ("../../icon.png", content or self.image(), mime)})
+        first = icon()
+        self.assertEqual(first.status_code, 200, first.text)
+        path = first.json()["icon_image_path"]
+        self.assertTrue(path.startswith(f"/media/covers/{item['id']}-"))
+        self.assertEqual(first.json()["cover_image_path"], cover)
+        self.assertEqual(self.client.get(path).status_code, 200)
+        self.assertEqual(icon(b"invalid").status_code, 400)
+        with patch("app.routers.items.MAX_UPLOAD_BYTES", 8):
+            self.assertEqual(icon().status_code, 413)
+        self.assertEqual(self.client.get(f"/items/{item['id']}").json()["icon_image_path"], path)
+        replacement = icon().json()["icon_image_path"]
+        self.assertNotEqual(path, replacement)
+        self.assertEqual(self.client.get(path).status_code, 404)
+        self.assertEqual(self.client.get(cover).status_code, 200)
+        self.assertEqual(self.client.delete(f"/items/{item['id']}").status_code, 204)
+        self.assertEqual(list(self.covers.iterdir()), [])
+
 
 if __name__ == "__main__":
     unittest.main()
