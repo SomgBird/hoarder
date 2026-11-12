@@ -18,6 +18,8 @@ export function useExplorer(): ExplorerApi {
 
 export function useExplorerHistory(initial: ExplorerLocation) {
   const [h, setH] = useState({ stack: [initial], index: 0 });
+  const [revision, setRevision] = useState(0);
+  const refresh = () => setRevision((value) => value + 1);
 
   const navigate = (loc: ExplorerLocation) =>
     setH(({ stack, index }) => ({
@@ -32,6 +34,15 @@ export function useExplorerHistory(initial: ExplorerLocation) {
   const back = () => setH((s) => ({ ...s, index: Math.max(0, s.index - 1) }));
   const forward = () =>
     setH((s) => ({ ...s, index: Math.min(s.stack.length - 1, s.index + 1) }));
+  const removeItem = (id: number) => {
+    setH(({ stack, index }) => {
+      const keep = (location: ExplorerLocation) => location.page !== "item" || location.id !== id;
+      const before = stack.slice(0, index).filter(keep);
+      const current: ExplorerLocation = keep(stack[index]) ? stack[index] : { page: "home" };
+      return { stack: [...before, current, ...stack.slice(index + 1).filter(keep)], index: before.length };
+    });
+    refresh();
+  };
 
   return {
     current: h.stack[h.index],
@@ -39,6 +50,9 @@ export function useExplorerHistory(initial: ExplorerLocation) {
     replace,
     back,
     forward,
+    refresh,
+    revision,
+    removeItem,
     canBack: h.index > 0,
     canForward: h.index < h.stack.length - 1,
   };

@@ -8,7 +8,7 @@ import styles from "./CollectionView.module.css";
 import { useSearchParams } from "react-router-dom";
 
 function CollectionViewContent() {
-  const { current, navigate } = useExplorer();
+  const { current, navigate, revision } = useExplorer();
   const selectedItemId = current.page === "item" ? current.id : null;
 
   return (
@@ -16,6 +16,7 @@ function CollectionViewContent() {
       <div className={styles.manager_column}>
         <CollectionManager
           selectedItemId={selectedItemId}
+          refreshKey={revision}
           onSelectItem={(id) =>
             navigate(id === null ? { page: "home" } : { page: "item", id })
           }

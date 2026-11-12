@@ -11,7 +11,7 @@ import { parseUrl, toUrl } from "./locations";
 import { renderPage } from "./explorer_pages";
 
 function Explorer() {
-  const { current, navigate } = useExplorer();
+  const { current, navigate, revision } = useExplorer();
 
   // What's typed in the address bar before Enter; reset whenever we navigate.
   // Resetting during render (instead of in an effect) avoids a second,
@@ -51,7 +51,7 @@ function Explorer() {
 
       <Frame bgColor="$material" className={styles.outer_content_wrapper}>
         <Frame boxShadow="$in" className={styles.inner_content_wrapper}>
-          <ContentFrame>{renderPage(current)}</ContentFrame>
+          <ContentFrame key={revision}>{renderPage(current)}</ContentFrame>
         </Frame>
       </Frame>
     </Frame>

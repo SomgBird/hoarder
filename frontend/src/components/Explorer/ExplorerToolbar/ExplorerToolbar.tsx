@@ -15,7 +15,7 @@ import { useExplorer } from "../ExplorerContext";
 import styles from "./ExplorerToolbar.module.css";
 
 function ExplorerToolbar() {
-  const { back, forward, canBack, canForward, navigate, current } = useExplorer();
+  const { back, forward, canBack, canForward, navigate, current, refresh } = useExplorer();
   const navigateTo = useNavigate();
 
   return (
@@ -34,7 +34,7 @@ function ExplorerToolbar() {
           disabled={!canForward}
         />
         <Toolbar.Button icon={<Icon name="stop" />} />
-        <Toolbar.Button icon={<Icon name="refresh_page" />} />
+        <Toolbar.Button icon={<Icon name="refresh_page" />} aria-label="Refresh" onClick={refresh} />
         <Toolbar.Button
           icon={<Icon name="home" />}
           onClick={() => navigate({ page: "home" })}

@@ -8,16 +8,17 @@ import CollectionManagerToolbar from "./CollectionManagerToolbar";
 interface Props {
   selectedItemId: number | null;
   onSelectItem: (id: number) => void;
+  refreshKey?: number;
 }
 
 const PAGE_SIZE = 20;
 type Result = { key: string; page?: ItemListPage; error?: string };
 
-function CollectionManager({ selectedItemId, onSelectItem }: Props) {
+function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Props) {
   const [offset, setOffset] = useState(0);
   const [retry, setRetry] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
-  const requestKey = `${offset}:${retry}`;
+  const requestKey = `${offset}:${retry}:${refreshKey}`;
   const current = result?.key === requestKey ? result : null;
   const loading = current === null;
   const page = current?.page;
