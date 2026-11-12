@@ -7,7 +7,7 @@ from app.db import crud
 from app.db.models import Item
 from app.db.schemas import ItemCreate, ItemListEntryRead, ItemRead, ItemUpdate, Page
 from app.errors import NotFoundError, PayloadTooLargeError
-from app.media import remove_unused_cover, store_cover
+from app.media import remove_unused_cover, store_cover, store_icon_from_cover
 
 router = APIRouter(prefix="/items", tags=["items"])
 
@@ -61,6 +61,16 @@ def upload_icon(item_id: int, file: UploadFile = File(...), session: Session = D
     return _upload_image(item_id, file, session, "icon")
 
 
+@router.post("/{item_id}/icon/from-cover", response_model=ItemRead)
+def generate_icon_from_cover(item_id: int, session: Session = Depends(get_session)):
+    item = session.get(Item, item_id)
+    if item is None:
+        raise NotFoundError("item", item_id)
+    previous_icon = item.icon_image_path
+    path = store_icon_from_cover(item_id, item.cover_image_path)
+    return _replace_image(item_id, path, previous_icon, session, "icon")
+
+
 def _upload_image(item_id: int, file: UploadFile, session: Session, kind: str):
     item = session.get(Item, item_id)
     if item is None:
@@ -71,11 +81,16 @@ def _upload_image(item_id: int, file: UploadFile, session: Session, kind: str):
     if len(content) > MAX_UPLOAD_BYTES:
         raise PayloadTooLargeError("Image must be no larger than 5 MB.")
     path = store_cover(item_id, content, file.content_type)
+    return _replace_image(item_id, path, previous_cover, session, kind)
+
+
+def _replace_image(item_id: int, path: str, previous_path: str | None, session: Session, kind: str):
+    field = f"{kind}_image_path"
     try:
         updated = crud.update_item(session, item_id, ItemUpdate(**{field: path}))
     except Exception:
         session.rollback()
         remove_unused_cover(session, path)
         raise
-    remove_unused_cover(session, previous_cover)
+    remove_unused_cover(session, previous_path)
     return updated

@@ -123,3 +123,63 @@ test("editing patches the same item and retries images without repeating the upd
   assert.equal(saved.cover_image_path, "/media/covers/updated.png");
   assert.deepEqual(requests, [["PATCH", "/items/42"], ["POST", "/items/42/cover"], ["POST", "/items/42/icon"], ["POST", "/items/42/icon"]]);
 });
+
+test("new pages generate an icon after the cover upload and retry without repeating successful steps", async () => {
+  const paths = [];
+  let knownItem = null;
+  let pendingCover = cover;
+  let failGeneration = true;
+  let generationPending = true;
+  globalThis.fetch = async (url) => {
+    const path = new URL(url).pathname;
+    paths.push(path);
+    if (path === "/items/") return Response.json({ id: 42 });
+    if (path.endsWith("/cover")) return Response.json({ id: 42, cover_image_path: "/media/covers/cover.png" });
+    assert.equal(path, "/items/42/icon/from-cover");
+    if (failGeneration) return Response.json({ detail: "Generation failed" }, { status: 400 });
+    return Response.json({ ...knownItem, icon_image_path: "/media/covers/generated.ico" });
+  };
+  const remember = (item) => { knownItem = item; };
+  const uploaded = (kind) => { if (kind === "cover") pendingCover = null; else generationPending = false; };
+  await assert.rejects(saveNewItem(payload, pendingCover, knownItem, remember, () => {}, null, uploaded, generationPending), /Generation failed/);
+  assert.equal(pendingCover, null);
+  assert.equal(generationPending, true);
+  failGeneration = false;
+  const saved = await saveNewItem(payload, pendingCover, knownItem, remember, () => {}, null, uploaded, generationPending);
+  assert.equal(saved.icon_image_path, "/media/covers/generated.ico");
+  assert.equal(generationPending, false);
+  assert.deepEqual(paths, ["/items/", "/items/42/cover", "/items/42/icon/from-cover", "/items/42/icon/from-cover"]);
+});
+
+test("edits can generate from the saved cover, replacing an existing icon without an upload", async () => {
+  const paths = [];
+  const stored = { id: 42, cover_image_path: "/media/covers/cover.png", icon_image_path: "/media/covers/old.png" };
+  globalThis.fetch = async (url, options) => {
+    const path = new URL(url).pathname;
+    paths.push([options.method, path]);
+    return Response.json(path.endsWith("/from-cover") ? { ...stored, icon_image_path: "/media/covers/new.ico" } : stored);
+  };
+  const saved = await saveExistingItem(42, payload, null, null, () => {}, () => {}, null, undefined, true);
+  assert.equal(saved.icon_image_path, "/media/covers/new.ico");
+  assert.deepEqual(paths, [["PATCH", "/items/42"], ["POST", "/items/42/icon/from-cover"]]);
+});
+
+test("a failed cover upload prevents generation and generation takes precedence over manual upload", async () => {
+  const paths = [];
+  globalThis.fetch = async (url) => {
+    const path = new URL(url).pathname;
+    paths.push(path);
+    return Response.json({ detail: "Cover failed" }, { status: 400 });
+  };
+  const icon = new File(["icon"], "icon.png", { type: "image/png" });
+  const saved = { id: 42, cover_image_path: "/media/covers/previous.png" };
+  await assert.rejects(saveExistingItem(42, payload, cover, saved, () => {}, () => {}, icon, undefined, true), /Cover failed/);
+  assert.deepEqual(paths, ["/items/42/cover"]);
+  paths.length = 0;
+  globalThis.fetch = async (url) => {
+    paths.push(new URL(url).pathname);
+    return Response.json({ ...saved, icon_image_path: "/media/covers/generated.ico" });
+  };
+  await saveNewItem(payload, null, saved, () => {}, () => {}, icon, undefined, true);
+  assert.deepEqual(paths, ["/items/42/icon/from-cover"]);
+});

@@ -96,6 +96,8 @@
 .selected_references button { border: 0; background: none; cursor: pointer; font: inherit; }
 .image_preview { display: block; max-width: 100%; max-height: 220px; object-fit: contain; margin: 0 auto; }
 .image_upload input { display: block; max-width: 100%; margin-top: 6px; }
+.generate_icon { display: flex; align-items: flex-start; gap: 6px; }
+.icon_help { font-size: 12px; margin: 6px 0 12px; }
 
 .tag {
     padding: 3px 16px;

@@ -38,4 +38,6 @@ export const itemService = {
     form.append("file", file);
     return request<ItemRead>(`${PATH}/${id}/icon`, { method: "POST", body: form });
   },
+  generateIconFromCover: (id: number) =>
+    request<ItemRead>(`${PATH}/${id}/icon/from-cover`, { method: "POST" }),
 };

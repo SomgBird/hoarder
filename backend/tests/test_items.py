@@ -20,7 +20,7 @@ from app.db.models import (
     CopyPhoto, Item, ItemLanguageLink, ItemTag, ItemTagLink, ItemType, Language,
     OwnedCopy, Title,
 )
-from app.errors import register_exception_handlers
+from app.errors import AppError, register_exception_handlers
 from app.db.seed import seed_builtin, seed_examples
 from app.routers import items, reference
 
@@ -336,6 +336,74 @@ class ItemApiTests(unittest.TestCase):
         self.assertEqual(self.client.get(cover).status_code, 200)
         self.assertEqual(self.client.delete(f"/items/{item['id']}").status_code, 204)
         self.assertEqual(list(self.covers.iterdir()), [])
+
+    def test_generate_icon_from_cover_contains_all_sizes_and_preserves_aspect_ratio(self):
+        item = self.create()
+        cover = self.upload(item["id"], content=self.image(size=(20, 40))).json()["cover_image_path"]
+        response = self.client.post(f"/items/{item['id']}/icon/from-cover")
+        self.assertEqual(response.status_code, 200, response.text)
+        path = response.json()["icon_image_path"]
+        self.assertTrue(path.endswith(".ico"))
+        self.assertEqual(response.json()["cover_image_path"], cover)
+        media = self.client.get(path)
+        self.assertEqual(media.status_code, 200)
+        with Image.open(BytesIO(media.content)) as icon:
+            self.assertEqual(icon.ico.sizes(), {(16, 16), (32, 32), (64, 64)})
+            for size in icon.ico.sizes():
+                frame = icon.ico.getimage(size)
+                self.assertEqual(frame.size, size)
+                self.assertEqual(frame.getpixel((0, 0))[3], 0)
+                self.assertEqual(frame.getpixel((size[0] // 2, size[1] // 2)), (255, 0, 0, 255))
+        listed = self.client.get("/items/itemlist").json()["items"][0]
+        self.assertEqual(listed["icon_image_path"], path)
+
+    def test_generate_replaces_manual_and_generated_icons_and_cleans_up_files(self):
+        item = self.create()
+        cover = self.upload(item["id"]).json()["cover_image_path"]
+        manual = self.client.post(f"/items/{item['id']}/icon", files={"file": ("icon.png", self.image(), "image/png")}).json()["icon_image_path"]
+        first = self.client.post(f"/items/{item['id']}/icon/from-cover").json()["icon_image_path"]
+        second = self.client.post(f"/items/{item['id']}/icon/from-cover").json()["icon_image_path"]
+        self.assertNotEqual(first, second)
+        for path in (manual, first):
+            self.assertEqual(self.client.get(path).status_code, 404)
+        self.assertEqual(self.client.get(cover).status_code, 200)
+        self.assertEqual(self.client.get(second).status_code, 200)
+        # A manual upload also removes a previously generated icon.
+        self.client.post(f"/items/{item['id']}/icon", files={"file": ("icon.png", self.image(), "image/png")})
+        self.assertEqual(self.client.get(second).status_code, 404)
+        final = self.client.post(f"/items/{item['id']}/icon/from-cover").json()["icon_image_path"]
+        self.client.delete(f"/items/{item['id']}")
+        self.assertEqual(self.client.get(final).status_code, 404)
+        self.assertEqual(list(self.covers.iterdir()), [])
+
+    def test_generate_requires_an_existing_item_and_a_managed_cover(self):
+        self.assertEqual(self.client.post("/items/99999/icon/from-cover").status_code, 404)
+        item = self.create()
+        manual = self.client.post(f"/items/{item['id']}/icon", files={"file": ("icon.png", self.image(), "image/png")}).json()["icon_image_path"]
+        for path in (None, "/media/covers/../../outside.png", "https://example.com/cover.png", "/media/covers/1-" + "a" * 32 + ".png"):
+            with self.subTest(path=path):
+                self.client.patch(f"/items/{item['id']}", json={"cover_image_path": path})
+                response = self.client.post(f"/items/{item['id']}/icon/from-cover")
+                self.assertEqual(response.status_code, 400, response.text)
+                self.assertEqual(response.json()["code"], "cover_required")
+                self.assertEqual(self.client.get(f"/items/{item['id']}").json()["icon_image_path"], manual)
+                self.assertEqual(self.client.get(manual).status_code, 200)
+
+    def test_generation_failure_preserves_existing_icon_and_removes_uncommitted_file(self):
+        item = self.create()
+        cover = self.upload(item["id"]).json()["cover_image_path"]
+        icon = self.client.post(f"/items/{item['id']}/icon/from-cover").json()["icon_image_path"]
+        original_files = set(self.covers.iterdir())
+        with patch("app.routers.items.crud.update_item", side_effect=AppError("Save failed", code="save_failed")):
+            response = self.client.post(f"/items/{item['id']}/icon/from-cover")
+        self.assertEqual(response.status_code, 400, response.text)
+        self.assertEqual(set(self.covers.iterdir()), original_files)
+        self.assertEqual(self.client.get(f"/items/{item['id']}").json()["icon_image_path"], icon)
+        (self.covers / Path(cover).name).write_bytes(b"invalid image")
+        response = self.client.post(f"/items/{item['id']}/icon/from-cover")
+        self.assertEqual(response.status_code, 400, response.text)
+        self.assertEqual(response.json()["code"], "invalid_image")
+        self.assertEqual(set(self.covers.iterdir()), original_files)
 
 
 if __name__ == "__main__":

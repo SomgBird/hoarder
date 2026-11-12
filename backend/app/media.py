@@ -14,6 +14,8 @@ from app.db.models import Item
 from app.errors import AppError
 
 logger = logging.getLogger(__name__)
+IMAGE_FILENAME = r"\d+-[0-9a-f]{32}\.(jpg|png|webp|ico)"
+ICON_SIZES = [(16, 16), (32, 32), (64, 64)]
 
 
 def store_cover(item_id: int, content: bytes, content_type: str | None) -> str:
@@ -39,11 +41,45 @@ def store_cover(item_id: int, content: bytes, content_type: str | None) -> str:
             Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
         raise AppError("The file is not a valid image.", code="invalid_image") from exc
 
+    return _store_image(item_id, output.getvalue(), extension)
+
+
+def store_icon_from_cover(item_id: int, cover_path: str | None) -> str:
+    """Keep all icon sizes in one ICO, fitting the whole cover into each square."""
+    filename = (cover_path or "").removeprefix(f"{COVERS_URL_PREFIX}/")
+    if not cover_path or not cover_path.startswith(f"{COVERS_URL_PREFIX}/") or not re.fullmatch(IMAGE_FILENAME, filename):
+        raise AppError("Upload a cover before generating an icon.", code="cover_required")
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(COVERS_DIR / filename) as image:
+                if image.width * image.height > MAX_COVER_PIXELS:
+                    raise AppError("Image dimensions are too large.", code="image_too_large")
+                image.load()
+                cover = ImageOps.exif_transpose(image).convert("RGBA")
+                # Resize from the original at each size for crisp small icons.
+                frames = []
+                for size in ICON_SIZES:
+                    fitted = ImageOps.contain(cover, size, Image.Resampling.LANCZOS)
+                    frame = Image.new("RGBA", size)
+                    frame.paste(fitted, ((size[0] - fitted.width) // 2, (size[1] - fitted.height) // 2))
+                    frames.append(frame)
+                output = BytesIO()
+                frames[-1].save(output, format="ICO", sizes=ICON_SIZES, append_images=frames[:-1])
+    except FileNotFoundError as exc:
+        raise AppError("The saved cover is missing. Upload a cover and retry.", code="cover_required") from exc
+    except (UnidentifiedImageError, OSError, ValueError, SyntaxError,
+            Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
+        raise AppError("The saved cover is not a valid image. Upload another cover and retry.", code="invalid_image") from exc
+    return _store_image(item_id, output.getvalue(), ".ico")
+
+
+def _store_image(item_id: int, content: bytes, extension: str) -> str:
     filename = f"{item_id}-{uuid4().hex}{extension}"
     destination = COVERS_DIR / filename
     temporary = destination.with_suffix(".tmp")
     try:
-        temporary.write_bytes(output.getvalue())
+        temporary.write_bytes(content)
         temporary.replace(destination)
     finally:
         temporary.unlink(missing_ok=True)
@@ -55,7 +91,7 @@ def remove_unused_cover(session: Session, path: str | None) -> None:
     if not path or not path.startswith(f"{COVERS_URL_PREFIX}/"):
         return
     filename = path.removeprefix(f"{COVERS_URL_PREFIX}/")
-    if not re.fullmatch(r"\d+-[0-9a-f]{32}\.(jpg|png|webp)", filename):
+    if not re.fullmatch(IMAGE_FILENAME, filename):
         return
     if session.exec(select(Item.id).where(or_(Item.cover_image_path == path, Item.icon_image_path == path)).limit(1)).first() is not None:
         return

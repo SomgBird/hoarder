@@ -27,6 +27,7 @@ let failCreate;
 let storedItem;
 let failLoad;
 let failUpdate;
+let failGeneration;
 const originalFetch = globalThis.fetch;
 beforeEach(() => {
   calls = [];
@@ -34,6 +35,7 @@ beforeEach(() => {
   failCreate = false;
   failLoad = false;
   failUpdate = false;
+  failGeneration = false;
   storedItem = structuredClone(existingItem);
   container = document.createElement("div");
   document.body.append(container);
@@ -50,6 +52,15 @@ beforeEach(() => {
         savedPayload = JSON.parse(options.body);
         storedItem = { ...storedItem, display_title: savedPayload.titles[0].title_text, description: savedPayload.description, details: savedPayload.details };
       } else if (failLoad) return Response.json({ detail: "Item not found" }, { status: 404 });
+      return Response.json(storedItem);
+    }
+    if (parsed.pathname === "/items/42/cover") {
+      storedItem.cover_image_path = "/media/covers/uploaded.png";
+      return Response.json(storedItem);
+    }
+    if (parsed.pathname === "/items/42/icon/from-cover") {
+      if (failGeneration) return Response.json({ detail: "Generation failed" }, { status: 400 });
+      storedItem.icon_image_path = "/media/covers/generated.ico";
       return Response.json(storedItem);
     }
     if (parsed.pathname === "/items/") {
@@ -248,4 +259,66 @@ test("cancelling an edit returns to the same item without writing", async () => 
   await click(button("Cancel"));
   assert.equal(container.querySelector("h1").textContent, "Original title");
   assert.equal(calls.some((call) => call.method !== "GET"), false);
+});
+
+const generationCheckbox = () => section("Icon").querySelector('input[type="checkbox"]');
+const selectCover = async () => {
+  const input = section("Cover").querySelector('input[type="file"]');
+  Object.defineProperty(input, "files", { configurable: true, value: [new File(["cover"], "cover.png", { type: "image/png" })] });
+  await act(async () => {
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  });
+};
+
+test("new pages enable automatic generation when a cover is selected and save all image steps in order", async () => {
+  let saved;
+  await render(createElement(PageEditorWorkspace, {
+    initialData: { pageType: "item", itemType: "book", title: "Example" }, onClose() {}, onSaved: (item) => { saved = item; },
+  }));
+  assert.equal(generationCheckbox().checked, false);
+  assert.equal(generationCheckbox().disabled, true);
+  await selectCover();
+  assert.equal(generationCheckbox().checked, true);
+  assert.equal(generationCheckbox().disabled, false);
+  assert.equal(section("Icon").querySelector('input[type="file"]').matches(":disabled"), true);
+  await click(button("Create"));
+  assert.deepEqual(calls.filter((call) => call.method === "POST").map((call) => call.path), ["/items/", "/items/42/cover", "/items/42/icon/from-cover"]);
+  assert.equal(saved.icon_image_path, "/media/covers/generated.ico");
+});
+
+test("editing defaults generation off and opting in replaces the icon from the saved cover", async () => {
+  let saved;
+  await render(createElement(PageEditorWorkspace, { existingItem: storedItem, onClose() {}, onSaved: (item) => { saved = item; } }));
+  assert.equal(generationCheckbox().checked, false);
+  assert.equal(generationCheckbox().disabled, false);
+  await click(generationCheckbox());
+  await click(button("Save"));
+  assert.equal(saved.icon_image_path, "/media/covers/generated.ico");
+  assert.deepEqual(calls.filter((call) => call.method !== "GET").map((call) => [call.method, call.path]), [["PATCH", "/items/42"], ["POST", "/items/42/icon/from-cover"]]);
+});
+
+test("editing without a cover keeps generation off after selecting a cover until explicitly enabled", async () => {
+  await render(createElement(PageEditorWorkspace, { existingItem: { ...storedItem, cover_image_path: null }, onClose() {} }));
+  assert.equal(generationCheckbox().disabled, true);
+  await selectCover();
+  assert.equal(generationCheckbox().disabled, false);
+  assert.equal(generationCheckbox().checked, false);
+  await click(button("Save"));
+  assert.equal(calls.some((call) => call.path.endsWith("/from-cover")), false);
+});
+
+test("generation failures keep the checkbox selected and retry without updating the page again", async () => {
+  await render(createElement(PageEditorWorkspace, { existingItem: storedItem, onClose() {} }));
+  await click(generationCheckbox());
+  failGeneration = true;
+  await click(button("Save"));
+  assert.match(container.querySelector('[role="alert"]').textContent, /Generation failed/);
+  assert.equal(generationCheckbox().checked, true);
+  assert.match(section("Icon").querySelector("img").src, /icon.png$/);
+  failGeneration = false;
+  await click(button("Retry image save"));
+  assert.equal(calls.filter((call) => call.method === "PATCH").length, 1);
+  assert.equal(calls.filter((call) => call.path.endsWith("/from-cover")).length, 2);
+  assert.match(section("Icon").querySelector("img").src, /generated.ico$/);
 });
