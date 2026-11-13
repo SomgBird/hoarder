@@ -2,12 +2,12 @@ import { useState } from "react";
 import { FileText } from "@react95/icons";
 import { ITEM_TYPES, ITEM_TYPE_LABELS, type ItemListEntryRead } from "@types";
 import { coverUrl } from "@services";
-import type { CollectionViewMode } from "./CollectionManagerToolbar";
+import type { CollectionItemViewMode } from "./CollectionManagerToolbar";
 import styles from "./CollectionManager.module.css";
 
 interface Props {
   items: ItemListEntryRead[];
-  view: CollectionViewMode;
+  view: CollectionItemViewMode;
   selectedItemId: number | null;
   onSelectItem: (id: number) => void;
 }

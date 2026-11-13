@@ -32,7 +32,8 @@ beforeEach(() => {
     const params = new URL(url).searchParams;
     const offset = Number(params.get("offset"));
     const limit = Number(params.get("limit"));
-    return Response.json({ items: items.slice(offset, offset + limit), total: items.length, offset, limit });
+    const filtered = params.has("item_type") ? items.filter((item) => item.item_type === params.get("item_type")) : items;
+    return Response.json({ items: filtered.slice(offset, offset + limit), total: filtered.length, offset, limit });
   };
 });
 afterEach(async () => {
@@ -173,6 +174,109 @@ test("ordering resets pagination, supports keyboard activation, and survives vie
   assert.equal(query().get("sort_direction"), "desc");
   assert.equal(option("Date added").getAttribute("aria-checked"), "true");
   assert.equal(option("Descending").getAttribute("aria-checked"), "true");
+});
+
+test("categories opens subtype folders and retains selection and item layouts when navigating", async () => {
+  await render();
+  await click(button("First item"));
+  await click(option("List"));
+  const requestCount = calls.length;
+  await act(async () => option("Categories").dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })));
+  assert.equal(calls.length, requestCount);
+  assert.equal(option("Categories").getAttribute("aria-checked"), "true");
+  assert.equal(option("List").getAttribute("aria-checked"), "false");
+  const folders = container.querySelector('[aria-label="Collection categories"]');
+  assert.deepEqual([...folders.querySelectorAll("button")].map((node) => node.textContent), [
+    "Board game", "Book", "Figurine", "Film", "Journal issue", "LEGO set", "Miniature", "Video game",
+  ]);
+  assert.equal(folders.querySelectorAll("svg").length, 8);
+  assert.equal(collection(), null);
+  assert.equal(button("Next"), undefined);
+  assert.match(container.textContent, /8 categories/);
+
+  await click(button("Book"));
+  assert.equal(new URL(calls.at(-1)).searchParams.get("item_type"), "book");
+  assert.equal(collection().querySelectorAll("li").length, 1);
+  assert.equal(button("First item").getAttribute("aria-current"), "true");
+  assert.equal(button("Second item"), undefined);
+  assert.equal(container.querySelector('nav [aria-current="page"]').textContent, "Book");
+  assert.equal(option("List").getAttribute("aria-checked"), "true");
+  await click(option("Mini pages"));
+  assert.match(collection().textContent, /Book · Owned/);
+
+  await click(button("Categories"));
+  await click(button("Video game"));
+  assert.equal(new URL(calls.at(-1)).searchParams.get("item_type"), "game");
+  assert.equal(button("First item"), undefined);
+  assert.match(collection().textContent, /Second item/);
+  assert.equal(option("Mini pages").getAttribute("aria-checked"), "true");
+  await click(collection().querySelector("button"));
+  assert.equal(selectedItemId, 2);
+  await click(button("All items"));
+  assert.equal(new URL(calls.at(-1)).searchParams.has("item_type"), false);
+  assert.equal(collection().querySelectorAll("li").length, 2);
+  assert.equal(container.querySelector('[aria-label="Collection folders"]'), null);
+  assert.equal(collection().querySelectorAll("button")[1].getAttribute("aria-current"), "true");
+});
+
+test("category pagination, ordering, refresh and retries keep the selected subtype", async () => {
+  const [book, game] = items;
+  items = Array.from({ length: 23 }, (_, index) => [
+    { ...game, id: index * 2 + 1, title: `Game ${index + 1}` },
+    { ...book, id: index * 2 + 2, title: `Book ${index + 1}` },
+  ]).flat();
+  const query = () => new URL(calls.at(-1)).searchParams;
+  await render();
+  await click(button("Next"));
+  await click(option("Categories"));
+  await click(button("Book"));
+  assert.equal(query().get("offset"), "0");
+  assert.equal(query().get("item_type"), "book");
+  assert.equal(collection().querySelectorAll("tbody tr").length, 20);
+  assert.equal(button("Game 1"), undefined);
+  assert.match(container.textContent, /1–20 of 23/);
+  await click(button("Next"));
+  assert.equal(query().get("item_type"), "book");
+  assert.equal(query().get("offset"), "20");
+  assert.equal(collection().querySelectorAll("tbody tr").length, 3);
+  assert.ok(button("Book 21"));
+  assert.match(container.textContent, /21–23 of 23/);
+  await click(option("Descending"));
+  assert.equal(query().get("offset"), "0");
+  assert.equal(query().get("sort_direction"), "desc");
+  assert.equal(query().get("item_type"), "book");
+
+  failLoad = true;
+  refreshKey++;
+  await render();
+  assert.match(container.querySelector('[role="alert"]').textContent, /Cannot load collection/);
+  failLoad = false;
+  await click(button("Retry"));
+  assert.equal(query().get("item_type"), "book");
+  assert.equal(query().get("sort_direction"), "desc");
+  assert.ok(button("Book 1"));
+  await click(button("Next"));
+  items = items.filter((item) => item.item_type !== "book" || item.id <= 40);
+  refreshKey++;
+  await render();
+  assert.equal(query().get("offset"), "0");
+  assert.equal(query().get("item_type"), "book");
+  assert.match(container.textContent, /1–20 of 20/);
+});
+
+test("empty category folders can return to categories or switch to all items", async () => {
+  await render();
+  await click(option("Categories"));
+  await click(button("Film"));
+  assert.match(container.textContent, /No items in this category yet/);
+  assert.match(container.textContent, /0 items/);
+  assert.equal(button("Next").disabled, true);
+  await click(button("Categories"));
+  await click(option("Icons"));
+  assert.equal(new URL(calls.at(-1)).searchParams.has("item_type"), false);
+  assert.equal(option("Icons").getAttribute("aria-checked"), "true");
+  assert.ok(button("First item"));
+  assert.ok(button("Second item"));
 });
 
 test("mini pages show a 64px icon, item type, ownership and dates while keeping selection", async () => {

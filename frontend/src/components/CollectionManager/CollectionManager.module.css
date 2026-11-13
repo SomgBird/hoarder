@@ -10,6 +10,14 @@
   overflow: auto;
 }
 
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
 .table {
   width: 100%;
   border-spacing: 0;

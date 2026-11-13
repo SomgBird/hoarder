@@ -6,13 +6,15 @@ import {
   Detlicon,
   Explorer101,
   Files,
+  Folder,
   FolderExe,
   FolderFile,
   Mailnews20,
   Shdocvw272,
 } from "@react95/icons";
 
-export type CollectionViewMode = "table" | "list" | "icons" | "minipages";
+export type CollectionItemViewMode = "table" | "list" | "icons" | "minipages";
+export type CollectionViewMode = CollectionItemViewMode | "categories";
 
 interface Props {
   view: CollectionViewMode;
@@ -78,7 +80,9 @@ function CollectionManagerToolbar({ view, onViewChange, ordering, onOrderingChan
           </Toolbar.MenuItem>
         ))}
         <Toolbar.MenuDivider />
-        <Toolbar.MenuItem icon={<FolderFile variant="16x16_4" />}>
+        <Toolbar.MenuItem checked={view === "categories"} icon={<Folder variant="16x16_4" />} tabIndex={0}
+          onClick={() => onViewChange("categories")}
+          onKeyDown={(event: KeyboardEvent<HTMLLIElement>) => activateOnKeyDown(event, () => onViewChange("categories"))}>
           Categories
         </Toolbar.MenuItem>
       </Toolbar.Menu>

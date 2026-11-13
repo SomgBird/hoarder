@@ -183,6 +183,32 @@ class ItemApiTests(unittest.TestCase):
         for params in ({"sort_by": "unknown"}, {"sort_direction": "sideways"}):
             self.assertEqual(self.client.get("/items/itemlist", params=params).status_code, 422)
 
+    def test_list_filters_category_before_ordering_and_pagination(self):
+        records = []
+        for name in ("zulu", "Alpha", "Middle"):
+            self.create(details={"type_name": "game"}, titles=[{"title_text": name, "language_code": "en"}])
+            records.append(self.create(titles=[{"title_text": name, "language_code": "en"}]))
+        for direction, indices in (("asc", [1, 2, 0]), ("desc", [0, 2, 1])):
+            with self.subTest(direction=direction):
+                listed = []
+                for offset in (0, 2):
+                    response = self.client.get("/items/itemlist", params={
+                        "item_type": "book", "sort_by": "title", "sort_direction": direction,
+                        "offset": offset, "limit": 2,
+                    })
+                    self.assertEqual(response.status_code, 200, response.text)
+                    page = response.json()
+                    self.assertEqual((page["total"], page["offset"], page["limit"]), (3, offset, 2))
+                    self.assertTrue(all(item["item_type"] == "book" for item in page["items"]))
+                    listed.extend(item["id"] for item in page["items"])
+                self.assertEqual(listed, [records[index]["id"] for index in indices])
+        games = self.client.get("/items/itemlist", params={"item_type": "game"}).json()
+        self.assertEqual(games["total"], 3)
+        self.assertTrue(all(item["item_type"] == "game" for item in games["items"]))
+        self.assertEqual(self.client.get("/items/itemlist").json()["total"], 6)
+        empty = self.client.get("/items/itemlist", params={"item_type": "film"}).json()
+        self.assertEqual((empty["items"], empty["total"]), ([], 0))
+
     def test_list_includes_current_description_and_allows_no_description(self):
         first = self.create(description="A description for the mini page.")
         second = self.create()

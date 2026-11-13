@@ -336,8 +336,14 @@ def get_item_list_entry(session: Session, item_id: int) -> ItemListEntryRead:
 def get_item_list(
     session: Session, offset: int = 0, limit: int = 20,
     sort_by: ItemSortField | None = None, sort_direction: ItemSortDirection = "asc",
+    item_type: str | None = None,
 ) -> Page[ItemListEntryRead]:
     query = _list_query()
+    count_query = select(func.count()).select_from(Item)
+    if item_type is not None:
+        type_id = select(ItemType.id).where(ItemType.name == item_type).scalar_subquery()
+        query = query.where(Item.item_type_id == type_id)
+        count_query = count_query.where(Item.item_type_id == type_id)
     if sort_by is not None:
         column = query.selected_columns[sort_by]
         if sort_by == "title":
@@ -346,7 +352,7 @@ def get_item_list(
         query = query.order_by(order.nulls_last())
     # Stable ties keep items from moving between pages. Unknown dates go last.
     rows = session.exec(query.order_by(Item.id).offset(offset).limit(limit)).all()
-    total = session.exec(select(func.count()).select_from(Item)).one()
+    total = session.exec(count_query).one()
     return Page(
         items=[ItemListEntryRead(**r._mapping) for r in rows],
         total=total,

@@ -1311,6 +1311,7 @@ export interface operations {
     item_list_items_itemlist_get: {
         parameters: {
             query?: {
+                item_type?: string | null;
                 limit?: number;
                 offset?: number;
                 sort_by?: ("title" | "release_date" | "date_added") | null;

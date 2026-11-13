@@ -22,9 +22,10 @@ def item_list(
     limit: int = Query(20, ge=1, le=100),
     sort_by: ItemSortField | None = None,
     sort_direction: ItemSortDirection = "asc",
+    item_type: str | None = Query(None, min_length=1),
     session: Session = Depends(get_session),
 ):
-    return crud.get_item_list(session, offset, limit, sort_by, sort_direction)
+    return crud.get_item_list(session, offset, limit, sort_by, sort_direction, item_type)
 
 
 @router.get("/{item_id}", response_model=ItemRead)
