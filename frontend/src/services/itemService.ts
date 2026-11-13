@@ -5,13 +5,14 @@ import { request } from './client.ts'
 const PATH = "/items";
 
 export const itemService = {
-  list: (offset = 0, limit = 20, signal?: AbortSignal, ordering?: ItemOrdering, itemType?: ItemType) => {
+  list: (offset = 0, limit = 20, signal?: AbortSignal, ordering?: ItemOrdering, itemType?: ItemType, query?: string) => {
     const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
     if (ordering) {
       params.set("sort_by", ordering.sortBy);
       params.set("sort_direction", ordering.direction);
     }
     if (itemType) params.set("item_type", itemType);
+    if (query?.trim()) params.set("q", query.trim());
     return request<ItemListPage>(`${PATH}/itemlist?${params}`, { signal });
   },
 

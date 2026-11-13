@@ -23,9 +23,10 @@ def item_list(
     sort_by: ItemSortField | None = None,
     sort_direction: ItemSortDirection = "asc",
     item_type: str | None = Query(None, min_length=1),
+    q: str = Query("", description="Text contained in any title or short title, case-insensitive."),
     session: Session = Depends(get_session),
 ):
-    return crud.get_item_list(session, offset, limit, sort_by, sort_direction, item_type)
+    return crud.get_item_list(session, offset, limit, sort_by, sort_direction, item_type, q)
 
 
 @router.get("/{item_id}", response_model=ItemRead)

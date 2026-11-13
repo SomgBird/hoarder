@@ -1314,6 +1314,8 @@ export interface operations {
                 item_type?: string | null;
                 limit?: number;
                 offset?: number;
+                /** @description Text contained in any title or short title, case-insensitive. */
+                q?: string;
                 sort_by?: ("title" | "release_date" | "date_added") | null;
                 sort_direction?: "asc" | "desc";
             };

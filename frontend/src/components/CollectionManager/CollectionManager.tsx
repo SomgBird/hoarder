@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId, useRef } from "react";
 import { Button, Frame, TitleBar } from "@react95/core";
-import { Notepad } from "@react95/icons";
+import { Close, Notepad } from "@react95/icons";
 import { ITEM_TYPES, ITEM_TYPE_LABELS, type ItemListPage, type ItemOrdering, type ItemType } from "@types";
 import { itemService } from "@services";
 import CollectionManagerToolbar, { type CollectionItemViewMode } from "./CollectionManagerToolbar";
@@ -25,8 +25,13 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
   const [ordering, setOrdering] = useState<ItemOrdering>({ sortBy: "title", direction: "asc" });
   const [offset, setOffset] = useState(0);
   const [retry, setRetry] = useState(0);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchDraft, setSearchDraft] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInput = useRef<HTMLInputElement>(null);
+  const searchId = useId();
   const [result, setResult] = useState<Result | null>(null);
-  const requestKey = `${category ?? "all"}:${offset}:${ordering.sortBy}:${ordering.direction}:${retry}:${refreshKey}`;
+  const requestKey = JSON.stringify([category, offset, ordering.sortBy, ordering.direction, searchQuery, retry, refreshKey]);
   const current = result?.key === requestKey ? result : null;
   const loading = !showingFolders && current === null;
   const page = current?.page;
@@ -34,7 +39,7 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
   useEffect(() => {
     if (showingFolders) return;
     const controller = new AbortController();
-    itemService.list(offset, PAGE_SIZE, controller.signal, ordering, category ?? undefined)
+    itemService.list(offset, PAGE_SIZE, controller.signal, ordering, category ?? undefined, searchQuery)
       .then((page) => {
         if (controller.signal.aborted) return;
         if (offset > 0 && offset >= page.total) {
@@ -49,7 +54,7 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
         }
       });
     return () => controller.abort();
-  }, [offset, ordering, requestKey, category, showingFolders]);
+  }, [offset, ordering, requestKey, category, showingFolders, searchQuery]);
 
   const showCategories = () => {
     setFolder("categories");
@@ -77,12 +82,33 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
             setView(next);
             if (showingFolders) setFolder("all");
           }
-        }} ordering={ordering}
+        }} ordering={ordering} searchVisible={searchVisible} searchPanelId={`${searchId}-panel`}
+          onSearch={() => setSearchVisible((visible) => !visible)}
           onOrderingChange={(next) => {
             if (next.sortBy === ordering.sortBy && next.direction === ordering.direction) return;
             setOrdering(next);
             setOffset(0);
           }} />
+        {searchVisible && <form id={`${searchId}-panel`} role="search" aria-label="Search collection" className={styles.search} onSubmit={(event) => {
+          event.preventDefault();
+          setSearchQuery(searchDraft.trim());
+          setOffset(0);
+          setRetry((value) => value + 1);
+          if (showingFolders) setFolder("all");
+        }}>
+          <label htmlFor={searchId}>Search titles</label>
+          <input ref={searchInput} id={searchId} type="search" value={searchDraft} autoFocus
+            placeholder="Title or alternative title…" onChange={(event) => setSearchDraft(event.target.value)} />
+          <Button type="submit">Find</Button>
+          <Button type="button" className={styles.clearSearch} aria-label="Clear search" title="Clear search"
+            disabled={!searchDraft && !searchQuery} onClick={() => {
+            setSearchDraft("");
+            setSearchQuery("");
+            setOffset(0);
+            searchInput.current?.focus();
+          }}><Close variant="16x16_4" aria-hidden="true" /></Button>
+        </form>}
+        {!showingFolders && searchQuery && <p role="status">Results for “{searchQuery}”</p>}
         {folder !== "all" && (
           <nav className={styles.breadcrumbs} aria-label="Collection folders">
             <Button onClick={() => {
@@ -112,7 +138,9 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
                 <p>{current.error}</p>
                 <Button onClick={() => setRetry((value) => value + 1)}>Retry</Button>
               </div>}
-              {page?.total === 0 && <p style={{ margin: 4 }}>{category ? "No items in this category yet." : "No items yet."}</p>}
+              {page?.total === 0 && <p style={{ margin: 4 }}>{searchQuery
+                ? `No items match “${searchQuery}”${category ? " in this category" : ""}.`
+                : category ? "No items in this category yet." : "No items yet."}</p>}
               {page && page.total > 0 && (
                 <CollectionItems items={page.items} view={view} selectedItemId={selectedItemId} onSelectItem={onSelectItem} />
               )}

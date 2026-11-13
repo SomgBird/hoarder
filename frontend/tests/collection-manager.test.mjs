@@ -5,7 +5,7 @@ import { JSDOM } from "jsdom";
 import { act, createElement as h } from "react";
 
 const dom = new JSDOM("<!doctype html><html><body></body></html>", { url: "http://localhost" });
-for (const key of ["window", "document", "HTMLElement", "Event", "KeyboardEvent"]) {
+for (const key of ["window", "document", "HTMLElement", "HTMLInputElement", "Event", "KeyboardEvent"]) {
   globalThis[key] = dom.window[key];
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -32,7 +32,8 @@ beforeEach(() => {
     const params = new URL(url).searchParams;
     const offset = Number(params.get("offset"));
     const limit = Number(params.get("limit"));
-    const filtered = params.has("item_type") ? items.filter((item) => item.item_type === params.get("item_type")) : items;
+    const filtered = items.filter((item) => (!params.has("item_type") || item.item_type === params.get("item_type"))
+      && item.title.toLowerCase().includes((params.get("q") ?? "").toLowerCase()));
     return Response.json({ items: filtered.slice(offset, offset + limit), total: filtered.length, offset, limit });
   };
 });
@@ -49,10 +50,138 @@ function manager() {
   } });
 }
 const render = () => act(async () => root.render(manager()));
-const button = (title) => [...container.querySelectorAll("button")].find((node) => node.textContent.trim() === title);
+const button = (title) => [...container.querySelectorAll("button")].find((node) => (node.getAttribute("aria-label") ?? node.textContent.trim()) === title);
 const option = (title) => [...container.querySelectorAll('[role="menuitemradio"]')].find((node) => node.textContent.replace("✓", "").trim() === title);
 const click = (node) => act(async () => { assert.ok(node); node.click(); });
 const collection = () => container.querySelector('[aria-label="Collection items"]');
+const searchInput = () => container.querySelector('input[type="search"]');
+const typeSearch = (value) => act(async () => {
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(searchInput(), value);
+  searchInput().dispatchEvent(new Event("input", { bubbles: true }));
+});
+const submitSearch = () => act(async () => {
+  container.querySelector('[role="search"]').dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+});
+
+test("search submits on the form, resets pagination, retains selection and can be cleared", async () => {
+  items = Array.from({ length: 23 }, (_, index) => ({ ...items[0], id: index + 1, title: `Item ${index + 1}` }));
+  const query = () => new URL(calls.at(-1)).searchParams;
+  await render();
+  assert.equal(searchInput(), null);
+  assert.equal(button("Search").getAttribute("aria-expanded"), "false");
+  await click(button("Item 1"));
+  await click(button("Next"));
+  assert.equal(query().get("offset"), "20");
+  await click(button("Search"));
+  assert.equal(button("Search").getAttribute("aria-expanded"), "true");
+  assert.equal(button("Search").getAttribute("aria-controls"), container.querySelector('[role="search"]').id);
+  assert.equal(document.activeElement, searchInput());
+  const requestCount = calls.length;
+  await typeSearch("  Item 1  ");
+  assert.equal(calls.length, requestCount);
+  await submitSearch();
+  assert.equal(query().get("q"), "Item 1");
+  assert.equal(query().get("offset"), "0");
+  assert.match(container.textContent, /1–11 of 11/);
+  assert.equal(button("Item 1").getAttribute("aria-current"), "true");
+  assert.equal(button("Item 2"), undefined);
+  assert.equal(button("Next").disabled, true);
+  await typeSearch("Unsubmitted draft");
+  const searchedRequestCount = calls.length;
+  await click(button("Search"));
+  assert.equal(searchInput(), null);
+  assert.equal(button("Search").getAttribute("aria-expanded"), "false");
+  assert.equal(calls.length, searchedRequestCount);
+  assert.match(container.textContent, /Results for “Item 1”/);
+  assert.equal(button("Item 2"), undefined);
+  await click(button("Search"));
+  assert.equal(searchInput().value, "Unsubmitted draft");
+  assert.equal(document.activeElement, searchInput());
+  assert.equal(calls.length, searchedRequestCount);
+  await click(button("Clear search"));
+  assert.equal(searchInput().value, "");
+  assert.equal(document.activeElement, searchInput());
+  assert.equal(query().has("q"), false);
+  assert.ok(button("Item 2"));
+  assert.equal(button("Clear search").disabled, true);
+});
+
+test("search works with category pagination, ordering, views, refresh and retry", async () => {
+  const [book, game] = items;
+  items = Array.from({ length: 23 }, (_, index) => [
+    { ...book, id: index * 2 + 1, title: `Match book ${index + 1}` },
+    { ...game, id: index * 2 + 2, title: `Match game ${index + 1}` },
+  ]).flat();
+  items.push({ ...book, id: 100, title: "Unrelated book" });
+  const query = () => new URL(calls.at(-1)).searchParams;
+  await render();
+  await click(option("Categories"));
+  await click(button("Book"));
+  await click(button("Search"));
+  await typeSearch("Match");
+  await click(button("Find"));
+  assert.equal(query().get("item_type"), "book");
+  assert.equal(query().get("q"), "Match");
+  assert.equal(button("Unrelated book"), undefined);
+  await click(button("Next"));
+  assert.equal(query().get("offset"), "20");
+  assert.equal(query().get("q"), "Match");
+  assert.match(container.textContent, /21–23 of 23/);
+  await click(option("Descending"));
+  assert.equal(query().get("offset"), "0");
+  assert.equal(query().get("sort_direction"), "desc");
+  await click(option("Icons"));
+  assert.equal(collection().tagName, "UL");
+  failLoad = true;
+  refreshKey++;
+  await render();
+  assert.match(container.querySelector('[role="alert"]').textContent, /Cannot load collection/);
+  failLoad = false;
+  await click(button("Retry"));
+  assert.equal(query().get("q"), "Match");
+  assert.equal(query().get("item_type"), "book");
+  assert.equal(query().get("sort_direction"), "desc");
+  assert.equal(option("Icons").getAttribute("aria-checked"), "true");
+  await click(button("Clear search"));
+  assert.equal(query().has("q"), false);
+  assert.equal(query().get("item_type"), "book");
+});
+
+test("searching from category folders opens results and empty searches offer a clear action", async () => {
+  await render();
+  await click(option("Categories"));
+  await click(button("Search"));
+  await typeSearch("Missing");
+  await submitSearch();
+  assert.equal(container.querySelector('[aria-label="Collection categories"]'), null);
+  assert.equal(new URL(calls.at(-1)).searchParams.has("item_type"), false);
+  assert.match(container.textContent, /No items match “Missing”/);
+  assert.match(container.textContent, /0 items/);
+  assert.equal(button("Next").disabled, true);
+  await click(button("Clear search"));
+  assert.ok(button("First item"));
+  await typeSearch("   ");
+  await submitSearch();
+  assert.equal(new URL(calls.at(-1)).searchParams.has("q"), false);
+  assert.ok(button("Second item"));
+});
+
+test("a late search response cannot replace newer results", async () => {
+  await render();
+  await click(button("Search"));
+  const pending = [];
+  globalThis.fetch = (url, options) => new Promise((resolve) => pending.push({ url, options, resolve }));
+  await typeSearch("First");
+  await submitSearch();
+  await typeSearch("Second");
+  await submitSearch();
+  assert.equal(pending.length, 2);
+  assert.equal(pending[0].options.signal.aborted, true);
+  await act(async () => pending[1].resolve(Response.json({ items: [items[1]], total: 1, offset: 0, limit: 20 })));
+  await act(async () => pending[0].resolve(Response.json({ items: [items[0]], total: 1, offset: 0, limit: 20 })));
+  assert.ok(button("Second item"));
+  assert.equal(button("First item"), undefined);
+});
 
 test("table shows three columns without icons, nullable dates, and selects from any cell", async () => {
   await render();

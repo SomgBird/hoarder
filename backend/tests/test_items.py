@@ -218,6 +218,55 @@ class ItemApiTests(unittest.TestCase):
         self.client.patch(f"/items/{second['id']}", json={"description": "Updated description"})
         self.assertEqual(self.client.get("/items/itemlist").json()["items"][1]["description"], "Updated description")
 
+    def test_list_searches_all_titles_and_short_titles_with_unicode_normalization(self):
+        item = self.create(selected_language_code="en", titles=[
+            {"title_text": "English title", "short_text": "Ｆｏｏ", "language_code": "en"},
+            {"title_text": "Пушкин: Сказки", "short_text": "Сказки", "language_code": "ru"},
+        ])
+        self.create(titles=[{"title_text": "Other item", "language_code": "en"}])
+        for query in ("ENGLISH", "  ПУШКИН  ", "foo", "сказки"):
+            with self.subTest(query=query):
+                response = self.client.get("/items/itemlist", params={"q": query})
+                self.assertEqual(response.status_code, 200, response.text)
+                page = response.json()
+                self.assertEqual(page["total"], 1)
+                self.assertEqual([entry["id"] for entry in page["items"]], [item["id"]])
+                self.assertEqual(page["items"][0]["title"], "English title")
+        self.assertEqual(self.client.get("/items/itemlist", params={"q": " \t "}).json()["total"], 2)
+        empty = self.client.get("/items/itemlist", params={"q": "missing"}).json()
+        self.assertEqual((empty["items"], empty["total"]), ([], 0))
+
+    def test_list_search_treats_special_characters_as_literal_text(self):
+        literal = self.create(titles=[{"title_text": "100% A_B & C?", "language_code": "en"}])
+        self.create(titles=[{"title_text": "1000 ACB and C", "language_code": "en"}])
+        for query in ("%", "_", "&", "?", "A_B"):
+            with self.subTest(query=query):
+                page = self.client.get("/items/itemlist", params={"q": query}).json()
+                self.assertEqual(page["total"], 1)
+                self.assertEqual([entry["id"] for entry in page["items"]], [literal["id"]])
+
+    def test_list_search_combines_category_sorting_and_pagination_without_duplicates(self):
+        records = []
+        for name in ("Zulu", "Alpha", "Middle"):
+            titles = [{"title_text": f"{name} match", "language_code": "en"},
+                      {"title_text": f"Совпадение match {name}", "language_code": "ru"}]
+            records.append(self.create(titles=titles))
+            self.create(details={"type_name": "game"}, titles=titles)
+        self.create(titles=[{"title_text": "A distraction", "language_code": "en"}])
+        for direction, expected in (("asc", [1, 2, 0]), ("desc", [0, 2, 1])):
+            with self.subTest(direction=direction):
+                ids = []
+                for offset in (0, 2):
+                    response = self.client.get("/items/itemlist", params={
+                        "q": "MATCH", "item_type": "book", "sort_by": "title", "sort_direction": direction,
+                        "offset": offset, "limit": 2,
+                    })
+                    self.assertEqual(response.status_code, 200, response.text)
+                    page = response.json()
+                    self.assertEqual((page["total"], page["offset"], page["limit"]), (3, offset, 2))
+                    ids.extend(entry["id"] for entry in page["items"])
+                self.assertEqual(ids, [records[index]["id"] for index in expected])
+
     def test_existing_database_adds_nullable_date_without_losing_items(self):
         legacy = create_engine("sqlite://", poolclass=StaticPool)
         try:

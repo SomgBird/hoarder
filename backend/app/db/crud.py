@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import joinedload, selectinload
 from sqlmodel import Session, SQLModel, select
 
@@ -337,6 +337,7 @@ def get_item_list(
     session: Session, offset: int = 0, limit: int = 20,
     sort_by: ItemSortField | None = None, sort_direction: ItemSortDirection = "asc",
     item_type: str | None = None,
+    q: str = "",
 ) -> Page[ItemListEntryRead]:
     query = _list_query()
     count_query = select(func.count()).select_from(Item)
@@ -344,6 +345,18 @@ def get_item_list(
         type_id = select(ItemType.id).where(ItemType.name == item_type).scalar_subquery()
         query = query.where(Item.item_type_id == type_id)
         count_query = count_query.where(Item.item_type_id == type_id)
+    search = name_key(q)
+    if search:
+        # EXISTS keeps one row per item even when several translated titles match.
+        matches_title = select(Title.id).where(
+            Title.item_id == Item.id,
+            or_(
+                func.instr(func.hoarder_name_key(Title.title_text), search) > 0,
+                func.instr(func.hoarder_name_key(Title.short_text), search) > 0,
+            ),
+        ).exists()
+        query = query.where(matches_title)
+        count_query = count_query.where(matches_title)
     if sort_by is not None:
         column = query.selected_columns[sort_by]
         if sort_by == "title":
