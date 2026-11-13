@@ -261,6 +261,22 @@ test("cancelling an edit returns to the same item without writing", async () => 
   assert.equal(calls.some((call) => call.method !== "GET"), false);
 });
 
+test("checkbox edits set explicit booleans while untouched unknown flags stay null", async () => {
+  storedItem.is_owned = null;
+  storedItem.languages = [{ ...storedItem.languages[0], ui: null, text: null, voice: null }];
+  await render(routed("/page-editor?itemId=42"));
+  const owned = container.querySelector('[aria-label="Owned"]');
+  const ui = section("Languages").querySelector('[aria-label="UI"]');
+  assert.equal(owned.checked, false);
+  assert.equal(ui.checked, false);
+  await click(owned);
+  await click(owned);
+  await click(ui);
+  await click(button("Save"));
+  assert.equal(savedPayload.is_owned, false);
+  assert.deepEqual(savedPayload.languages, [{ language_code: "ru", ui: true, text: null, voice: null }]);
+});
+
 const generationCheckbox = () => section("Icon").querySelector('input[type="checkbox"]');
 const selectCover = async () => {
   const input = section("Cover").querySelector('input[type="file"]');

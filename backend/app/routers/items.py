@@ -41,15 +41,26 @@ def create_item(payload: ItemCreate, session: Session = Depends(get_session)):
 
 @router.patch("/{item_id}", response_model=ItemRead)
 def update_item(item_id: int, payload: ItemUpdate, session: Session = Depends(get_session)):
-    return crud.update_item(session, item_id, payload)
+    item = session.get(Item, item_id)
+    previous_images = {
+        getattr(item, field) for field in ("cover_image_path", "icon_image_path")
+        if item is not None and field in payload.model_fields_set
+    }
+    updated = crud.update_item(session, item_id, payload)
+    for path in previous_images:
+        remove_unused_image(session, path)
+    return updated
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_item(item_id: int, session: Session = Depends(get_session)):
     item = session.get(Item, item_id)
-    previous_images = (item.cover_image_path, item.icon_image_path) if item else ()
+    previous_images = {
+        item.cover_image_path, item.icon_image_path,
+        *(photo.file_path for copy in item.owned_copies for photo in copy.photos),
+    } if item else set()
     crud.delete_item(session, item_id)
-    for path in set(previous_images):
+    for path in previous_images:
         remove_unused_image(session, path)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

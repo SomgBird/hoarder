@@ -35,6 +35,20 @@ test("clearing fields sends explicit nulls and clearing collections sends empty 
   assert.equal("owned_copies" in payload, false);
 });
 
+test("editing another field preserves null, false and true checkbox values", () => {
+  for (const value of [null, false, true]) {
+    const form = itemToFormState({
+      ...existingItem,
+      is_owned: value,
+      languages: [{ ...existingItem.languages[0], ui: value, text: value, voice: value }],
+    });
+    form.item.description = "Updated description";
+    const payload = JSON.parse(JSON.stringify(buildItemUpdate(form)));
+    assert.equal(payload.is_owned, value);
+    assert.deepEqual(payload.languages, [{ language_code: "ru", ui: value, text: value, voice: value }]);
+  }
+});
+
 test("all subtype values and nested references load into the form and can be cleared", () => {
   const cases = [
     ["book", { page_count: 320 }, { page_count: 320 }],

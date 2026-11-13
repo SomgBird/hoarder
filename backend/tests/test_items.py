@@ -326,6 +326,84 @@ class ItemApiTests(unittest.TestCase):
         self.assertEqual(self.client.delete(f"/items/{second['id']}").status_code, 204)
         self.assertEqual(self.client.get(path).status_code, 404)
 
+    def test_patch_replaces_and_clears_images_without_leaving_files(self):
+        for kind in ("cover", "icon"):
+            with self.subTest(kind=kind):
+                item = self.create()
+                replacement = self.create()
+                def upload(item_id):
+                    return self.client.post(f"/items/{item_id}/{kind}",
+                                            files={"file": ("image.png", self.image(), "image/png")})
+                field = f"{kind}_image_path"
+                previous = upload(item["id"]).json()[field]
+                path = upload(replacement["id"]).json()[field]
+                response = self.client.patch(f"/items/{item['id']}", json={field: path})
+                self.assertEqual(response.status_code, 200, response.text)
+                self.assertEqual(response.json()[field], path)
+                self.assertEqual(self.client.get(previous).status_code, 404)
+                self.assertEqual(self.client.get(path).status_code, 200)
+                self.client.delete(f"/items/{replacement['id']}")
+                self.assertEqual(self.client.get(path).status_code, 200)
+                response = self.client.patch(f"/items/{item['id']}", json={field: None})
+                self.assertEqual(response.status_code, 200, response.text)
+                self.assertIsNone(response.json()[field])
+                self.assertEqual(self.client.get(path).status_code, 404)
+                self.client.delete(f"/items/{item['id']}")
+        self.assertEqual(list(self.covers.iterdir()), [])
+        self.assertEqual(list(self.icons.iterdir()), [])
+
+    def test_patch_keeps_images_referenced_by_unchanged_fields(self):
+        item = self.create()
+        path = self.upload(item["id"]).json()["cover_image_path"]
+        for payload in ({"cover_image_path": path}, {"icon_image_path": path}, {"cover_image_path": None}):
+            response = self.client.patch(f"/items/{item['id']}", json=payload)
+            self.assertEqual(response.status_code, 200, response.text)
+            self.assertEqual(self.client.get(path).status_code, 200)
+        response = self.client.patch(f"/items/{item['id']}", json={"icon_image_path": None})
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(self.client.get(path).status_code, 404)
+
+    def test_failed_patch_preserves_image_files_and_paths(self):
+        item = self.create()
+        path = self.upload(item["id"]).json()["cover_image_path"]
+        response = self.client.patch(f"/items/{item['id']}",
+                                     json={"cover_image_path": None, "format_id": 99999})
+        self.assertEqual(response.status_code, 422, response.text)
+        self.assertEqual(self.client.get(f"/items/{item['id']}").json()["cover_image_path"], path)
+        self.assertEqual(self.client.get(path).status_code, 200)
+
+    def test_images_used_by_copy_photos_survive_replacement_and_deletion(self):
+        for kind in ("cover", "icon"):
+            for action in ("replace", "clear", "delete"):
+                with self.subTest(kind=kind, action=action):
+                    item = self.create()
+                    photo_item = self.create()
+                    def upload():
+                        return self.client.post(f"/items/{item['id']}/{kind}",
+                                                files={"file": ("image.png", self.image(), "image/png")})
+                    path = upload().json()[f"{kind}_image_path"]
+                    with Session(self.engine) as session:
+                        session.add(OwnedCopy(item_id=photo_item["id"], photos=[CopyPhoto(file_path=path)]))
+                        session.commit()
+                    if action == "replace":
+                        response = upload()
+                    elif action == "clear":
+                        response = self.client.patch(f"/items/{item['id']}", json={f"{kind}_image_path": None})
+                    else:
+                        response = self.client.delete(f"/items/{item['id']}")
+                    self.assertIn(response.status_code, (200, 204), response.text)
+                    self.assertEqual(self.client.get(path).status_code, 200)
+                    self.assertEqual(self.client.delete(f"/items/{photo_item['id']}").status_code, 204)
+                    self.assertEqual(self.client.get(path).status_code, 404)
+
+    def test_patch_never_removes_unmanaged_files(self):
+        unmanaged = self.covers / "custom.png"
+        unmanaged.write_bytes(self.image())
+        item = self.create(cover_image_path="/media/covers/custom.png")
+        response = self.client.patch(f"/items/{item['id']}", json={"cover_image_path": None})
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertTrue(unmanaged.is_file())
+
     def test_builtin_and_example_seeds_with_foreign_keys(self):
         with Session(self.engine) as session, redirect_stdout(StringIO()):
             seed_builtin(session)

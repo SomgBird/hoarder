@@ -14,7 +14,7 @@ from app.config import (
     ALLOWED_IMAGE_TYPES, COVERS_DIR, COVERS_URL_PREFIX,
     ICONS_DIR, ICONS_URL_PREFIX, MAX_COVER_PIXELS,
 )
-from app.db.models import Item
+from app.db.models import CopyPhoto, Item
 from app.errors import AppError
 
 logger = logging.getLogger(__name__)
@@ -108,11 +108,13 @@ def _image_location(path: str | None) -> Path | None:
 
 
 def remove_unused_image(session: Session, path: str | None) -> None:
-    """Never delete arbitrary user paths or an image still referenced by an item."""
+    """Never delete arbitrary user paths or an image still used by an item or photo."""
     source = _image_location(path)
     if source is None:
         return
     if session.exec(select(Item.id).where(or_(Item.cover_image_path == path, Item.icon_image_path == path)).limit(1)).first() is not None:
+        return
+    if session.exec(select(CopyPhoto.id).where(CopyPhoto.file_path == path).limit(1)).first() is not None:
         return
     try:
         source.unlink(missing_ok=True)

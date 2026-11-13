@@ -1,7 +1,7 @@
 import { ITEM_TYPE, ITEM_TYPES, type ItemCreate, type ItemDetailsCreate, type ItemRead, type ItemType, type ItemUpdate } from "@types";
 import type { ReferenceResource } from "../../../services/referenceService";
 
-export type Values = Record<string, string | boolean | string[]>;
+export type Values = Record<string, string | boolean | string[] | null>;
 
 type FieldKind = "text" | "textarea" | "number" | "date" | "bool" | "reference";
 
@@ -79,7 +79,7 @@ export const DETAILS_FIELDS: Record<ItemType, FieldSpec[]> = {
 // ============================================================
 
 const isBlank = (row: Values) =>
-  Object.values(row).every((v) => v === "" || v === false || v === undefined);
+  Object.values(row).every((v) => v === "" || v === false || v == null);
 
 
 export interface FormState {
@@ -108,7 +108,7 @@ export function itemToFormState(source: ItemRead): FormState {
     itemType,
     item: {
       release_date: source.release_date ?? "",
-      is_owned: source.is_owned === true,
+      is_owned: source.is_owned,
       description: source.description ?? "",
       format_id: String(source.format?.id ?? ""),
       selected_language_code: source.selected_language?.code ?? "",
@@ -123,7 +123,7 @@ export function itemToFormState(source: ItemRead): FormState {
       language_code: title.language?.code ?? "",
     })),
     languages: source.languages.map((entry) => ({
-      language_code: entry.language.code, ui: entry.ui === true, text: entry.text === true, voice: entry.voice === true,
+      language_code: entry.language.code, ui: entry.ui, text: entry.text, voice: entry.voice,
     })),
     barcodes: source.barcodes.map((entry) => ({ code: entry.code, barcode_type_id: String(entry.barcode_type?.id ?? "") })),
     authorCredits: source.author_credits.map((entry, index) => ({
@@ -138,6 +138,9 @@ export function itemToFormState(source: ItemRead): FormState {
 }
 
 // ---------- small parsers ----------
+// An untouched unknown checkbox stays null; interacting with it sets a boolean.
+const bool = (v: Values[string] | undefined): boolean | null => v === null ? null : v === true;
+
 const text = (v: Values[string] | undefined): string | undefined => {
   const s = typeof v === "string" ? v.trim() : "";
   return s || undefined;
@@ -215,7 +218,7 @@ export function buildItemCreate(f: FormState): ItemCreate {
   const i = f.item;
   return {
     release_date: text(i.release_date),
-    is_owned: i.is_owned === true,
+    is_owned: bool(i.is_owned),
     description: text(i.description),
     format_id: num(i.format_id, "Format"),
     selected_language_code: text(i.selected_language_code),
@@ -225,9 +228,9 @@ export function buildItemCreate(f: FormState): ItemCreate {
     titles,
     languages: nonBlank(f.languages).map((r) => ({
       language_code: required(r.language_code, "Language"),
-      ui: r.ui === true,
-      text: r.text === true,
-      voice: r.voice === true,
+      ui: bool(r.ui),
+      text: bool(r.text),
+      voice: bool(r.voice),
     })),
     barcodes: nonBlank(f.barcodes).map((r) => ({
       code: required(r.code, "Barcode"),
