@@ -10,6 +10,9 @@ export interface ItemOrdering {
   sortBy: ItemSortField;
   direction: ItemSortDirection;
 }
+export type ItemFilters = Pick<ItemListQuery,
+  "is_owned" | "release_date_from" | "release_date_to" | "date_added_from" | "date_added_to"
+>;
 export type ReferenceCreate = Schemas["ReferenceCreate"];
 
 export type LanguageRead = Schemas["LanguageRead"];

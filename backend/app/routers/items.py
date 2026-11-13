@@ -1,4 +1,7 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, File, Query, Response, UploadFile, status
+from fastapi.exceptions import RequestValidationError
 from sqlmodel import Session
 
 from app.database import get_session
@@ -24,9 +27,27 @@ def item_list(
     sort_direction: ItemSortDirection = "asc",
     item_type: str | None = Query(None, min_length=1),
     q: str = Query("", description="Text contained in any title or short title, case-insensitive."),
+    is_owned: bool | None = None,
+    release_date_from: date | None = Query(None, description="Inclusive earliest release date."),
+    release_date_to: date | None = Query(None, description="Inclusive latest release date."),
+    date_added_from: date | None = Query(None, description="Inclusive earliest date added."),
+    date_added_to: date | None = Query(None, description="Inclusive latest date added."),
     session: Session = Depends(get_session),
 ):
-    return crud.get_item_list(session, offset, limit, sort_by, sort_direction, item_type, q)
+    for field, lower, upper in (
+        ("release_date_to", release_date_from, release_date_to),
+        ("date_added_to", date_added_from, date_added_to),
+    ):
+        if lower is not None and upper is not None and lower > upper:
+            raise RequestValidationError([{
+                "type": "value_error", "loc": ("query", field),
+                "msg": "End date must be on or after start date", "input": upper.isoformat(),
+            }])
+    return crud.get_item_list(
+        session, offset, limit, sort_by, sort_direction, item_type, q,
+        is_owned=is_owned, release_date_from=release_date_from, release_date_to=release_date_to,
+        date_added_from=date_added_from, date_added_to=date_added_to,
+    )
 
 
 @router.get("/{item_id}", response_model=ItemRead)

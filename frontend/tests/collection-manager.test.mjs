@@ -33,7 +33,11 @@ beforeEach(() => {
     const offset = Number(params.get("offset"));
     const limit = Number(params.get("limit"));
     const filtered = items.filter((item) => (!params.has("item_type") || item.item_type === params.get("item_type"))
-      && item.title.toLowerCase().includes((params.get("q") ?? "").toLowerCase()));
+      && item.title.toLowerCase().includes((params.get("q") ?? "").toLowerCase())
+      && (!params.has("is_owned") || Boolean(item.is_owned) === (params.get("is_owned") === "true"))
+      && ["release_date", "date_added"].every((field) =>
+        (!params.has(`${field}_from`) || item[field] && item[field] >= params.get(`${field}_from`))
+        && (!params.has(`${field}_to`) || item[field] && item[field] <= params.get(`${field}_to`))));
     return Response.json({ items: filtered.slice(offset, offset + limit), total: filtered.length, offset, limit });
   };
 });
@@ -61,6 +65,148 @@ const typeSearch = (value) => act(async () => {
 });
 const submitSearch = () => act(async () => {
   container.querySelector('[role="search"]').dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+});
+
+const filterDialog = () => container.querySelector('[role="dialog"]');
+const filterField = (label) => [...filterDialog().querySelectorAll("select, input")].find((node) =>
+  (node.getAttribute("aria-label") ?? node.labels[0]?.firstChild.textContent.trim()) === label);
+const changeFilter = (label, value) => act(async () => {
+  const node = filterField(label);
+  Object.getOwnPropertyDescriptor(Object.getPrototypeOf(node), "value").set.call(node, value);
+  node.dispatchEvent(new Event(node.tagName === "SELECT" ? "change" : "input", { bubbles: true }));
+});
+
+test("filter dialog drafts can be cancelled with focus restored and keyboard focus contained", async () => {
+  await render();
+  button("Filter").focus();
+  await click(button("Filter"));
+  assert.equal(filterDialog().getAttribute("aria-modal"), "true");
+  assert.equal(button("Filter").getAttribute("aria-controls"), filterDialog().id);
+  assert.equal(document.activeElement, filterField("Category"));
+  const count = calls.length;
+  await changeFilter("Category", "game");
+  await changeFilter("Ownership", "false");
+  assert.equal(calls.length, count);
+  button("Cancel").focus();
+  await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true })));
+  assert.equal(document.activeElement, button("Close filters"));
+  await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true })));
+  assert.equal(document.activeElement, button("Cancel"));
+  await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })));
+  assert.equal(filterDialog(), null);
+  assert.equal(document.activeElement, button("Filter"));
+  assert.equal(calls.length, count);
+  await click(button("Filter"));
+  assert.equal(filterField("Category").value, "");
+  assert.equal(filterField("Ownership").value, "");
+  await click(button("Close filters"));
+  assert.equal(filterDialog(), null);
+});
+
+test("filters combine category, ownership and dates with search, pagination, refresh and reset", async () => {
+  const [book, game] = items;
+  items = Array.from({ length: 23 }, (_, index) => [
+    { ...book, id: index * 2 + 1, title: `Match ${index + 1}` },
+    { ...game, id: index * 2 + 2, title: `Match game ${index + 1}` },
+  ]).flat();
+  const query = () => new URL(calls.at(-1)).searchParams;
+  await render();
+  assert.equal(button("Reset filters"), undefined);
+  await click(button("Match 1"));
+  await click(button("Search"));
+  await typeSearch("Match");
+  await submitSearch();
+  await click(button("Next"));
+  await click(button("Filter"));
+  for (const [label, value] of [
+    ["Category", "book"], ["Ownership", "true"],
+    ["Release date from", "2001-02-03"], ["Release date to", "2001-02-03"],
+    ["Date added from", "2026-11-12"], ["Date added to", "2026-11-12"],
+  ]) await changeFilter(label, value);
+  await click(button("Apply"));
+  assert.equal(filterDialog(), null);
+  assert.equal(query().get("offset"), "0");
+  assert.equal(query().get("item_type"), "book");
+  assert.equal(query().get("is_owned"), "true");
+  assert.equal(query().get("release_date_from"), "2001-02-03");
+  assert.equal(query().get("release_date_to"), "2001-02-03");
+  assert.equal(query().get("date_added_from"), "2026-11-12");
+  assert.equal(query().get("date_added_to"), "2026-11-12");
+  assert.equal(query().get("q"), "Match");
+  assert.match(container.textContent, /1–20 of 23/);
+  assert.equal(button("Match 1").getAttribute("aria-current"), "true");
+  assert.equal(button("Filter").getAttribute("aria-pressed"), "true");
+  await click(button("Next"));
+  assert.equal(query().get("offset"), "20");
+  assert.equal(collection().querySelectorAll("tbody tr").length, 3);
+  await click(option("Descending"));
+  await click(option("List"));
+  refreshKey++;
+  await render();
+  assert.equal(query().get("is_owned"), "true");
+  assert.equal(query().get("sort_direction"), "desc");
+  await click(button("Filter"));
+  assert.equal(filterField("Category").value, "book");
+  assert.equal(filterField("Release date to").value, "2001-02-03");
+  await changeFilter("Ownership", "false");
+  await click(button("Cancel"));
+  assert.equal(query().get("is_owned"), "true");
+  assert.match(button("Reset filters").nextElementSibling.textContent, /^Filters: /);
+  assert.equal(button("Reset filters").closest('[role="toolbar"]'), null);
+  await click(button("Reset filters"));
+  assert.equal(filterDialog(), null);
+  assert.equal(query().has("item_type"), false);
+  assert.equal(query().has("is_owned"), false);
+  assert.equal(query().has("release_date_from"), false);
+  assert.equal(query().has("date_added_to"), false);
+  assert.equal(query().get("q"), "Match");
+  assert.equal(query().get("sort_direction"), "desc");
+  assert.equal(button("Filter").getAttribute("aria-pressed"), "false");
+  assert.equal(button("Reset filters"), undefined);
+  assert.equal(container.querySelector(".filterSummary"), null);
+  assert.match(container.textContent, /1–20 of 46/);
+  assert.equal(option("List").getAttribute("aria-checked"), "true");
+});
+
+test("filters use the current category and show empty results and invalid date ranges", async () => {
+  await render();
+  await click(option("Categories"));
+  await click(button("Book"));
+  await click(button("Filter"));
+  assert.equal(filterField("Category").value, "book");
+  await changeFilter("Ownership", "false");
+  await click(button("Apply"));
+  assert.match(container.textContent, /No items match the selected filters/);
+  assert.match(container.textContent, /0 items/);
+  await click(button("Filter"));
+  const count = calls.length;
+  for (const field of ["Release date", "Date added"]) {
+    await changeFilter(`${field} from`, "2026-11-02");
+    await changeFilter(`${field} to`, "2026-11-01");
+    assert.equal(button("Apply").disabled, true);
+    assert.equal(filterField(`${field} to`).getAttribute("aria-invalid"), "true");
+    assert.match(filterDialog().querySelector('[role="alert"]').textContent, /end date must be on or after start date/);
+    await click(button("Apply"));
+    assert.equal(calls.length, count);
+    await changeFilter(`${field} from`, "");
+    await changeFilter(`${field} to`, "");
+  }
+  assert.equal(button("Apply").disabled, false);
+  await changeFilter("Category", "");
+  await click(button("Apply"));
+  assert.equal(new URL(calls.at(-1)).searchParams.get("is_owned"), "false");
+  assert.ok(button("Second item"));
+});
+
+test("applying filters from the category overview opens item results", async () => {
+  await render();
+  await click(option("Categories"));
+  await click(button("Filter"));
+  await changeFilter("Category", "book");
+  await click(button("Apply"));
+  assert.equal(container.querySelector('[aria-label="Collection categories"]'), null);
+  assert.ok(button("First item"));
+  assert.equal(button("Second item"), undefined);
 });
 
 test("search submits on the form, resets pagination, retains selection and can be cleared", async () => {

@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import date
 
 from sqlalchemy import func, or_
 from sqlalchemy.orm import joinedload, selectinload
@@ -338,13 +339,30 @@ def get_item_list(
     sort_by: ItemSortField | None = None, sort_direction: ItemSortDirection = "asc",
     item_type: str | None = None,
     q: str = "",
+    *,
+    is_owned: bool | None = None,
+    release_date_from: date | None = None,
+    release_date_to: date | None = None,
+    date_added_from: date | None = None,
+    date_added_to: date | None = None,
 ) -> Page[ItemListEntryRead]:
     query = _list_query()
     count_query = select(func.count()).select_from(Item)
+    filters = []
     if item_type is not None:
         type_id = select(ItemType.id).where(ItemType.name == item_type).scalar_subquery()
-        query = query.where(Item.item_type_id == type_id)
-        count_query = count_query.where(Item.item_type_id == type_id)
+        filters.append(Item.item_type_id == type_id)
+    if is_owned is not None:
+        # The list represents an unset ownership value as not owned, too.
+        filters.append(func.coalesce(Item.is_owned, False) == is_owned)
+    for column, lower, upper in (
+        (Item.release_date, release_date_from, release_date_to),
+        (Item.date_added, date_added_from, date_added_to),
+    ):
+        if lower is not None:
+            filters.append(column >= lower)
+        if upper is not None:
+            filters.append(column <= upper)
     search = name_key(q)
     if search:
         # EXISTS keeps one row per item even when several translated titles match.
@@ -355,8 +373,10 @@ def get_item_list(
                 func.instr(func.hoarder_name_key(Title.short_text), search) > 0,
             ),
         ).exists()
-        query = query.where(matches_title)
-        count_query = count_query.where(matches_title)
+        filters.append(matches_title)
+    if filters:
+        query = query.where(*filters)
+        count_query = count_query.where(*filters)
     if sort_by is not None:
         column = query.selected_columns[sort_by]
         if sort_by == "title":

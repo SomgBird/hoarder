@@ -24,9 +24,14 @@ interface Props {
   onSearch: () => void;
   searchVisible: boolean;
   searchPanelId: string;
+  onFilter: () => void;
+  filterVisible: boolean;
+  filterActive: boolean;
+  filterDialogId: string;
 }
 
-function CollectionManagerToolbar({ view, onViewChange, ordering, onOrderingChange, onSearch, searchVisible, searchPanelId }: Props) {
+function CollectionManagerToolbar({ view, onViewChange, ordering, onOrderingChange, onSearch, searchVisible, searchPanelId,
+  onFilter, filterVisible, filterActive, filterDialogId }: Props) {
   const sortFields = [
     { value: "title", label: "Title" },
     { value: "release_date", label: "Release date" },
@@ -53,7 +58,9 @@ function CollectionManagerToolbar({ view, onViewChange, ordering, onOrderingChan
     <Toolbar>
       <Toolbar.Button icon={<Explorer101 variant="32x32_4" />} label="Search" onClick={onSearch}
         aria-expanded={searchVisible} aria-controls={searchVisible ? searchPanelId : undefined} />
-      <Toolbar.Button icon={<Bookmark variant="32x32_4" />} label="Filter" />
+      <Toolbar.Button icon={<Bookmark variant="32x32_4" />} label="Filter" onClick={onFilter}
+        aria-haspopup="dialog" aria-expanded={filterVisible} aria-pressed={filterActive}
+        aria-controls={filterVisible ? filterDialogId : undefined} />
 
       <Toolbar.Menu icon={<Files variant="32x32_4" />} label="Order">
         {sortFields.map((option) => (

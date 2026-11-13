@@ -26,6 +26,30 @@
   margin: 4px 0 8px;
 }
 
+.filterSummary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+
+.filterSummary p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.resetFilters,
+.resetFilters:active {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 4px;
+}
+
 .search label {
   flex: none;
   white-space: nowrap;

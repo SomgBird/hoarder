@@ -1311,11 +1311,20 @@ export interface operations {
     item_list_items_itemlist_get: {
         parameters: {
             query?: {
+                /** @description Inclusive earliest date added. */
+                date_added_from?: string | null;
+                /** @description Inclusive latest date added. */
+                date_added_to?: string | null;
+                is_owned?: boolean | null;
                 item_type?: string | null;
                 limit?: number;
                 offset?: number;
                 /** @description Text contained in any title or short title, case-insensitive. */
                 q?: string;
+                /** @description Inclusive earliest release date. */
+                release_date_from?: string | null;
+                /** @description Inclusive latest release date. */
+                release_date_to?: string | null;
                 sort_by?: ("title" | "release_date" | "date_added") | null;
                 sort_direction?: "asc" | "desc";
             };

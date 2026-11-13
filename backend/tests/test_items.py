@@ -134,6 +134,75 @@ class ItemApiTests(unittest.TestCase):
         self.assertEqual([item["id"] for item in first["items"] + second["items"]], ids)
         self.assertEqual(self.client.get("/items/itemlist?limit=101").status_code, 422)
 
+    def test_list_combines_filters_before_sorting_counting_and_pagination(self):
+        records = [self.create(
+            titles=[{"title_text": title, "language_code": "en"}],
+            is_owned=owned, release_date=released,
+            details={"type_name": category},
+        ) for title, owned, released, category in (
+            ("Match B", True, "2001-02-03", "book"),
+            ("Match A", True, "2001-02-04", "book"),
+            ("Match unowned", False, "2001-02-03", "book"),
+            ("Match unknown ownership", None, "2001-02-03", "book"),
+            ("Match unknown date", True, None, "book"),
+            ("Match game", True, "2001-02-03", "game"),
+            ("Other", True, "2001-02-03", "book"),
+            ("Match early", True, "2001-02-02", "book"),
+            ("Match late", True, "2001-02-05", "book"),
+        )]
+        with Session(self.engine) as session:
+            for index, record in enumerate(records):
+                item = session.get(Item, record["id"])
+                item.date_added = date(2026, 11, 1 + index)
+                session.add(item)
+            session.commit()
+        params = {"item_type": "book", "q": "match", "is_owned": "true",
+                  "release_date_from": "2001-02-03", "release_date_to": "2001-02-04",
+                  "date_added_from": "2026-11-01", "date_added_to": "2026-11-02",
+                  "sort_by": "title", "sort_direction": "asc", "limit": 1}
+        for offset, index in enumerate((1, 0)):
+            response = self.client.get("/items/itemlist", params={**params, "offset": offset})
+            self.assertEqual(response.status_code, 200, response.text)
+            page = response.json()
+            self.assertEqual(page["total"], 2)
+            self.assertEqual([item["id"] for item in page["items"]], [records[index]["id"]])
+        self.assertEqual(self.client.get("/items/itemlist").json()["total"], len(records))
+
+    def test_list_filter_ownership_false_includes_unset_and_dates_allow_open_ranges(self):
+        owned = self.create(is_owned=True, release_date="2001-02-03")
+        unowned = self.create(is_owned=False, release_date="2002-02-03")
+        unknown = self.create()
+        with Session(self.engine) as session:
+            item = session.get(Item, unknown["id"])
+            item.date_added = None
+            session.add(item)
+            session.commit()
+        for params, expected in (
+            ({"is_owned": "false"}, [unowned["id"], unknown["id"]]),
+            ({"release_date_from": "2002-02-03"}, [unowned["id"]]),
+            ({"release_date_to": "2001-02-03"}, [owned["id"]]),
+            ({"date_added_from": "2000-01-01"}, [owned["id"], unowned["id"]]),
+            ({"date_added_to": "2000-01-01"}, []),
+        ):
+            with self.subTest(params=params):
+                response = self.client.get("/items/itemlist", params=params)
+                self.assertEqual(response.status_code, 200, response.text)
+                page = response.json()
+                self.assertEqual([item["id"] for item in page["items"]], expected)
+                self.assertEqual(page["total"], len(expected))
+
+    def test_list_rejects_invalid_filter_values_and_reversed_ranges(self):
+        for params in (
+            {"is_owned": "maybe"}, {"release_date_from": "bad-date"},
+            {"date_added_to": "2026-02-30"},
+            {"release_date_from": "2002-01-01", "release_date_to": "2001-01-01"},
+            {"date_added_from": "2026-11-02", "date_added_to": "2026-11-01"},
+        ):
+            with self.subTest(params=params):
+                response = self.client.get("/items/itemlist", params=params)
+                self.assertEqual(response.status_code, 422, response.text)
+                self.assertEqual(response.json()["code"], "validation_error")
+
     def test_list_records_date_added_and_preserves_it_on_edit(self):
         item = self.create()
         listed = self.client.get("/items/itemlist").json()["items"][0]

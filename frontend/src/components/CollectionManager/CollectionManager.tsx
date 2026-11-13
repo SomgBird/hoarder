@@ -1,11 +1,13 @@
 import { useState, useEffect, useId, useRef } from "react";
 import { Button, Frame, TitleBar } from "@react95/core";
 import { Close, Notepad } from "@react95/icons";
-import { ITEM_TYPES, ITEM_TYPE_LABELS, type ItemListPage, type ItemOrdering, type ItemType } from "@types";
+import { Icon } from "@components";
+import { ITEM_TYPES, ITEM_TYPE_LABELS, type ItemFilters, type ItemListPage, type ItemOrdering, type ItemType } from "@types";
 import { itemService } from "@services";
 import CollectionManagerToolbar, { type CollectionItemViewMode } from "./CollectionManagerToolbar";
 import CollectionCategories from "./CollectionCategories";
 import CollectionItems from "./CollectionItems";
+import CollectionFiltersDialog from "./CollectionFiltersDialog";
 import styles from "./CollectionManager.module.css";
 
 interface Props {
@@ -30,8 +32,12 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
   const [searchQuery, setSearchQuery] = useState("");
   const searchInput = useRef<HTMLInputElement>(null);
   const searchId = useId();
+  const filterId = useId();
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [filters, setFilters] = useState<ItemFilters>({});
+  const filterActive = category !== null || Object.values(filters).some((value) => value !== undefined && value !== null && value !== "");
   const [result, setResult] = useState<Result | null>(null);
-  const requestKey = JSON.stringify([category, offset, ordering.sortBy, ordering.direction, searchQuery, retry, refreshKey]);
+  const requestKey = JSON.stringify([category, filters, offset, ordering.sortBy, ordering.direction, searchQuery, retry, refreshKey]);
   const current = result?.key === requestKey ? result : null;
   const loading = !showingFolders && current === null;
   const page = current?.page;
@@ -39,7 +45,7 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
   useEffect(() => {
     if (showingFolders) return;
     const controller = new AbortController();
-    itemService.list(offset, PAGE_SIZE, controller.signal, ordering, category ?? undefined, searchQuery)
+    itemService.list(offset, PAGE_SIZE, controller.signal, ordering, category ?? undefined, searchQuery, filters)
       .then((page) => {
         if (controller.signal.aborted) return;
         if (offset > 0 && offset >= page.total) {
@@ -54,11 +60,18 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
         }
       });
     return () => controller.abort();
-  }, [offset, ordering, requestKey, category, showingFolders, searchQuery]);
+  }, [offset, ordering, requestKey, category, showingFolders, searchQuery, filters]);
 
   const showCategories = () => {
     setFolder("categories");
     setOffset(0);
+  };
+
+  const applyFilters = (nextCategory: ItemType | null, nextFilters: ItemFilters) => {
+    setFolder(nextCategory ?? "all");
+    setFilters(nextFilters);
+    setOffset(0);
+    setFilterVisible(false);
   };
 
   return (
@@ -83,6 +96,8 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
             if (showingFolders) setFolder("all");
           }
         }} ordering={ordering} searchVisible={searchVisible} searchPanelId={`${searchId}-panel`}
+          filterVisible={filterVisible} filterActive={filterActive} filterDialogId={filterId}
+          onFilter={() => setFilterVisible(true)}
           onSearch={() => setSearchVisible((visible) => !visible)}
           onOrderingChange={(next) => {
             if (next.sortBy === ordering.sortBy && next.direction === ordering.direction) return;
@@ -109,6 +124,18 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
           }}><Close variant="16x16_4" aria-hidden="true" /></Button>
         </form>}
         {!showingFolders && searchQuery && <p role="status">Results for “{searchQuery}”</p>}
+        {!showingFolders && filterActive && <div className={styles.filterSummary}>
+          <Button type="button" className={styles.resetFilters} aria-label="Reset filters" title="Reset filters"
+            onClick={() => applyFilters(null, {})}><Icon name="refresh_page" size={16} /></Button>
+          <p role="status">Filters: {[
+          category && ITEM_TYPE_LABELS[category],
+          filters.is_owned != null && (filters.is_owned ? "Owned" : "Not owned"),
+          filters.release_date_from && `Released from ${filters.release_date_from}`,
+          filters.release_date_to && `Released to ${filters.release_date_to}`,
+          filters.date_added_from && `Added from ${filters.date_added_from}`,
+          filters.date_added_to && `Added to ${filters.date_added_to}`,
+          ].filter(Boolean).join(" · ")}</p>
+        </div>}
         {folder !== "all" && (
           <nav className={styles.breadcrumbs} aria-label="Collection folders">
             <Button onClick={() => {
@@ -140,6 +167,7 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
               </div>}
               {page?.total === 0 && <p style={{ margin: 4 }}>{searchQuery
                 ? `No items match “${searchQuery}”${category ? " in this category" : ""}.`
+                : Object.values(filters).some((value) => value != null && value !== "") ? "No items match the selected filters."
                 : category ? "No items in this category yet." : "No items yet."}</p>}
               {page && page.total > 0 && (
                 <CollectionItems items={page.items} view={view} selectedItemId={selectedItemId} onSelectItem={onSelectItem} />
@@ -159,6 +187,8 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
           </div>
         )}
       </Frame>
+      {filterVisible && <CollectionFiltersDialog id={filterId} category={category} filters={filters}
+        onDismiss={() => setFilterVisible(false)} onApply={applyFilters} />}
     </>
   );
 }
