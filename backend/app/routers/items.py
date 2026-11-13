@@ -5,7 +5,7 @@ from app.database import get_session
 from app.config import MAX_UPLOAD_BYTES
 from app.db import crud
 from app.db.models import Item
-from app.db.schemas import ItemCreate, ItemListEntryRead, ItemRead, ItemUpdate, Page
+from app.db.schemas import ItemCreate, ItemListEntryRead, ItemRead, ItemSortDirection, ItemSortField, ItemUpdate, Page
 from app.errors import NotFoundError, PayloadTooLargeError
 from app.media import remove_unused_image, store_cover, store_icon, store_icon_from_cover
 
@@ -20,9 +20,11 @@ router = APIRouter(prefix="/items", tags=["items"])
 def item_list(
     offset: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
+    sort_by: ItemSortField | None = None,
+    sort_direction: ItemSortDirection = "asc",
     session: Session = Depends(get_session),
 ):
-    return crud.get_item_list(session, offset, limit)
+    return crud.get_item_list(session, offset, limit, sort_by, sort_direction)
 
 
 @router.get("/{item_id}", response_model=ItemRead)

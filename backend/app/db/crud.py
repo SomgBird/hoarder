@@ -46,6 +46,8 @@ from app.db.schemas import (
     ItemDetailsCreate,
     ItemLanguageCreate,
     ItemListEntryRead,
+    ItemSortDirection,
+    ItemSortField,
     ItemRead,
     ItemUpdate,
     Page,
@@ -332,11 +334,18 @@ def get_item_list_entry(session: Session, item_id: int) -> ItemListEntryRead:
 
 
 def get_item_list(
-    session: Session, offset: int = 0, limit: int = 20
+    session: Session, offset: int = 0, limit: int = 20,
+    sort_by: ItemSortField | None = None, sort_direction: ItemSortDirection = "asc",
 ) -> Page[ItemListEntryRead]:
-    rows = session.exec(
-        _list_query().order_by(Item.id).offset(offset).limit(limit)
-    ).all()
+    query = _list_query()
+    if sort_by is not None:
+        column = query.selected_columns[sort_by]
+        if sort_by == "title":
+            column = func.hoarder_name_key(column)
+        order = column.desc() if sort_direction == "desc" else column.asc()
+        query = query.order_by(order.nulls_last())
+    # Stable ties keep items from moving between pages. Unknown dates go last.
+    rows = session.exec(query.order_by(Item.id).offset(offset).limit(limit)).all()
     total = session.exec(select(func.count()).select_from(Item)).one()
     return Page(
         items=[ItemListEntryRead(**r._mapping) for r in rows],

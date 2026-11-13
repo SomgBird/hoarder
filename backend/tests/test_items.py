@@ -1,5 +1,5 @@
 from contextlib import redirect_stdout
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from io import BytesIO, StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -140,6 +140,48 @@ class ItemApiTests(unittest.TestCase):
         self.assertEqual(listed["date_added"], datetime.now(timezone.utc).date().isoformat())
         self.client.patch(f"/items/{item['id']}", json={"description": "Updated"})
         self.assertEqual(self.client.get("/items/itemlist").json()["items"][0]["date_added"], listed["date_added"])
+
+    def test_list_orders_before_pagination_with_stable_ties_and_unknown_dates_last(self):
+        records = [
+            self.create(titles=[{"title_text": "zulu", "language_code": "en"}], release_date="2003-01-01"),
+            self.create(titles=[{"title_text": "alpha", "language_code": "en"}], release_date="2001-01-01"),
+            self.create(titles=[{"title_text": "Alpha", "language_code": "en"}], release_date="2001-01-01"),
+            self.create(selected_language_code="ru", titles=[
+                {"title_text": "English title", "language_code": "en"},
+                {"title_text": "Бета", "language_code": "ru"},
+            ]),
+        ]
+        with Session(self.engine) as session:
+            for record, added in zip(records, ["2026-11-03", None, "2026-11-01", "2026-11-02"]):
+                item = session.get(Item, record["id"])
+                item.date_added = date.fromisoformat(added) if added else None
+                session.add(item)
+            session.commit()
+
+        cases = [
+            ("title", "asc", [1, 2, 0, 3]),
+            ("title", "desc", [3, 0, 1, 2]),
+            ("release_date", "asc", [1, 2, 0, 3]),
+            ("release_date", "desc", [0, 1, 2, 3]),
+            ("date_added", "asc", [2, 3, 0, 1]),
+            ("date_added", "desc", [0, 3, 2, 1]),
+        ]
+        for field, direction, indices in cases:
+            with self.subTest(field=field, direction=direction):
+                listed = []
+                for offset in (0, 2):
+                    response = self.client.get("/items/itemlist", params={
+                        "sort_by": field, "sort_direction": direction, "offset": offset, "limit": 2,
+                    })
+                    self.assertEqual(response.status_code, 200, response.text)
+                    page = response.json()
+                    self.assertEqual((page["total"], page["offset"], page["limit"]), (4, offset, 2))
+                    listed.extend(item["id"] for item in page["items"])
+                self.assertEqual(listed, [records[index]["id"] for index in indices])
+
+    def test_list_rejects_unknown_ordering(self):
+        for params in ({"sort_by": "unknown"}, {"sort_direction": "sideways"}):
+            self.assertEqual(self.client.get("/items/itemlist", params=params).status_code, 422)
 
     def test_list_includes_current_description_and_allows_no_description(self):
         first = self.create(description="A description for the mini page.")

@@ -132,6 +132,49 @@ test("load errors can retry and an empty collection keeps view choices available
   assert.equal(option("Icons").getAttribute("aria-checked"), "true");
 });
 
+test("ordering resets pagination, supports keyboard activation, and survives view changes and refresh", async () => {
+  items = Array.from({ length: 23 }, (_, index) => ({ ...items[0], id: index + 1, title: `Item ${index + 1}` }));
+  const query = () => new URL(calls.at(-1)).searchParams;
+  await render();
+  assert.equal(option("Title").getAttribute("aria-checked"), "true");
+  assert.equal(option("Ascending").getAttribute("aria-checked"), "true");
+  assert.equal(query().get("sort_by"), "title");
+  assert.equal(query().get("sort_direction"), "asc");
+  await click(button("Item 1"));
+  await click(option("List"));
+  await click(button("Next"));
+  assert.equal(query().get("offset"), "20");
+
+  await click(option("Release date"));
+  assert.equal(query().get("offset"), "0");
+  assert.equal(query().get("sort_by"), "release_date");
+  assert.equal(option("Release date").getAttribute("aria-checked"), "true");
+  assert.equal(option("Title").getAttribute("aria-checked"), "false");
+  assert.equal(button("Item 1").getAttribute("aria-current"), "true");
+  assert.equal(option("List").getAttribute("aria-checked"), "true");
+
+  await act(async () => option("Descending").dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })));
+  assert.equal(query().get("sort_direction"), "desc");
+  assert.equal(option("Descending").getAttribute("aria-checked"), "true");
+  assert.equal(option("Ascending").getAttribute("aria-checked"), "false");
+  await click(button("Next"));
+  assert.equal(query().get("sort_direction"), "desc");
+  await act(async () => option("Date added").dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true })));
+  assert.equal(query().get("sort_by"), "date_added");
+  assert.equal(query().get("offset"), "0");
+
+  const requestCount = calls.length;
+  await click(option("Date added"));
+  await click(option("Icons"));
+  assert.equal(calls.length, requestCount);
+  refreshKey++;
+  await render();
+  assert.equal(query().get("sort_by"), "date_added");
+  assert.equal(query().get("sort_direction"), "desc");
+  assert.equal(option("Date added").getAttribute("aria-checked"), "true");
+  assert.equal(option("Descending").getAttribute("aria-checked"), "true");
+});
+
 test("mini pages show a 64px icon, item type, ownership and dates while keeping selection", async () => {
   await render();
   await click(button("First item"));

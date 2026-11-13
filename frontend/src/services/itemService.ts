@@ -1,11 +1,17 @@
-import type { ItemRead, ItemCreate, ItemUpdate, ItemListPage } from '../types/item.ts';
+import type { ItemRead, ItemCreate, ItemUpdate, ItemListPage, ItemOrdering } from '../types/item.ts';
 import { request } from './client.ts'
 
 const PATH = "/items";
 
 export const itemService = {
-  list: (offset = 0, limit = 20, signal?: AbortSignal) =>
-    request<ItemListPage>(`${PATH}/itemlist?offset=${offset}&limit=${limit}`, { signal }),
+  list: (offset = 0, limit = 20, signal?: AbortSignal, ordering?: ItemOrdering) => {
+    const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+    if (ordering) {
+      params.set("sort_by", ordering.sortBy);
+      params.set("sort_direction", ordering.direction);
+    }
+    return request<ItemListPage>(`${PATH}/itemlist?${params}`, { signal });
+  },
 
   get: (id: number, signal?: AbortSignal) => request<ItemRead>(`${PATH}/${id}`, { signal }),
 

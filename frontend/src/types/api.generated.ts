@@ -1313,6 +1313,8 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                sort_by?: ("title" | "release_date" | "date_added") | null;
+                sort_direction?: "asc" | "desc";
             };
             header?: never;
             path?: never;

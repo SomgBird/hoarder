@@ -1,8 +1,15 @@
 // Public aliases for the generated API contract. Dates are ISO strings.
 // Keep API fields in backend/app/db/schemas.py and run npm run generate:types.
-import type { components } from "./api.generated";
+import type { components, operations } from "./api.generated";
 
 type Schemas = components["schemas"];
+type ItemListQuery = NonNullable<operations["item_list_items_itemlist_get"]["parameters"]["query"]>;
+export type ItemSortField = NonNullable<ItemListQuery["sort_by"]>;
+export type ItemSortDirection = NonNullable<ItemListQuery["sort_direction"]>;
+export interface ItemOrdering {
+  sortBy: ItemSortField;
+  direction: ItemSortDirection;
+}
 export type ReferenceCreate = Schemas["ReferenceCreate"];
 
 export type LanguageRead = Schemas["LanguageRead"];

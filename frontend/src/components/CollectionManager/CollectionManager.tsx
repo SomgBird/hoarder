@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button, Frame, TitleBar } from "@react95/core";
 import { Notepad } from "@react95/icons";
-import type { ItemListPage } from "@types";
+import type { ItemListPage, ItemOrdering } from "@types";
 import { itemService } from "@services";
 import CollectionManagerToolbar, { type CollectionViewMode } from "./CollectionManagerToolbar";
 import CollectionItems from "./CollectionItems";
@@ -18,17 +18,18 @@ type Result = { key: string; page?: ItemListPage; error?: string };
 
 function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Props) {
   const [view, setView] = useState<CollectionViewMode>("table");
+  const [ordering, setOrdering] = useState<ItemOrdering>({ sortBy: "title", direction: "asc" });
   const [offset, setOffset] = useState(0);
   const [retry, setRetry] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
-  const requestKey = `${offset}:${retry}:${refreshKey}`;
+  const requestKey = `${offset}:${ordering.sortBy}:${ordering.direction}:${retry}:${refreshKey}`;
   const current = result?.key === requestKey ? result : null;
   const loading = current === null;
   const page = current?.page;
 
   useEffect(() => {
     const controller = new AbortController();
-    itemService.list(offset, PAGE_SIZE, controller.signal)
+    itemService.list(offset, PAGE_SIZE, controller.signal, ordering)
       .then((page) => {
         if (controller.signal.aborted) return;
         if (offset > 0 && offset >= page.total) {
@@ -43,7 +44,7 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
         }
       });
     return () => controller.abort();
-  }, [offset, requestKey]);
+  }, [offset, ordering, requestKey]);
 
   return (
     <>
@@ -59,7 +60,12 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
             <TitleBar.Close />
           </TitleBar.OptionsBox>
         </TitleBar>
-        <CollectionManagerToolbar view={view} onViewChange={setView} />
+        <CollectionManagerToolbar view={view} onViewChange={setView} ordering={ordering}
+          onOrderingChange={(next) => {
+            if (next.sortBy === ordering.sortBy && next.direction === ordering.direction) return;
+            setOrdering(next);
+            setOffset(0);
+          }} />
         <Frame className={styles.content} bgColor="$inputBackground" boxShadow="$in" padding="$2" aria-busy={loading}>
           {loading && <p role="status">Loading collection…</p>}
           {current?.error && <div role="alert">

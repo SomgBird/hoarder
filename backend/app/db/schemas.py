@@ -9,6 +9,8 @@ from sqlmodel import SQLModel
 from app.db.base import ItemBase
 
 NonBlank = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+ItemSortField = Literal["title", "release_date", "date_added"]
+ItemSortDirection = Literal["asc", "desc"]
 
 
 # Input schemas reject unknown fields. Without this, a misspelled or renamed key

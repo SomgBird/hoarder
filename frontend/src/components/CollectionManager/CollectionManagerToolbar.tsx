@@ -1,5 +1,6 @@
 import type { KeyboardEvent } from "react";
 import { Toolbar } from "@components";
+import type { ItemOrdering } from "@types";
 import {
   Bookmark,
   Detlicon,
@@ -16,9 +17,26 @@ export type CollectionViewMode = "table" | "list" | "icons" | "minipages";
 interface Props {
   view: CollectionViewMode;
   onViewChange: (view: CollectionViewMode) => void;
+  ordering: ItemOrdering;
+  onOrderingChange: (ordering: ItemOrdering) => void;
 }
 
-function CollectionManagerToolbar({ view, onViewChange }: Props) {
+function CollectionManagerToolbar({ view, onViewChange, ordering, onOrderingChange }: Props) {
+  const sortFields = [
+    { value: "title", label: "Title" },
+    { value: "release_date", label: "Release date" },
+    { value: "date_added", label: "Date added" },
+  ] as const;
+  const sortDirections = [
+    { value: "asc", label: "Ascending" },
+    { value: "desc", label: "Descending" },
+  ] as const;
+  const activateOnKeyDown = (event: KeyboardEvent<HTMLLIElement>, activate: () => void) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      activate();
+    }
+  };
   const views = [
     { value: "table", label: "Table", icon: <Detlicon variant="16x16_4" /> },
     { value: "list", label: "List", icon: <FolderFile variant="16x16_4" /> },
@@ -32,23 +50,30 @@ function CollectionManagerToolbar({ view, onViewChange }: Props) {
       <Toolbar.Button icon={<Bookmark variant="32x32_4" />} label="Filter" />
 
       <Toolbar.Menu icon={<Files variant="32x32_4" />} label="Order">
-        <Toolbar.MenuItem>Title</Toolbar.MenuItem>
+        {sortFields.map((option) => (
+          <Toolbar.MenuItem key={option.value} checked={ordering.sortBy === option.value} tabIndex={0}
+            onClick={() => onOrderingChange({ ...ordering, sortBy: option.value })}
+            onKeyDown={(event: KeyboardEvent<HTMLLIElement>) => activateOnKeyDown(event,
+              () => onOrderingChange({ ...ordering, sortBy: option.value }))}>
+            {option.label}
+          </Toolbar.MenuItem>
+        ))}
         <Toolbar.MenuDivider />
-        <Toolbar.MenuItem>Release date</Toolbar.MenuItem>
-        <Toolbar.MenuDivider />
-        <Toolbar.MenuItem>Date added</Toolbar.MenuItem>
+        {sortDirections.map((option) => (
+          <Toolbar.MenuItem key={option.value} checked={ordering.direction === option.value} tabIndex={0}
+            onClick={() => onOrderingChange({ ...ordering, direction: option.value })}
+            onKeyDown={(event: KeyboardEvent<HTMLLIElement>) => activateOnKeyDown(event,
+              () => onOrderingChange({ ...ordering, direction: option.value }))}>
+            {option.label}
+          </Toolbar.MenuItem>
+        ))}
       </Toolbar.Menu>
 
       <Toolbar.Menu icon={<FolderExe variant="32x32_4" />} label="View">
         {views.map((option) => (
           <Toolbar.MenuItem key={option.value} checked={view === option.value} icon={option.icon} tabIndex={0}
             onClick={() => onViewChange(option.value)}
-            onKeyDown={(event: KeyboardEvent<HTMLLIElement>) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onViewChange(option.value);
-              }
-            }}>
+            onKeyDown={(event: KeyboardEvent<HTMLLIElement>) => activateOnKeyDown(event, () => onViewChange(option.value))}>
             {option.label}
           </Toolbar.MenuItem>
         ))}
