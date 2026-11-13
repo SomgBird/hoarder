@@ -141,6 +141,7 @@
 }
 
 .table tr[data-selected="true"],
+.item[aria-pressed="true"],
 .item[aria-current="true"] {
   background: var(--r95-color-headerBackground, #000080);
   color: var(--r95-color-headerText, #fff);

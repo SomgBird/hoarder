@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { FileText } from "@react95/icons";
 import { ITEM_TYPES, ITEM_TYPE_LABELS, type ItemListEntryRead } from "@types";
 import { coverUrl } from "@services";
@@ -10,6 +10,7 @@ interface Props {
   view: CollectionItemViewMode;
   selectedItemId: number | null;
   onSelectItem: (id: number) => void;
+  onOpenItem: (id: number) => void;
 }
 
 function ItemIcon({ path, size }: { path: string | null; size: 16 | 32 | 64 }) {
@@ -48,7 +49,17 @@ function ItemSummary({ item }: { item: ItemListEntryRead }) {
   );
 }
 
-export default function CollectionItems({ items, view, selectedItemId, onSelectItem }: Props) {
+export default function CollectionItems({ items, view, selectedItemId, onSelectItem, onOpenItem }: Props) {
+  const openItem = (id: number) => {
+    onSelectItem(id);
+    onOpenItem(id);
+  };
+  const openOnEnter = (event: KeyboardEvent<HTMLButtonElement>, id: number) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      openItem(id);
+    }
+  };
   if (view === "table") {
     return (
       <table className={styles.table} aria-label="Collection items">
@@ -57,10 +68,12 @@ export default function CollectionItems({ items, view, selectedItemId, onSelectI
         </thead>
         <tbody>
           {items.map((item) => (
-            <tr key={item.id} data-selected={item.id === selectedItemId} onClick={() => onSelectItem(item.id)}>
+            <tr key={item.id} data-selected={item.id === selectedItemId} onClick={() => onSelectItem(item.id)}
+              onDoubleClick={() => openItem(item.id)}>
               <td>
                 <button type="button" className={styles.tableTitle} aria-current={item.id === selectedItemId}
-                  onClick={(event) => { event.stopPropagation(); onSelectItem(item.id); }}>
+                  onClick={(event) => { event.stopPropagation(); onSelectItem(item.id); }}
+                  onKeyDown={(event) => openOnEnter(event, item.id)}>
                   {item.title}
                 </button>
               </td>
@@ -78,7 +91,8 @@ export default function CollectionItems({ items, view, selectedItemId, onSelectI
       {items.map((item) => (
         <li key={item.id}>
           <button type="button" className={styles.item} aria-current={item.id === selectedItemId}
-            onClick={() => onSelectItem(item.id)} title={item.title}>
+            onClick={() => onSelectItem(item.id)} onDoubleClick={() => openItem(item.id)}
+            onKeyDown={(event) => openOnEnter(event, item.id)} title={item.title}>
             <ItemIcon path={item.icon_image_path} size={view === "minipages" ? 64 : view === "icons" ? 32 : 16} />
             {view === "minipages" ? <ItemSummary item={item} /> : <span className={styles.itemTitle}>{item.title}</span>}
             {view === "minipages" && item.description?.trim() && (

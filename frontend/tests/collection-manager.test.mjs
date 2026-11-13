@@ -51,12 +51,18 @@ function manager() {
   return h(CollectionManager, { selectedItemId, refreshKey, onSelectItem: (id) => {
     selectedItemId = id;
     root.render(manager());
-  } });
+  }, onOpenItem: () => {} });
 }
 const render = () => act(async () => root.render(manager()));
 const button = (title) => [...container.querySelectorAll("button")].find((node) => (node.getAttribute("aria-label") ?? node.textContent.trim()) === title);
 const option = (title) => [...container.querySelectorAll('[role="menuitemradio"]')].find((node) => node.textContent.replace("✓", "").trim() === title);
 const click = (node) => act(async () => { assert.ok(node); node.click(); });
+const doubleClick = (node) => act(async () => {
+  assert.ok(node);
+  node.click();
+  node.click();
+  node.dispatchEvent(new dom.window.MouseEvent("dblclick", { bubbles: true, detail: 2 }));
+});
 const collection = () => container.querySelector('[aria-label="Collection items"]');
 const searchInput = () => container.querySelector('input[type="search"]');
 const typeSearch = (value) => act(async () => {
@@ -171,7 +177,7 @@ test("filters combine category, ownership and dates with search, pagination, ref
 test("filters use the current category and show empty results and invalid date ranges", async () => {
   await render();
   await click(option("Categories"));
-  await click(button("Book"));
+  await doubleClick(button("Book"));
   await click(button("Filter"));
   assert.equal(filterField("Category").value, "book");
   await changeFilter("Ownership", "false");
@@ -262,7 +268,7 @@ test("search works with category pagination, ordering, views, refresh and retry"
   const query = () => new URL(calls.at(-1)).searchParams;
   await render();
   await click(option("Categories"));
-  await click(button("Book"));
+  await doubleClick(button("Book"));
   await click(button("Search"));
   await typeSearch("Match");
   await click(button("Find"));
@@ -451,7 +457,7 @@ test("ordering resets pagination, supports keyboard activation, and survives vie
   assert.equal(option("Descending").getAttribute("aria-checked"), "true");
 });
 
-test("categories opens subtype folders and retains selection and item layouts when navigating", async () => {
+test("categories select on click, open on double-click or Enter, and retain item selection and layouts", async () => {
   await render();
   await click(button("First item"));
   await click(option("List"));
@@ -470,6 +476,14 @@ test("categories opens subtype folders and retains selection and item layouts wh
   assert.match(container.textContent, /8 categories/);
 
   await click(button("Book"));
+  assert.equal(button("Book").getAttribute("aria-pressed"), "true");
+  assert.equal(collection(), null);
+  assert.equal(calls.length, requestCount);
+  await click(button("Video game"));
+  assert.equal(button("Video game").getAttribute("aria-pressed"), "true");
+  assert.equal(button("Book").getAttribute("aria-pressed"), "false");
+  assert.equal(calls.length, requestCount);
+  await doubleClick(button("Book"));
   assert.equal(new URL(calls.at(-1)).searchParams.get("item_type"), "book");
   assert.equal(collection().querySelectorAll("li").length, 1);
   assert.equal(button("First item").getAttribute("aria-current"), "true");
@@ -480,7 +494,9 @@ test("categories opens subtype folders and retains selection and item layouts wh
   assert.match(collection().textContent, /Book · Owned/);
 
   await click(button("Categories"));
-  await click(button("Video game"));
+  await act(async () => button("Video game").dispatchEvent(new KeyboardEvent("keydown", {
+    key: "Enter", bubbles: true, cancelable: true,
+  })));
   assert.equal(new URL(calls.at(-1)).searchParams.get("item_type"), "game");
   assert.equal(button("First item"), undefined);
   assert.match(collection().textContent, /Second item/);
@@ -504,7 +520,7 @@ test("category pagination, ordering, refresh and retries keep the selected subty
   await render();
   await click(button("Next"));
   await click(option("Categories"));
-  await click(button("Book"));
+  await doubleClick(button("Book"));
   assert.equal(query().get("offset"), "0");
   assert.equal(query().get("item_type"), "book");
   assert.equal(collection().querySelectorAll("tbody tr").length, 20);
@@ -542,7 +558,7 @@ test("category pagination, ordering, refresh and retries keep the selected subty
 test("empty category folders can return to categories or switch to all items", async () => {
   await render();
   await click(option("Categories"));
-  await click(button("Film"));
+  await doubleClick(button("Film"));
   assert.match(container.textContent, /No items in this category yet/);
   assert.match(container.textContent, /0 items/);
   assert.equal(button("Next").disabled, true);

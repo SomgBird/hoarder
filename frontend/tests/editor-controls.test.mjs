@@ -202,7 +202,9 @@ const editButton = () => [...container.querySelectorAll('[role="toolbar"] button
 test("explorer enables Edit for an item, loads the full form, and displays saved changes", async () => {
   await render(routed("/collection-view"));
   assert.equal(editButton().disabled, true);
-  await click(container.querySelector('button[aria-current="false"]'));
+  await act(async () => container.querySelector('button[aria-current="false"]').dispatchEvent(
+    new dom.window.MouseEvent("dblclick", { bubbles: true, detail: 2 }),
+  ));
   assert.equal(editButton().disabled, false);
   await click(editButton());
   assert.equal(container.querySelector('input[aria-label="Title"]').value, "Original title");

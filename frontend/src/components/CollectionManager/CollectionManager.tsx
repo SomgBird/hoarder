@@ -13,13 +13,14 @@ import styles from "./CollectionManager.module.css";
 interface Props {
   selectedItemId: number | null;
   onSelectItem: (id: number) => void;
+  onOpenItem: (id: number) => void;
   refreshKey?: number;
 }
 
 const PAGE_SIZE = 20;
 type Result = { key: string; page?: ItemListPage; error?: string };
 
-function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Props) {
+function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKey = 0 }: Props) {
   const [view, setView] = useState<CollectionItemViewMode>("table");
   const [folder, setFolder] = useState<"all" | "categories" | ItemType>("all");
   const category = folder === "all" || folder === "categories" ? null : folder;
@@ -170,7 +171,8 @@ function CollectionManager({ selectedItemId, onSelectItem, refreshKey = 0 }: Pro
                 : Object.values(filters).some((value) => value != null && value !== "") ? "No items match the selected filters."
                 : category ? "No items in this category yet." : "No items yet."}</p>}
               {page && page.total > 0 && (
-                <CollectionItems items={page.items} view={view} selectedItemId={selectedItemId} onSelectItem={onSelectItem} />
+                <CollectionItems items={page.items} view={view} selectedItemId={selectedItemId}
+                  onSelectItem={onSelectItem} onOpenItem={onOpenItem} />
               )}
             </>
           )}
