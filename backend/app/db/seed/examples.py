@@ -9,6 +9,7 @@ from datetime import date
 from sqlmodel import Session, SQLModel, select
 
 from app.db import crud
+from app.db.crud.lookups import get_or_create_named
 from app.db.models import (
     BarcodeType, Condition, ConditionType, CopyPhoto, Format, Franchise, GamePlatform,
     Genre, Item, ItemTag, Journal, OwnedCopy, Scale,
@@ -34,7 +35,7 @@ def _ids(session, model, values: list[str]) -> list[int]:
 
 def _named(session, model, name: str) -> int:
     """Get-or-create a user-level (non-builtin) row: franchise, journal."""
-    return crud._get_or_create_named(session, model, name).id
+    return get_or_create_named(session, model, name).id
 
 
 def _add_copy(session: Session, item_id: int, condition: str, notes: str,
