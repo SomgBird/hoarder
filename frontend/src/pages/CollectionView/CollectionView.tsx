@@ -6,20 +6,24 @@ import {
 } from "@components";
 import styles from "./CollectionView.module.css";
 import { useSearchParams } from "react-router-dom";
+import { useState } from "react";
 
 function CollectionViewContent() {
   const { current, navigate, revision } = useExplorer();
-  const selectedItemId = current.page === "item" ? current.id : null;
+  const [selection, setSelection] = useState({ location: current, id: current.page === "item" ? current.id : null });
+  // Explorer navigation updates the selection; selecting a file leaves the open page alone.
+  if (selection.location !== current) {
+    setSelection({ location: current, id: current.page === "item" ? current.id : null });
+  }
 
   return (
     <div className={styles.page}>
       <div className={styles.manager_column}>
         <CollectionManager
-          selectedItemId={selectedItemId}
+          selectedItemId={selection.id}
           refreshKey={revision}
-          onSelectItem={(id) =>
-            navigate(id === null ? { page: "home" } : { page: "item", id })
-          }
+          onSelectItem={(id) => setSelection({ location: current, id })}
+          onOpenItem={(id) => navigate({ page: "item", id })}
         />
       </div>
       <div className={styles.explorer_column}>

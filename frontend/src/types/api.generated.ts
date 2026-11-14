@@ -73,6 +73,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/items/{item_id}/icon/from-cover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate Icon From Cover */
+        post: operations["generate_icon_from_cover_items__item_id__icon_from_cover_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/items/itemlist": {
         parameters: {
             query?: never;
@@ -82,6 +99,23 @@ export interface paths {
         };
         /** Item List */
         get: operations["item_list_items_itemlist_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/media/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Media */
+        get: operations["list_media_media__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -736,6 +770,10 @@ export interface components {
         };
         /** ItemListEntryRead */
         ItemListEntryRead: {
+            /** Date Added */
+            date_added: string | null;
+            /** Description */
+            description: string | null;
             /** Icon Image Path */
             icon_image_path: string | null;
             /** Id */
@@ -917,6 +955,17 @@ export interface components {
              * @enum {string}
              */
             type_name: "lego_set";
+        };
+        /** MediaFileRead */
+        MediaFileRead: {
+            /** Name */
+            name: string;
+            /** Path */
+            path: string;
+            /** Relative Path */
+            relative_path: string;
+            /** Size Bytes */
+            size_bytes: number;
         };
         /** MiniatureDetailsCreate */
         MiniatureDetailsCreate: {
@@ -1228,11 +1277,56 @@ export interface operations {
             };
         };
     };
+    generate_icon_from_cover_items__item_id__icon_from_cover_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     item_list_items_itemlist_get: {
         parameters: {
             query?: {
+                /** @description Inclusive earliest date added. */
+                date_added_from?: string | null;
+                /** @description Inclusive latest date added. */
+                date_added_to?: string | null;
+                is_owned?: boolean | null;
+                item_type?: string | null;
                 limit?: number;
                 offset?: number;
+                /** @description Text contained in any title or short title, case-insensitive. */
+                q?: string;
+                /** @description Inclusive earliest release date. */
+                release_date_from?: string | null;
+                /** @description Inclusive latest release date. */
+                release_date_to?: string | null;
+                sort_by?: ("title" | "release_date" | "date_added") | null;
+                sort_direction?: "asc" | "desc";
             };
             header?: never;
             path?: never;
@@ -1256,6 +1350,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_media_media__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaFileRead"][];
                 };
             };
         };

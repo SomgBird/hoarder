@@ -15,7 +15,7 @@ from app.db.models import (
 # ------------------------------------------------------------
 # DATA
 # ------------------------------------------------------------
-# name must match the registry key in crud._SUBTYPES
+# name must match the registry key in crud.details._SUBTYPES
 ITEM_TYPES = [
     ("book", "Book"),
     ("game", "Video game"),

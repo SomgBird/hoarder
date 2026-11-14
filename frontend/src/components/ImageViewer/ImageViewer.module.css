@@ -1,0 +1,64 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.window {
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  min-width: min(280px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  padding: 3px;
+}
+
+.titlebar {
+  flex: none;
+  min-width: 0;
+}
+
+.titlebar > div:first-of-type {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewport {
+  min-width: 0;
+  min-height: 0;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100dvh - 100px);
+  overflow: auto;
+  margin-top: 4px;
+  padding: 4px;
+}
+
+.image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: auto;
+}
+
+.status {
+  flex: none;
+  padding: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.error {
+  padding: 16px;
+}

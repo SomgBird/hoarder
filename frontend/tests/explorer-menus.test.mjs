@@ -65,12 +65,19 @@ const command = (text) => find('[role="menu"] button', text);
 const button = (text, scope = container) => find("button", text, scope);
 const dialog = () => container.querySelector('[role="alertdialog"]');
 const click = (node) => act(async () => { assert.ok(node); node.click(); });
+const doubleClick = (node) => act(async () => {
+  assert.ok(node);
+  node.click();
+  node.click();
+  node.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, detail: 2 }));
+});
 const key = (node, value, options = {}) => act(async () => {
   node.dispatchEvent(new KeyboardEvent("keydown", { key: value, bubbles: true, cancelable: true, ...options }));
 });
 const run = async (top, action) => { await click(menu(top)); await click(command(action)); };
 const deletes = () => calls.filter((call) => call.method === "DELETE");
-const select = (id) => click([...container.querySelectorAll('button[aria-current]')].find((node) => node.textContent.startsWith(items.get(id).display_title)));
+const itemButton = (id) => [...container.querySelectorAll('button[aria-current]')].find((node) => node.textContent.startsWith(items.get(id).display_title));
+const openItem = (id) => doubleClick(itemButton(id));
 
 test("menus expose available actions and disable item actions on the home page", async () => {
   await render(explorer());
@@ -90,8 +97,8 @@ test("menus expose available actions and disable item actions on the home page",
 
 test("Go navigates explorer history and Refresh reloads both the page and collection", async () => {
   await render(explorer());
-  await select(42);
-  await select(43);
+  await openItem(42);
+  await openItem(43);
   await run("Go", "Back");
   assert.equal(container.querySelector("h1").textContent, "Original title");
   await run("Go", "Forward");
@@ -101,9 +108,44 @@ test("Go navigates explorer history and Refresh reloads both the page and collec
   await run("View", "Refresh");
   assert.equal(container.querySelector("h1").textContent, "Refreshed item");
   assert.equal(calls.filter((call) => call.path === "/items/itemlist").length, listsBefore + 1);
-  assert.ok(button("Refreshed item2001-02-03"));
+  assert.ok(button("Refreshed item"));
   await run("Go", "Home");
   assert.equal(container.querySelector("h1").textContent, "Welcome to your collection");
+});
+
+test("every item view selects on single click and opens the explorer on double-click or Enter", async () => {
+  for (const view of ["Table", "List", "Icons", "Mini pages"]) {
+    await render(h("div", { key: view }, explorer()));
+    await click([...container.querySelectorAll('[role="menuitemradio"]')].find((node) => node.textContent.trim().endsWith(view)));
+    const itemLoads = (id) => calls.filter((call) => call.path === `/items/${id}`).length;
+    const firstLoads = itemLoads(42);
+    await click(itemButton(42));
+    assert.equal(itemButton(42).getAttribute("aria-current"), "true", view);
+    assert.equal(container.querySelector("h1").textContent, "Welcome to your collection", view);
+    assert.equal(itemLoads(42), firstLoads, view);
+
+    // In table mode any cell can open the item, including its dates.
+    await doubleClick(view === "Table" ? itemButton(42).closest("tr").lastElementChild : itemButton(42));
+    assert.equal(container.querySelector("h1").textContent, "Original title", view);
+    assert.equal(itemLoads(42), firstLoads + 1, view);
+    const secondLoads = itemLoads(43);
+    await click(itemButton(43));
+    assert.equal(itemButton(43).getAttribute("aria-current"), "true", view);
+    assert.equal(itemButton(42).getAttribute("aria-current"), "false", view);
+    assert.equal(container.querySelector("h1").textContent, "Original title", view);
+    assert.equal(itemLoads(43), secondLoads, view);
+
+    await key(itemButton(43), "Enter");
+    assert.equal(container.querySelector("h1").textContent, "Second item", view);
+    assert.equal(itemLoads(43), secondLoads + 1, view);
+    await run("Go", "Back");
+    assert.equal(container.querySelector("h1").textContent, "Original title", view);
+    assert.equal(itemButton(42).getAttribute("aria-current"), "true", view);
+    await run("Go", "Back");
+    assert.equal(container.querySelector("h1").textContent, "Welcome to your collection", view);
+    assert.equal(itemButton(42).getAttribute("aria-current"), "false", view);
+    assert.equal(itemButton(43).getAttribute("aria-current"), "false", view);
+  }
 });
 
 test("Edit and About menu commands open their existing destinations", async () => {
@@ -148,9 +190,9 @@ test("Cancel remains the default focus with the application's Strict Mode enable
 
 test("confirmed deletion refreshes the list, returns home, and removes all history references", async () => {
   await render(explorer());
-  await select(42);
-  await select(43);
-  await select(42);
+  await openItem(42);
+  await openItem(43);
+  await openItem(42);
   await run("File", "Delete item…");
   await click(button("Delete item", dialog()));
   assert.deepEqual(deletes(), [{ path: "/items/42", method: "DELETE" }]);

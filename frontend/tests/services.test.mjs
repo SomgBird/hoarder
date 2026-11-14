@@ -83,6 +83,36 @@ test("reference search encodes Unicode and literal special characters", async ()
   assert.equal((await referenceService.authors("ПУШ % &"))[0].name, "Пушкин");
 });
 
+test("collection ordering and category are sent with pagination", async () => {
+  const controller = new AbortController();
+  globalThis.fetch = async (url, options) => {
+    const params = new URL(url).searchParams;
+    assert.equal(params.get("offset"), "20");
+    assert.equal(params.get("limit"), "20");
+    assert.equal(params.get("sort_by"), "release_date");
+    assert.equal(params.get("sort_direction"), "desc");
+    assert.equal(params.get("item_type"), "game");
+    assert.equal(options.signal, controller.signal);
+    return Response.json({ items: [], total: 0, offset: 20, limit: 20 });
+  };
+  await itemService.list(20, 20, controller.signal, { sortBy: "release_date", direction: "desc" }, "game");
+});
+
+test("collection search encodes literal special characters and retains the category and ordering", async () => {
+  const controller = new AbortController();
+  globalThis.fetch = async (url, options) => {
+    const params = new URL(url).searchParams;
+    assert.equal(params.get("q"), "ПУШ % & ? _");
+    assert.equal(params.get("offset"), "20");
+    assert.equal(params.get("item_type"), "book");
+    assert.equal(params.get("sort_by"), "title");
+    assert.equal(params.get("sort_direction"), "desc");
+    assert.equal(options.signal, controller.signal);
+    return Response.json({ items: [], total: 0, offset: 20, limit: 20 });
+  };
+  await itemService.list(20, 20, controller.signal, { sortBy: "title", direction: "desc" }, "book", "  ПУШ % & ? _  ");
+});
+
 test("reference lists preserve item type scope and creation sends a name instead of an ID", async () => {
   globalThis.fetch = async (url, options) => {
     const parsed = new URL(url);

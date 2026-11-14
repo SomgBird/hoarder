@@ -1,4 +1,5 @@
 export * from "./item";
+export * from "./media";
 export {
   ITEM_TYPE,
   ITEM_TYPES,

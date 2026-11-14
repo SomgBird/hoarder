@@ -52,10 +52,14 @@ export function PageEditorWorkspace({ initialData, existingItem, onClose, onSave
   const [coverError, setCoverError] = useState("");
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [iconError, setIconError] = useState("");
+  const [autoGenerateIcon, setAutoGenerateIcon] = useState(!existingItem);
   const [uploadKind, setUploadKind] = useState<"cover" | "icon">("cover");
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState<ValidationIssue[]>([]);
   const references = useReferenceData(itemType);
+  const imageItem = savedItem ?? existingItem;
+  const hasCover = !!(coverFile || imageItem?.cover_image_path);
+  const generateIconFromCover = autoGenerateIcon && hasCover;
 
   // The header edits the first title; "Alternative titles" edits the rest.
   const [mainTitle = {}, ...otherTitles] = titles;
@@ -99,29 +103,31 @@ export function PageEditorWorkspace({ initialData, existingItem, onClose, onSave
         setSavedItem(item);
       };
       const uploading = (kind: "cover" | "icon") => { setUploadKind(kind); setStatus("uploading"); };
-      const uploaded = (kind: "cover" | "icon") => { if (kind === "cover") setCoverFile(null); else setIconFile(null); };
+      const uploaded = (kind: "cover" | "icon") => {
+        if (kind === "cover") setCoverFile(null);
+        else { setIconFile(null); setAutoGenerateIcon(false); }
+      };
       const saved = existingItem && updatePayload
-        ? await saveExistingItem(existingItem.id, updatePayload, coverFile, savedItem, remember, uploading, iconFile, uploaded)
-        : await saveNewItem(payload, coverFile, savedItem, remember, uploading, iconFile, uploaded);
+        ? await saveExistingItem(existingItem.id, updatePayload, coverFile, savedItem, remember, uploading, iconFile, uploaded, generateIconFromCover)
+        : await saveNewItem(payload, coverFile, savedItem, remember, uploading, iconFile, uploaded, generateIconFromCover);
       setSavedItem(saved);
       setStatus("saved");
       onSaved?.(saved);
     } catch (e) {
       setStatus("idle");
       const message = e instanceof Error ? e.message : "Failed to save item.";
-      setError(itemSaved ? `Item ${existingItem ? "updated" : "created"}, but an image could not be uploaded. Choose another image or retry. ${message}` : message);
+      setError(itemSaved ? `Item ${existingItem ? "updated" : "created"}, but an image could not be saved. Choose another image or retry. ${message}` : message);
       if (e instanceof ApiError) setValidationErrors(e.errors);
     }
   };
 
   const locked = status !== "idle" || references.pending > 0;
   const busy = status === "creating" || status === "updating" || status === "uploading" || references.pending > 0;
-  const imageItem = savedItem ?? existingItem;
   const detailSpecs = itemType ? DETAILS_FIELDS[itemType] : [];
   const saveLabel = status === "creating" ? "Creating..."
     : status === "updating" ? "Saving..."
-    : status === "uploading" ? `Uploading ${uploadKind}...`
-    : savedItem && status !== "saved" ? (coverFile || iconFile ? "Retry image upload" : "Finish")
+    : status === "uploading" ? (uploadKind === "icon" && generateIconFromCover ? "Generating icon..." : `Uploading ${uploadKind}...`)
+    : savedItem && status !== "saved" ? (coverFile || iconFile || generateIconFromCover ? "Retry image save" : "Finish")
     : existingItem ? "Save" : "Create";
 
   return (
@@ -243,8 +249,21 @@ export function PageEditorWorkspace({ initialData, existingItem, onClose, onSave
                     onSelect={(file, message) => { setCoverFile(file); setCoverError(message); }} />
                 </Box>
                 <Box title="Icon">
-                  <ImageUpload label="Icon" file={iconFile} savedPath={imageItem?.icon_image_path ?? null} error={iconError}
-                    onSelect={(file, message) => { setIconFile(file); setIconError(message); }} />
+                  <label className={styles.generate_icon}>
+                    <input type="checkbox" checked={generateIconFromCover} disabled={!hasCover}
+                      onChange={(event) => {
+                        setAutoGenerateIcon(event.target.checked);
+                        if (event.target.checked) { setIconFile(null); setIconError(""); }
+                      }} />
+                    Generate icon from cover
+                  </label>
+                  <p className={styles.icon_help}>{hasCover
+                    ? "Creates 16×16, 32×32 and 64×64 sizes when saving. Replaces the current icon."
+                    : "Upload a cover to generate an icon."}</p>
+                  <fieldset disabled={generateIconFromCover} className={styles.field_group}>
+                    <ImageUpload label="Icon" file={iconFile} savedPath={imageItem?.icon_image_path ?? null} error={iconError}
+                      onSelect={(file, message) => { setIconFile(file); setIconError(message); setAutoGenerateIcon(false); }} />
+                  </fieldset>
                 </Box>
                 <fieldset disabled={savedItem !== null} className={styles.field_group}>
                   <Box title="Languages">

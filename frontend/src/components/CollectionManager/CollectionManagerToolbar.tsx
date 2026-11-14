@@ -1,44 +1,100 @@
+import type { KeyboardEvent } from "react";
 import { Toolbar } from "@components";
+import type { ItemOrdering } from "@types";
 import {
   Bookmark,
   Detlicon,
   Explorer101,
   Files,
+  Folder,
   FolderExe,
   FolderFile,
   Mailnews20,
   Shdocvw272,
 } from "@react95/icons";
 
-function CollectionManagerToolbar() {
+export type CollectionItemViewMode = "table" | "list" | "icons" | "minipages";
+export type CollectionViewMode = CollectionItemViewMode | "categories";
+
+interface Props {
+  view: CollectionViewMode;
+  onViewChange: (view: CollectionViewMode) => void;
+  ordering: ItemOrdering;
+  onOrderingChange: (ordering: ItemOrdering) => void;
+  onSearch: () => void;
+  searchVisible: boolean;
+  searchPanelId: string;
+  onFilter: () => void;
+  filterVisible: boolean;
+  filterActive: boolean;
+  filterDialogId: string;
+}
+
+function CollectionManagerToolbar({ view, onViewChange, ordering, onOrderingChange, onSearch, searchVisible, searchPanelId,
+  onFilter, filterVisible, filterActive, filterDialogId }: Props) {
+  const sortFields = [
+    { value: "title", label: "Title" },
+    { value: "release_date", label: "Release date" },
+    { value: "date_added", label: "Date added" },
+  ] as const;
+  const sortDirections = [
+    { value: "asc", label: "Ascending" },
+    { value: "desc", label: "Descending" },
+  ] as const;
+  const activateOnKeyDown = (event: KeyboardEvent<HTMLLIElement>, activate: () => void) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      activate();
+    }
+  };
+  const views = [
+    { value: "table", label: "Table", icon: <Detlicon variant="16x16_4" /> },
+    { value: "list", label: "List", icon: <FolderFile variant="16x16_4" /> },
+    { value: "icons", label: "Icons", icon: <Shdocvw272 variant="16x16_4" /> },
+    { value: "minipages", label: "Mini pages", icon: <Mailnews20 variant="16x16_4" /> },
+  ] as const;
+
   return (
     <Toolbar>
-      <Toolbar.Button icon={<Explorer101 variant="32x32_4" />} label="Search" />
-      <Toolbar.Button icon={<Bookmark variant="32x32_4" />} label="Filter" />
+      <Toolbar.Button icon={<Explorer101 variant="32x32_4" />} label="Search" onClick={onSearch}
+        aria-expanded={searchVisible} aria-controls={searchVisible ? searchPanelId : undefined} />
+      <Toolbar.Button icon={<Bookmark variant="32x32_4" />} label="Filter" onClick={onFilter}
+        aria-haspopup="dialog" aria-expanded={filterVisible} aria-pressed={filterActive}
+        aria-controls={filterVisible ? filterDialogId : undefined} />
 
       <Toolbar.Menu icon={<Files variant="32x32_4" />} label="Order">
-        <Toolbar.MenuItem>Title</Toolbar.MenuItem>
+        {sortFields.map((option) => (
+          <Toolbar.MenuItem key={option.value} checked={ordering.sortBy === option.value} tabIndex={0}
+            onClick={() => onOrderingChange({ ...ordering, sortBy: option.value })}
+            onKeyDown={(event: KeyboardEvent<HTMLLIElement>) => activateOnKeyDown(event,
+              () => onOrderingChange({ ...ordering, sortBy: option.value }))}>
+            {option.label}
+          </Toolbar.MenuItem>
+        ))}
         <Toolbar.MenuDivider />
-        <Toolbar.MenuItem>Release date</Toolbar.MenuItem>
-        <Toolbar.MenuDivider />
-        <Toolbar.MenuItem>Date added</Toolbar.MenuItem>
+        {sortDirections.map((option) => (
+          <Toolbar.MenuItem key={option.value} checked={ordering.direction === option.value} tabIndex={0}
+            onClick={() => onOrderingChange({ ...ordering, direction: option.value })}
+            onKeyDown={(event: KeyboardEvent<HTMLLIElement>) => activateOnKeyDown(event,
+              () => onOrderingChange({ ...ordering, direction: option.value }))}>
+            {option.label}
+          </Toolbar.MenuItem>
+        ))}
       </Toolbar.Menu>
 
       <Toolbar.Menu icon={<FolderExe variant="32x32_4" />} label="View">
-        <Toolbar.MenuItem icon={<Shdocvw272 variant="16x16_4" />}>
-          Icons
-        </Toolbar.MenuItem>
+        {views.map((option) => (
+          <Toolbar.MenuItem key={option.value} checked={view === option.value} icon={option.icon} tabIndex={0}
+            onClick={() => onViewChange(option.value)}
+            onKeyDown={(event: KeyboardEvent<HTMLLIElement>) => activateOnKeyDown(event, () => onViewChange(option.value))}>
+            {option.label}
+          </Toolbar.MenuItem>
+        ))}
         <Toolbar.MenuDivider />
-        <Toolbar.MenuItem icon={<Detlicon variant="16x16_4" />}>
-          Table
-        </Toolbar.MenuItem>
-        <Toolbar.MenuDivider />
-        <Toolbar.MenuItem icon={<FolderFile variant="16x16_4" />}>
+        <Toolbar.MenuItem checked={view === "categories"} icon={<Folder variant="16x16_4" />} tabIndex={0}
+          onClick={() => onViewChange("categories")}
+          onKeyDown={(event: KeyboardEvent<HTMLLIElement>) => activateOnKeyDown(event, () => onViewChange("categories"))}>
           Categories
-        </Toolbar.MenuItem>
-        <Toolbar.MenuDivider />
-        <Toolbar.MenuItem icon={<Mailnews20 variant="16x16_4" />}>
-          Mini pages
         </Toolbar.MenuItem>
       </Toolbar.Menu>
     </Toolbar>
