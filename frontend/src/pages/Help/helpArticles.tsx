@@ -12,7 +12,8 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
         <li>Open <strong>Collection → Collection Manager</strong> to browse your items.</li>
       </ol>
       <h2>Using Help</h2>
-      <p>Select a topic in the Contents tree on the left. Use Back and Forward to return to topics you have already read. Print prints the current article.</p>
+      <p>Select a folder in the tree on the left to see its topics, then open a topic from the list or the tree. Use the + and − controls to expand or collapse folders.</p>
+      <p>Back and Forward revisit folders and topics. Up opens the containing folder. The address path also links to parent folders. Print prints the current page.</p>
       <p>The question mark in a window opens its relevant topic in a separate Help window. Your current work stays open.</p>
       <h2>Available features</h2>
       <p>You can manage item pages, browse uploaded images, and change the display colors. Tracker, Barcode Scanner, Shopping List, and the other page types are not available yet.</p>

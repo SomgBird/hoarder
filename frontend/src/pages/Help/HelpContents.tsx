@@ -1,42 +1,25 @@
 import { useLayoutEffect, useRef, type KeyboardEvent } from "react";
 import { Tree } from "@react95/core";
-import {
-  Bookmark, HelpBook, Icwdial101, Ie, Inetcpl1319, Mshtml32541, Mspaint,
-  RecycleEmpty, Settings, Wangimg128, Winhlp324000,
-} from "@react95/icons";
-import { HELP_TOPICS, isHelpTopic, type HelpTopicId } from "@config/help";
-
-const groups: { id: string; label: string; topics: HelpTopicId[] }[] = [
-  { id: "getting-started", label: "Getting started", topics: ["welcome", "about", "confirmations"] },
-  { id: "collection", label: "Collection", topics: ["collection", "filters", "explorer"] },
-  { id: "item-pages", label: "Item pages", topics: ["new-item", "edit-item", "images", "delete-item"] },
-  { id: "media", label: "Media", topics: ["media", "image-viewer"] },
-  { id: "appearance", label: "Appearance", topics: ["settings", "color-picker"] },
-];
-
-const topicIcons = {
-  welcome: HelpBook, collection: Inetcpl1319, filters: Bookmark, explorer: Ie,
-  "new-item": Mshtml32541, "edit-item": Mshtml32541, images: Wangimg128,
-  "delete-item": RecycleEmpty, media: Wangimg128, "image-viewer": Wangimg128,
-  settings: Settings, "color-picker": Mspaint, confirmations: Icwdial101, about: Winhlp324000,
-};
+import { HelpBook } from "@react95/icons";
+import { getHelpGroup, HELP_GROUPS, HELP_TOPICS, isHelpFolder, isHelpTopic, type HelpPage } from "@config/help";
+import { HelpTopicIcon } from "./HelpTopicIcon";
 
 const folderLabel = (node: Element) => node.querySelector<HTMLElement>(":scope > div > label");
 const folderChildren = (node: Element) => node.querySelector(":scope > ul");
 const toggleFolder = (node: Element) => folderLabel(node)?.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
 
-export function HelpContents({ topic, onSelect }: { topic: HelpTopicId; onSelect: (topic: HelpTopicId) => void }) {
+export function HelpContents({ page, onSelect }: { page: HelpPage; onSelect: (page: HelpPage) => void }) {
   const contents = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     const tree = contents.current;
-    if (!tree) return;
+    if (!tree || page.kind !== "topic") return;
     // React95 owns folder expansion but exposes no controlled/default-open prop.
     // Use its label toggle action to reveal contextual links and history entries.
-    const group = groups.find(({ topics }) => topics.includes(topic));
+    const group = getHelpGroup(page);
     const folder = tree.querySelector(`[data-help-folder="${group?.id}"]`);
     if (folder && !folderChildren(folder)) toggleFolder(folder);
-  }, [topic]);
+  }, [page]);
 
   useLayoutEffect(() => {
     const tree = contents.current;
@@ -44,8 +27,9 @@ export function HelpContents({ topic, onSelect }: { topic: HelpTopicId; onSelect
     const updateExpanded = () => {
       tree.querySelectorAll("[data-help-folder]").forEach((folder) => {
         const children = folderChildren(folder);
-        folder.setAttribute("aria-expanded", String(children !== null));
-        children?.setAttribute("role", "group");
+        const expanded = String(children !== null);
+        if (folder.getAttribute("aria-expanded") !== expanded) folder.setAttribute("aria-expanded", expanded);
+        if (children?.getAttribute("role") !== "group") children?.setAttribute("role", "group");
       });
     };
     // Keep accessibility state aligned with React95's mouse/keyboard toggles.
@@ -71,12 +55,15 @@ export function HelpContents({ topic, onSelect }: { topic: HelpTopicId; onSelect
       event.stopPropagation();
       if (event.key === "Enter" || event.key === " ") {
         const selected = node.getAttribute("data-help-topic");
-        if (isHelpTopic(selected)) onSelect(selected);
-        else if (node.hasAttribute("data-help-folder")) toggleFolder(node);
-        else onSelect("welcome");
+        const folder = node.getAttribute("data-help-folder");
+        if (isHelpTopic(selected)) onSelect({ kind: "topic", id: selected });
+        else if (isHelpFolder(folder)) onSelect({ kind: "folder", id: folder });
+        else onSelect({ kind: "folder", id: "root" });
       } else if (event.key === "ArrowRight" && node.hasAttribute("data-help-folder")) {
         if (!folderChildren(node)) toggleFolder(node);
         else folderChildren(node)?.querySelector<HTMLElement>("label")?.focus();
+      } else if (event.key === "ArrowRight" && node.hasAttribute("data-help-root")) {
+        labels[1]?.focus();
       } else if (event.key === "ArrowLeft") {
         if (node.hasAttribute("data-help-folder") && folderChildren(node)) toggleFolder(node);
         else {
@@ -89,18 +76,22 @@ export function HelpContents({ topic, onSelect }: { topic: HelpTopicId; onSelect
   };
 
   const rootNode = { id: 0, label: "Hoarder Help", icon: <HelpBook variant="16x16_4" />,
-    role: "treeitem", "aria-level": 1, onClick: () => onSelect("welcome") };
+    role: "treeitem", "aria-level": 1, "aria-expanded": true, "aria-owns": "help-folder-tree",
+    "aria-selected": page.kind === "folder" && page.id === "root",
+    "data-help-root": true, onClick: () => onSelect({ kind: "folder", id: "root" }) };
 
   return (
     <div ref={contents} role="tree" aria-label="Help topics" onKeyDownCapture={onKeyDown}>
-      <Tree role="group" root={rootNode} data={groups.map((group, groupIndex) => ({
-        id: groupIndex + 1, label: group.label, role: "treeitem", "aria-level": 1, "data-help-folder": group.id,
-        children: group.topics.map((key, index) => {
-          const Icon = topicIcons[key];
-          return { id: (groupIndex + 1) * 100 + index, label: HELP_TOPICS[key],
-            icon: <Icon variant="32x32_4" width={16} height={16} />, role: "treeitem", "aria-level": 2,
-            "aria-selected": topic === key, "data-help-topic": key, onClick: () => onSelect(key) };
-        }),
+      <Tree id="help-folder-tree" role="group" root={rootNode} data={HELP_GROUPS.map((group, groupIndex) => ({
+        id: groupIndex + 1, label: group.label, role: "treeitem", "aria-level": 2, "data-help-folder": group.id,
+        "aria-selected": page.kind === "folder" && page.id === group.id,
+        onClick: () => onSelect({ kind: "folder", id: group.id }),
+        children: group.topics.map((key, index) => ({
+          id: (groupIndex + 1) * 100 + index, label: HELP_TOPICS[key],
+          icon: <HelpTopicIcon topic={key} />, role: "treeitem", "aria-level": 3,
+          "aria-selected": page.kind === "topic" && page.id === key, "data-help-topic": key,
+          onClick: () => onSelect({ kind: "topic", id: key }),
+        })),
       }))} />
     </div>
   );

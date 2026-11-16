@@ -21,10 +21,10 @@ function Separator({
       width: 4,
       margin: "2px 4px 2px 2px",
       boxSizing: "border-box",
-      borderTop: "1px solid #ffffff",
-      borderLeft: "1px solid #ffffff",
-      borderBottom: "1px solid #808080",
-      borderRight: "1px solid #808080",
+      borderTop: "1px solid var(--r95-color-borderLightest)",
+      borderLeft: "1px solid var(--r95-color-borderLightest)",
+      borderBottom: "1px solid var(--r95-color-borderDark)",
+      borderRight: "1px solid var(--r95-color-borderDark)",
     };
     return <div className={className} style={{ ...gripStyle, ...style }} />;
   }
@@ -35,8 +35,8 @@ function Separator({
           width: 0,
           height: "auto",
           alignSelf: "stretch",
-          borderLeft: "1px solid #808080",
-          borderRight: "1px solid #ffffff",
+          borderLeft: "1px solid var(--r95-color-borderDark)",
+          borderRight: "1px solid var(--r95-color-borderLightest)",
           borderTop: "none",
           borderBottom: "none",
           margin: "0 6px",
@@ -44,8 +44,8 @@ function Separator({
       : {
           width: "100%",
           height: 0,
-          borderTop: "1px solid #808080",
-          borderBottom: "1px solid #ffffff",
+          borderTop: "1px solid var(--r95-color-borderDark)",
+          borderBottom: "1px solid var(--r95-color-borderLightest)",
           borderLeft: "none",
           borderRight: "none",
           margin: "6px 0",
