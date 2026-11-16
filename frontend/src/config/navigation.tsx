@@ -74,8 +74,12 @@ export const navigation: readonly NavEntry[] = [
     icon: <Notepad2 variant="32x32_4" />,
   },
   {
+    path: "/settings",
     label: "Settings",
     icon: <Settings variant="32x32_4" />,
+    Component: lazy(() =>
+      import("@pages").then(({ Settings }) => ({ default: Settings })),
+    ),
   },
   {
     label: "Help",

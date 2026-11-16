@@ -1,3 +1,3 @@
 body {
-  background-color: #008080;
+  background-color: var(--hoarder-background, #008080);
 }
