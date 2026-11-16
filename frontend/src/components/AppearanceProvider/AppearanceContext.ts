@@ -3,7 +3,7 @@ import type { AppearanceSettings } from "@config/appearance";
 
 interface AppearanceContextValue {
   settings: AppearanceSettings;
-  updateSettings: (changes: Partial<AppearanceSettings>) => void;
+  updateSettings: (settings: AppearanceSettings) => boolean;
 }
 
 export const AppearanceContext = createContext<AppearanceContextValue | null>(null);

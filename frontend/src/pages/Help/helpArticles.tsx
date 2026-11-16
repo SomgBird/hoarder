@@ -110,13 +110,18 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
     </>, related: ["media", "images"],
   },
   settings: {
-    introduction: "Display Properties changes the desktop background and React95 color scheme.",
+    introduction: "Display Properties changes the desktop wallpaper, background color, and React95 color scheme.",
     content: <>
       <h2>Changing the appearance</h2>
       <ol><li>Open Settings from the main menu.</li><li>On Background, click the color button to choose a desktop color.</li><li>On Appearance, select a built-in React95 scheme.</li><li>Check the monitor preview, then click Apply to save or OK to save and close.</li></ol>
       <p>Cancel and the titlebar’s × button discard changes made since the last Apply. The preview updates before the application’s colors change.</p>
+      <h2>Choosing wallpaper</h2>
+      <p>On Background, click Browse… and choose a PNG, JPEG, WebP, GIF, BMP, or AVIF image up to 2 MB. The monitor previews it before you apply it.</p>
+      <p>Center places the image at its original size in the middle of the desktop. Tile repeats it across the desktop. Stretch resizes it to fill the screen. The desktop color shows wherever the image does not cover the screen, including transparent areas.</p>
+      <p>Fit horizontally scales the image to the desktop width while keeping its proportions. It stays centered vertically; tall images may extend beyond the top and bottom of the screen.</p>
+      <p>Select (None) to remove the wallpaper. Wallpapers are saved in this browser along with your other appearance preferences.</p>
       <h2>Restoring the defaults</h2>
-      <p>Click Reset to default, then Apply or OK. The project defaults are the Brick scheme and the teal background <code>#008080</code>.</p>
+      <p>Click Reset to default, then Apply or OK. The project defaults are the Brick scheme, the teal background <code>#008080</code>, and no wallpaper.</p>
       <p>Appearance preferences are saved in this browser. If browser storage is unavailable, changes work for the current session.</p>
     </>, related: ["color-picker"],
   },

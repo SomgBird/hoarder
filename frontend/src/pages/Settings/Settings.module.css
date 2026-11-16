@@ -12,8 +12,61 @@
   padding: 16px 12px 12px;
 }
 
-.description {
-  margin: 2px 0 12px;
+.backgroundSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wallpaperChooser {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 135px;
+  gap: 12px;
+}
+
+.wallpaperList,
+.wallpaperControls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wallpaperList select {
+  width: 100%;
+  min-height: 82px;
+  padding: 3px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: var(--r95-shadow-in);
+  background: var(--r95-color-inputBackground);
+  color: var(--r95-color-materialText);
+  font: inherit;
+}
+
+.wallpaperControls .wallpaperDisplay {
+  width: 100%;
+  min-width: 0;
+}
+
+.wallpaperList option {
+  padding: 2px 4px;
+}
+
+.wallpaperList option:checked {
+  background: var(--r95-color-headerBackground);
+  color: var(--r95-color-headerText);
+}
+
+.wallpaperHint {
+  margin: 8px 0 2px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.wallpaperError {
+  margin: 6px 0 2px;
+  line-height: 1.5;
 }
 
 .colorRow {
@@ -76,5 +129,9 @@
 
   .panel {
     padding: 12px 6px;
+  }
+
+  .wallpaperChooser {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

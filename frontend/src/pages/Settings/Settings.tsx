@@ -7,6 +7,7 @@ import { HelpButton } from "@components/HelpButton/HelpButton";
 import { ColorPicker } from "@components/ColorPicker/ColorPicker";
 import { DEFAULT_APPEARANCE, themeOptions } from "@config/appearance";
 import { AppearancePreview } from "./AppearancePreview";
+import { BackgroundSettings } from "./BackgroundSettings";
 import styles from "./Settings.module.css";
 
 const TABS = ["Background", "Appearance"] as const;
@@ -16,9 +17,17 @@ export default function Settings() {
   const [draft, setDraft] = useState(settings);
   const [activeTab, setActiveTab] = useState<string>(TABS[0]);
   const [choosingColor, setChoosingColor] = useState(false);
+  const [backgroundRevision, setBackgroundRevision] = useState(0);
+  const [saveFailed, setSaveFailed] = useState(false);
   const navigate = useNavigate();
-  const changed = draft.theme !== settings.theme || draft.backgroundColor !== settings.backgroundColor;
+  const changed = draft.theme !== settings.theme || draft.backgroundColor !== settings.backgroundColor
+    || draft.wallpaper !== settings.wallpaper || draft.wallpaperMode !== settings.wallpaperMode;
   const close = () => navigate("/");
+  const apply = () => {
+    const saved = updateSettings(draft);
+    setSaveFailed(!saved);
+    return saved;
+  };
 
   const tabKeyDown = (event: KeyboardEvent<HTMLLIElement>) => {
     const index = TABS.indexOf(activeTab as typeof TABS[number]);
@@ -54,19 +63,10 @@ export default function Settings() {
               aria-selected={activeTab === title} aria-controls={`settings-panel-${title}`}
               tabIndex={activeTab === title ? 0 : -1} onKeyDown={tabKeyDown}>
               <div className={styles.panel} id={`settings-panel-${title}`} role="tabpanel" aria-labelledby={`settings-tab-${title}`}>
-                <AppearancePreview settings={draft} />
-                {title === "Background" ? <Fieldset legend="Desktop">
-                  <p className={styles.description}>Choose a background color for your desktop.</p>
-                  <div className={styles.colorRow}>
-                    <span>Color:</span>
-                    <Button id="system-background" type="button" className={styles.colorButton}
-                      aria-label={`System background color: ${draft.backgroundColor.toUpperCase()}`}
-                      aria-haspopup="dialog" onClick={() => setChoosingColor(true)}>
-                      <Frame as="span" className={styles.colorSample} boxShadow="$in" style={{ backgroundColor: draft.backgroundColor }} />
-                      {draft.backgroundColor.toUpperCase()}<span className={styles.arrow} aria-hidden="true">▼</span>
-                    </Button>
-                  </div>
-                </Fieldset> : <Fieldset legend="Color scheme">
+                <AppearancePreview settings={draft} showWindows={title === "Appearance"} />
+                {title === "Background" ? <BackgroundSettings key={backgroundRevision} settings={draft}
+                  onChange={(changes) => setDraft((current) => ({ ...current, ...changes }))}
+                  onChooseColor={() => setChoosingColor(true)} /> : <Fieldset legend="Color scheme">
                   <div className={styles.scheme}>
                     <label htmlFor="react95-theme">Scheme:</label>
                     <Dropdown id="react95-theme" aria-label="React95 theme" width="100%"
@@ -82,14 +82,21 @@ export default function Settings() {
             </Tab>)}
           </Tabs>
           <div className={styles.resetRow}>
-            <Button type="button" onClick={() => setDraft({ ...DEFAULT_APPEARANCE })}>Reset to default</Button>
+            <Button type="button" onClick={() => {
+              setDraft({ ...DEFAULT_APPEARANCE });
+              setBackgroundRevision((revision) => revision + 1);
+            }}>Reset to default</Button>
             <span>Click Apply to save changes.</span>
           </div>
+          {saveFailed && <p role="alert" className={styles.wallpaperError}>
+            Changes are applied for this session, but could not be saved in this browser.
+            Try a smaller wallpaper or free some browser storage, then click Apply again.
+          </p>}
         </div>
         <div className={styles.actions}>
-          <Button type="button" onClick={() => { updateSettings(draft); close(); }}>OK</Button>
+          <Button type="button" onClick={() => { if (apply()) close(); }}>OK</Button>
           <Button type="button" onClick={close}>Cancel</Button>
-          <Button type="button" disabled={!changed} onClick={() => updateSettings(draft)}>Apply</Button>
+          <Button type="button" disabled={!changed && !saveFailed} onClick={apply}>Apply</Button>
         </div>
       </Frame>
       {choosingColor && <ColorPicker value={draft.backgroundColor}

@@ -1,3 +1,7 @@
 body {
   background-color: var(--hoarder-background, #008080);
+  background-position: var(--hoarder-wallpaper-position, center center);
+  background-repeat: var(--hoarder-wallpaper-repeat, no-repeat);
+  background-size: var(--hoarder-wallpaper-size, auto);
+  background-attachment: fixed;
 }
