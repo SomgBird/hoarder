@@ -3,6 +3,7 @@ import { Frame, TitleBar } from "@react95/core";
 import { HtmlPage, Ie } from "@react95/icons";
 
 import { Separator, AddressBar, ContentFrame, EtchedBox } from "@components";
+import { HelpButton } from "@components/HelpButton/HelpButton";
 import styles from "./Explorer.module.css";
 import ExplorerToolbar from "./ExplorerToolbar/ExplorerToolbar";
 import { ExplorerMenuBar } from "./ExplorerMenuBar/ExplorerMenuBar";
@@ -32,6 +33,7 @@ function Explorer() {
     >
       <TitleBar icon={<Ie variant="16x16_8" />} title="Explorer">
         <TitleBar.OptionsBox>
+          <HelpButton topic="explorer" />
           <TitleBar.Close />
         </TitleBar.OptionsBox>
       </TitleBar>

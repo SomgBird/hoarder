@@ -1,0 +1,169 @@
+.window {
+  width: 980px;
+  max-width: 100%;
+  height: min(680px, 100dvh);
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar {
+  flex: none;
+  margin: 3px 0;
+}
+
+.panes {
+  display: grid;
+  grid-template-columns: 245px minmax(0, 1fr);
+  gap: 5px;
+  flex: 1;
+  min-height: 0;
+}
+
+.panes[data-contents-visible="false"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.contents {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 3px;
+}
+
+.contents > div:last-child {
+  flex: 1;
+  min-height: 0;
+  padding: 3px;
+}
+
+.treePanel {
+  height: 100%;
+  overflow: auto;
+  padding: 8px 4px;
+}
+
+.treePanel [role="treeitem"] > div > label {
+  cursor: default;
+  white-space: nowrap;
+}
+
+.treePanel [aria-selected="true"] > div > label {
+  background: var(--r95-color-headerBackground);
+  color: var(--r95-color-headerText);
+}
+
+.article {
+  min-width: 0;
+  overflow: auto;
+  line-height: 1.6;
+  color: var(--r95-color-materialText);
+}
+
+.articleHeader {
+  padding: 16px 20px 12px;
+  background: var(--r95-color-material);
+  border-bottom: 1px solid var(--r95-color-borderDark);
+}
+
+.articleHeader > span {
+  font-size: 11px;
+}
+
+.article h1 {
+  margin: 2px 0 0;
+  font-size: 22px;
+  line-height: 1.3;
+}
+
+.articleBody {
+  padding: 4px 20px 20px;
+}
+
+.article h2 {
+  margin: 20px 0 5px;
+  font-size: 14px;
+}
+
+.article p {
+  margin: 12px 0;
+}
+
+.article li + li {
+  margin-top: 6px;
+}
+
+.article ol {
+  padding-left: 24px;
+}
+
+.introduction {
+  font-weight: bold;
+}
+
+.article code {
+  font-family: monospace;
+  overflow-wrap: anywhere;
+}
+
+.related {
+  border-top: 1px solid var(--r95-color-borderDark);
+  margin-top: 24px;
+}
+
+.related button {
+  display: block;
+  border: 0;
+  background: none;
+  color: var(--r95-color-anchor);
+  padding: 3px 0;
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.status {
+  flex: none;
+  margin-top: 4px;
+  padding: 3px 6px;
+}
+
+@media (max-width: 720px) {
+  .panes {
+    grid-template-columns: minmax(155px, 38%) minmax(0, 1fr);
+  }
+
+  .articleHeader {
+    padding: 12px;
+  }
+
+  .articleBody {
+    padding: 0 12px 12px;
+  }
+}
+
+@media print {
+  :global(body:has([data-help-window]) *) {
+    visibility: hidden;
+  }
+
+  .article,
+  .article * {
+    visibility: visible !important;
+  }
+
+  .article {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    width: 100%;
+    overflow: visible;
+    box-shadow: none;
+  }
+
+  .related {
+    display: none;
+  }
+}

@@ -1,5 +1,6 @@
 // ExplorerToolbar/ExplorerToolbar.tsx
 import { Icon, Separator } from "@components";
+import { openHelp } from "@config/help";
 import { Toolbar } from "@components";
 import {
   Progman44,
@@ -68,6 +69,7 @@ function ExplorerToolbar() {
         <Toolbar.Button
           icon={<Winhlp324001 variant="32x32_4" />}
           label="Help"
+          onClick={() => openHelp("explorer")}
         />
       </Toolbar>
     </div>

@@ -7,6 +7,7 @@ import { WizardBanner } from "./WizardBanner";
 import { WizardStepList } from "./WizardStepList";
 import { ConfirmDialog } from "@components";
 import { Icwdial101 } from "@react95/icons";
+import { HelpButton } from "@components/HelpButton/HelpButton";
 
 export function Wizard({
   title,
@@ -14,6 +15,7 @@ export function Wizard({
   imageSrc,
   showImage,
   showSteps,
+  helpTopic = "welcome",
   onFinish,
   onCancel,
   confirmCancel,
@@ -61,7 +63,9 @@ export function Wizard({
         boxShadow="$out"
         className={styles.wizard_frame}
       >
-        <TitleBar icon={icon} title={title}></TitleBar>
+        <TitleBar icon={icon} title={title}>
+          <TitleBar.OptionsBox><HelpButton topic={helpTopic} /></TitleBar.OptionsBox>
+        </TitleBar>
         <div className={styles.wizard_content_wrapper}>
           <div className={styles.wizard_inner_content_wrapper}>
             {showImage && <WizardBanner bannerImage={imageSrc} />}
@@ -96,6 +100,7 @@ export function Wizard({
       {confirmingCancel && (
         <ConfirmDialog
           title="Cancel wizard"
+          helpTopic={helpTopic}
           message="Are you sure you want to cancel? All entered data will be lost."
           onConfirm={confirmCancelYes}
           onDismiss={() => setConfirmingCancel(false)}

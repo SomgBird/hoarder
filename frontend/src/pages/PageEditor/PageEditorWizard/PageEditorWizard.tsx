@@ -72,6 +72,7 @@ export function PageEditorWizard({ onFinish }: PageEditorWizardProps) {
         <div style={{ marginTop: 16 }}>
           <Wizard
             title="New page"
+            helpTopic="new-item"
             icon={<Mshtml32541 variant="16x16_4" />}
             steps={steps}
             imageSrc={BANNER}

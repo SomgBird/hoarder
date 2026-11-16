@@ -88,10 +88,12 @@ test("Enter opens an image, focus stays inside the popup, and Escape closes it i
   await key(thumbnail, "Enter");
   const viewport = dialog().querySelector('[aria-label="Full size image"]');
   assert.equal(document.activeElement, close());
-  await key(close(), "Tab", { shiftKey: true });
+  const help = dialog().querySelector('[aria-label="Help: Viewing an image"]');
+  help.focus();
+  await key(help, "Tab", { shiftKey: true });
   assert.equal(document.activeElement, viewport);
   await key(viewport, "Tab");
-  assert.equal(document.activeElement, close());
+  assert.equal(document.activeElement, help);
   await key(close(), "Escape");
   assert.equal(dialog(), null);
   assert.equal(document.activeElement, thumbnail);

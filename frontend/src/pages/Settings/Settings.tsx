@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, Dropdown, Fieldset, Frame, Tab, Tabs, TitleBar } from "@react95/core";
 import { Settings as SettingsIcon } from "@react95/icons";
 import { useAppearance } from "@components/AppearanceProvider";
+import { HelpButton } from "@components/HelpButton/HelpButton";
 import { ColorPicker } from "@components/ColorPicker/ColorPicker";
 import { DEFAULT_APPEARANCE, themeOptions } from "@config/appearance";
 import { AppearancePreview } from "./AppearancePreview";
@@ -41,6 +42,7 @@ export default function Settings() {
         }}>
         <TitleBar icon={<SettingsIcon variant="16x16_4" />} title="Display Properties">
           <TitleBar.OptionsBox>
+            <HelpButton topic="settings" />
             <TitleBar.Close type="button" aria-label="Close settings" onClick={close} />
           </TitleBar.OptionsBox>
         </TitleBar>

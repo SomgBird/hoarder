@@ -166,7 +166,7 @@ test("deletion requires confirmation, focuses Cancel, traps focus, and Escape ca
   assert.equal(document.activeElement, button("Cancel", dialog()));
   assert.equal(deletes().length, 0);
   await key(document.activeElement, "Tab");
-  assert.equal(document.activeElement, button("Delete item", dialog()));
+  assert.equal(document.activeElement, dialog().querySelector('[aria-label="Help: Deleting an item"]'));
   await key(document.activeElement, "Tab", { shiftKey: true });
   assert.equal(document.activeElement, button("Cancel", dialog()));
   await key(document.activeElement, "Escape");

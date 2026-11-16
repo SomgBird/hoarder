@@ -2,6 +2,7 @@ import { Button, Frame, TitleBar } from "@react95/core";
 import { Wangimg128 } from "@react95/icons";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { HelpButton } from "@components/HelpButton/HelpButton";
 import styles from "./ImageViewer.module.css";
 
 interface Props {
@@ -29,7 +30,7 @@ export function ImageViewer({ src, name, onClose }: Props) {
         onClose();
       }
       if (event.key === "Tab") {
-        const controls = [...(dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), [tabindex="0"]') ?? [])];
+        const controls = [...(dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), [href], [tabindex="0"]') ?? [])];
         const first = controls[0];
         const last = controls.at(-1);
         if (!dialog.current?.contains(document.activeElement)
@@ -50,6 +51,7 @@ export function ImageViewer({ src, name, onClose }: Props) {
         role="dialog" aria-modal="true" aria-label={`Image: ${name}`}>
         <TitleBar title={name} icon={<Wangimg128 variant="16x16_4" />} className={styles.titlebar}>
           <TitleBar.OptionsBox>
+            <HelpButton topic="image-viewer" />
             <TitleBar.Close ref={closeButton} type="button" aria-label="Close image" onClick={onClose} />
           </TitleBar.OptionsBox>
         </TitleBar>

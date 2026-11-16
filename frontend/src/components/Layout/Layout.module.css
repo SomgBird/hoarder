@@ -17,3 +17,8 @@
   flex-direction: column;
   min-width: 0;       /* wide content can't stretch the column */
 }
+
+.helpWindow {
+  min-height: 100dvh;
+  padding: 8px;
+}

@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { Button, Frame, Input, TitleBar } from "@react95/core";
+import { HelpButton } from "@components/HelpButton/HelpButton";
 import { ColorSpectrum } from "./ColorSpectrum";
 import { clamp, hexToHsl, hslToHex, isHexColor, type HslColor } from "./colorUtils";
 import styles from "./ColorPicker.module.css";
@@ -47,7 +48,6 @@ export function ColorPicker({ value, onSelect, onDismiss }: ColorPickerProps) {
   const [selection, setSelection] = useState<{ group: "basic" | "custom"; index: number } | null>(
     () => ({ group: "basic", index: BASIC_COLORS.indexOf(value.toLowerCase()) }),
   );
-  const [help, setHelp] = useState(false);
   const dialog = useRef<HTMLDivElement>(null);
   const palette = useRef<HTMLDivElement>(null);
   const [previousFocus] = useState(() => document.activeElement as HTMLElement | null);
@@ -81,7 +81,7 @@ export function ColorPicker({ value, onSelect, onDismiss }: ColorPickerProps) {
       }
       if (event.key === "Tab") {
         const controls = [...(dialog.current?.querySelectorAll<HTMLElement>(
-          'button:not(:disabled):not([tabindex="-1"]), input:not(:disabled), [role="slider"][tabindex="0"]',
+          'button:not(:disabled):not([tabindex="-1"]), [href], input:not(:disabled), [role="slider"][tabindex="0"]',
         ) ?? [])];
         const first = controls[0];
         const last = controls.at(-1);
@@ -103,7 +103,7 @@ export function ColorPicker({ value, onSelect, onDismiss }: ColorPickerProps) {
         role="dialog" aria-modal="true" aria-label="Color">
         <TitleBar title="Color">
           <TitleBar.OptionsBox>
-            <TitleBar.Help type="button" aria-label="Color picker help" aria-expanded={help} onClick={() => setHelp((current) => !current)} />
+            <HelpButton topic="color-picker" label="Color picker help" />
             <TitleBar.Close type="button" aria-label="Close color picker" onClick={onDismiss} />
           </TitleBar.OptionsBox>
         </TitleBar>
@@ -189,7 +189,6 @@ export function ColorPicker({ value, onSelect, onDismiss }: ColorPickerProps) {
             }}>Add to Custom Colors</Button>
           </div>
           {!valid && <p id={`${id}-error`} className={styles.hint} role="alert">Enter a color like #008080.</p>}
-          {help && <p className={styles.hint} role="status">Drag in the spectrum to choose hue and saturation. Use the vertical slider for luminance. Arrow keys adjust either control; Shift changes the spectrum in larger steps.</p>}
         </form>
       </Frame>
     </div>,

@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Button, Frame, TitleBar } from "@react95/core";
 import { Bookmark } from "@react95/icons";
+import { HelpButton } from "@components/HelpButton/HelpButton";
 import { ITEM_TYPE_OPTIONS, type ItemFilters, type ItemType } from "@types";
 import styles from "./CollectionFiltersDialog.module.css";
 
@@ -41,7 +42,7 @@ export default function CollectionFiltersDialog({ id, category, filters, onApply
       }
       if (event.key === "Tab") {
         const controls = [...(dialog.current?.querySelectorAll<HTMLElement>(
-          'button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]',
+          'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), [tabindex="0"]',
         ) ?? [])];
         const first = controls[0];
         const last = controls.at(-1);
@@ -63,6 +64,7 @@ export default function CollectionFiltersDialog({ id, category, filters, onApply
         role="dialog" aria-modal="true" aria-label="Filter collection" aria-describedby={`${fieldId}-hint`}>
         <TitleBar title="Filter collection" icon={<Bookmark variant="16x16_4" />}>
           <TitleBar.OptionsBox>
+            <HelpButton topic="filters" />
             <TitleBar.Close aria-label="Close filters" onClick={onDismiss} />
           </TitleBar.OptionsBox>
         </TitleBar>

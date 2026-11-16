@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
+import type { HelpTopicId } from "@config/help";
 
 
 export type WizardStatus = 'idle' | 'validating' | 'submitting';
@@ -20,6 +21,7 @@ export interface WizardProps {
     imageSrc?: string;
     showImage?: boolean;
     showSteps?: boolean;
+    helpTopic?: HelpTopicId;
 
     onCancel: () => void;
     onFinish: () => void;
