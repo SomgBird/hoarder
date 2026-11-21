@@ -156,7 +156,7 @@ const num = (v: Values[string] | undefined, label: string): number | undefined =
   const s = text(v);
   if (s === undefined) return undefined;
   const n = Number(s);
-  if (Number.isNaN(n)) throw new Error(`${label} must be a number.`);
+  if (!Number.isFinite(n)) throw new Error(`${label} must be a number.`);
   return n;
 };
 
@@ -213,67 +213,99 @@ function buildDetails(type: ItemType, v: Values): ItemDetailsCreate {
   }
 }
 
-export function buildItemCreate(f: FormState): ItemCreate {
-  const titles = nonBlank(f.titles).map((r) => ({
-    title_text: required(r.title_text, "Title"),
-    short_text: text(r.short_text),
-    language_code: required(r.language_code, "Title language"),
+function buildTitles(rows: Values[]) {
+  const titles = nonBlank(rows).map((row) => ({
+    title_text: required(row.title_text, "Title"),
+    short_text: text(row.short_text),
+    language_code: required(row.language_code, "Title language"),
   }));
-  if (titles.length === 0) throw new Error("At least one title is required.");
+  if (!titles.length) throw new Error("At least one title is required.");
+  return titles;
+}
 
-  const i = f.item;
+function buildLanguages(rows: Values[]) {
+  return nonBlank(rows).map((row) => ({
+    language_code: required(row.language_code, "Language"),
+    ui: bool(row.ui),
+    text: bool(row.text),
+    voice: bool(row.voice),
+  }));
+}
+
+function buildBarcodes(rows: Values[]) {
+  return nonBlank(rows).map((row) => ({
+    code: required(row.code, "Barcode"),
+    barcode_type_id: num(row.barcode_type_id, "Barcode type"),
+  }));
+}
+
+function buildAuthorCredits(rows: Values[]) {
+  return nonBlank(rows).map((row) => ({
+    ...(row.reference_mode === "new"
+      ? { author_name: required(row.author_name, "Author name") }
+      : { author_id: existingId(row, "author_id", "Author") }),
+    role_name: required(row.role_name, "Author role"),
+    involvement_date: text(row.involvement_date),
+    comments: text(row.comments),
+  }));
+}
+
+function buildCompanyCredits(rows: Values[]) {
+  return nonBlank(rows).map((row) => ({
+    ...(row.reference_mode === "new"
+      ? { company_name: required(row.company_name, "Company name") }
+      : { company_id: existingId(row, "company_id", "Company") }),
+    role_name: required(row.role_name, "Company role"),
+    involvement_date: text(row.involvement_date),
+    comments: text(row.comments),
+  }));
+}
+
+function buildItemFields(item: Values) {
   return {
-    release_date: text(i.release_date),
-    is_owned: bool(i.is_owned),
-    description: text(i.description),
-    format_id: num(i.format_id, "Format"),
-    selected_language_code: text(i.selected_language_code),
-    genre_ids: list(i.genre_ids).map((s) => num(s, "Genre")!),
-    franchise_ids: list(i.franchise_ids).map((s) => num(s, "Franchise")!),
-    tags: list(i.tags),
-    titles,
-    languages: nonBlank(f.languages).map((r) => ({
-      language_code: required(r.language_code, "Language"),
-      ui: bool(r.ui),
-      text: bool(r.text),
-      voice: bool(r.voice),
-    })),
-    barcodes: nonBlank(f.barcodes).map((r) => ({
-      code: required(r.code, "Barcode"),
-      barcode_type_id: num(r.barcode_type_id, "Barcode type"),
-    })),
-    author_credits: nonBlank(f.authorCredits).map((r) => ({
-      ...(r.reference_mode === "new"
-        ? { author_name: required(r.author_name, "Author name") }
-        : { author_id: existingId(r, "author_id", "Author") }),
-      role_name: required(r.role_name, "Author role"),
-      involvement_date: text(r.involvement_date),
-      comments: text(r.comments),
-    })),
-    company_credits: nonBlank(f.companyCredits).map((r) => ({
-      ...(r.reference_mode === "new"
-        ? { company_name: required(r.company_name, "Company name") }
-        : { company_id: existingId(r, "company_id", "Company") }),
-      role_name: required(r.role_name, "Company role"),
-      involvement_date: text(r.involvement_date),
-      comments: text(r.comments),
-    })),
-    details: buildDetails(f.itemType, f.details),
+    release_date: text(item.release_date),
+    description: text(item.description),
+    is_owned: bool(item.is_owned),
+    format_id: num(item.format_id, "Format"),
+    selected_language_code: text(item.selected_language_code),
+    genre_ids: list(item.genre_ids).map((id) => num(id, "Genre")!),
+    franchise_ids: list(item.franchise_ids).map((id) => num(id, "Franchise")!),
+    tags: list(item.tags),
   };
 }
 
-/** PATCH distinguishes a cleared field (null) from an omitted field (unchanged). */
-export function buildItemUpdate(f: FormState): ItemUpdate {
-  const payload = buildItemCreate(f);
+export function buildItemCreate(form: FormState): ItemCreate {
   return {
-    ...payload,
-    release_date: payload.release_date ?? null,
-    description: payload.description ?? null,
-    format_id: payload.format_id ?? null,
-    selected_language_code: payload.selected_language_code ?? null,
-    details: {
-      ...payload.details,
-      ...Object.fromEntries(Object.entries(payload.details).map(([key, value]) => [key, value ?? null])),
-    },
+    ...buildItemFields(form.item),
+    titles: buildTitles(form.titles),
+    languages: buildLanguages(form.languages),
+    barcodes: buildBarcodes(form.barcodes),
+    author_credits: buildAuthorCredits(form.authorCredits),
+    company_credits: buildCompanyCredits(form.companyCredits),
+    details: buildDetails(form.itemType, form.details),
   };
+}
+
+function differs(current: unknown, initial: unknown) {
+  return JSON.stringify(current) !== JSON.stringify(initial);
+}
+
+function changedFields(current: Record<string, unknown>, initial: Record<string, unknown>) {
+  return Object.fromEntries(Object.entries(current)
+    .filter(([key, value]) => differs(value, initial[key]))
+    .map(([key, value]) => [key, value ?? null]));
+}
+
+/** PATCH replaces a submitted list, so leave untouched lists and fields on the server. */
+export function buildItemUpdate(form: FormState, initial: FormState): ItemUpdate {
+  const update: ItemUpdate = changedFields(buildItemFields(form.item), buildItemFields(initial.item));
+  const details = changedFields(buildDetails(form.itemType, form.details), buildDetails(initial.itemType, initial.details));
+  if (Object.keys(details).length) update.details = { type_name: form.itemType, ...details };
+
+  if (differs(form.titles, initial.titles)) update.titles = buildTitles(form.titles);
+  if (differs(form.languages, initial.languages)) update.languages = buildLanguages(form.languages);
+  if (differs(form.barcodes, initial.barcodes)) update.barcodes = buildBarcodes(form.barcodes);
+  if (differs(form.authorCredits, initial.authorCredits)) update.author_credits = buildAuthorCredits(form.authorCredits);
+  if (differs(form.companyCredits, initial.companyCredits)) update.company_credits = buildCompanyCredits(form.companyCredits);
+  return update;
 }

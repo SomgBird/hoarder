@@ -359,6 +359,30 @@ class ItemApiTests(unittest.TestCase):
         finally:
             legacy.dispose()
 
+    def test_deleted_address_stays_missing_after_creating_another_item(self):
+        previous = self.create()
+        address = f"/items/{previous['id']}"
+        self.assertEqual(self.client.delete(address).status_code, 204)
+        replacement = self.create()
+        self.assertGreater(replacement["id"], previous["id"])
+        self.assertEqual(self.client.get(address).status_code, 404)
+        self.assertEqual(self.client.patch(address, json={"description": "stale edit"}).status_code, 404)
+
+    def test_existing_collection_reserves_addresses_before_its_next_create(self):
+        catalog_item = self.create()
+        older = self.create()
+        path = f"/items/{catalog_item['id']}"
+        self.client.post(f"{path}/copies", json={"request_id": str(uuid4()), "notes": "First edition"})
+        before = self.client.get(path).json()
+        with self.engine.begin() as connection:
+            connection.exec_driver_sql("DROP TABLE item_number")
+        with patch("app.database.engine", self.engine):
+            create_db_and_tables()
+            self.assertEqual(self.client.delete(f"/items/{older['id']}").status_code, 204)
+            create_db_and_tables()
+        self.assertGreater(self.create()["id"], older["id"])
+        self.assertEqual(self.client.get(path).json(), before)
+
     def test_copy_submission_table_upgrades_a_collection_with_existing_copies(self):
         from app.db.models.ownership import CopySubmission
 

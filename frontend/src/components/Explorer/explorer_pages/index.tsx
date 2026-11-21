@@ -13,7 +13,7 @@ export function renderPage(loc: ExplorerLocation) {
       return (
         <ErrorPage
           heading="Cannot find page"
-          message={`The address ${loc.url} is not valid.`}
+          message={<>The address <code>{loc.url}</code> is not valid.</>}
           hint="Check the address for typos."
         />
       );

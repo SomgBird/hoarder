@@ -1,3 +1,4 @@
+import { parseItemId } from "@components/Explorer/locations";
 import { useEffect, useState } from "react";
 import { FileFind, FileText } from "@react95/icons";
 import { PageEditorWindow } from "./PageEditorWindow";
@@ -18,8 +19,8 @@ export function PageEditor() {
   const [pageData, setPageData] = useState<PageData | null>(null);
 
   if (itemIdParam !== null) {
-    const itemId = Number(itemIdParam);
-    if (!Number.isSafeInteger(itemId) || itemId <= 0) {
+    const itemId = parseItemId(itemIdParam);
+    if (itemId === null) {
       const back = () => navigate("/collection-view");
       return <PageEditorWindow editing onClose={back}>
         <div className={styles.message}><FileFind variant="32x32_4" aria-hidden="true" /><p role="alert">Invalid item ID.</p></div>

@@ -50,7 +50,9 @@ beforeEach(() => {
       if (options.method === "PATCH") {
         if (failUpdate) return Response.json({ detail: "Update failed" }, { status: 500 });
         savedPayload = JSON.parse(options.body);
-        storedItem = { ...storedItem, display_title: savedPayload.titles[0].title_text, description: savedPayload.description, details: savedPayload.details };
+        if (savedPayload.titles) storedItem.display_title = savedPayload.titles[0].title_text;
+        if ("description" in savedPayload) storedItem.description = savedPayload.description;
+        if (savedPayload.details) Object.assign(storedItem.details, savedPayload.details);
       } else if (failLoad) return Response.json({ detail: "Item not found" }, { status: 404 });
       return Response.json(storedItem);
     }
@@ -250,6 +252,7 @@ test("explorer enables Edit for an item, loads the full form, and displays saved
   assert.match(section("Cover").querySelector("img").src, /cover.png$/);
   assert.match(section("Icon").querySelector("img").src, /icon.png$/);
 
+  storedItem.description = "Changed in another editor";
   await type(container.querySelector('input[aria-label="Title"]'), "Updated title");
   await type(container.querySelector('input[aria-label="Short title"]'), "Updated");
   await type(container.querySelector('[aria-label="Page count"]'), "");
@@ -259,7 +262,8 @@ test("explorer enables Edit for an item, loads the full form, and displays saved
   assert.equal(savedPayload.titles[0].short_text, "Updated");
   assert.equal(savedPayload.format_id, null);
   assert.equal(savedPayload.details.page_count, null);
-  assert.deepEqual(savedPayload.author_credits.map((credit) => credit.author_id), [11]);
+  assert.equal("author_credits" in savedPayload, false);
+  assert.match(container.textContent, /Changed in another editor/);
   assert.equal(calls.some((call) => call.method === "POST"), false);
   assert.equal(container.querySelector("h1").textContent, "Updated title");
   assert.equal(editButton().disabled, false);

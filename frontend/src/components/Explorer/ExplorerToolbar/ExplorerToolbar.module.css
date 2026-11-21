@@ -1,3 +1,7 @@
 .container {
-    display: flex;
+  display: flex;
+}
+
+.commands {
+  flex-wrap: wrap;
 }

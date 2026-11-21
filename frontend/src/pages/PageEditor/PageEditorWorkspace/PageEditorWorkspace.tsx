@@ -85,19 +85,7 @@ export function PageEditorWorkspace({ initialData, existingItem, onClose, onSave
     }
     setError("");
 
-    let payload;
-    let updatePayload;
-    try {
-      const form = {
-        itemType, item, details, titles, languages, barcodes, authorCredits, companyCredits,
-      };
-      payload = buildItemCreate(form);
-      if (existingItem) updatePayload = buildItemUpdate(form);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      return;
-    }
-
+    const form = { itemType, item, details, titles, languages, barcodes, authorCredits, companyCredits };
     setStatus(savedItem ? "uploading" : existingItem ? "updating" : "creating");
     let itemSaved = savedItem !== null;
     try {
@@ -110,9 +98,9 @@ export function PageEditorWorkspace({ initialData, existingItem, onClose, onSave
         if (kind === "cover") setCoverFile(null);
         else { setIconFile(null); setAutoGenerateIcon(false); }
       };
-      const saved = existingItem && updatePayload
-        ? await saveExistingItem(existingItem.id, updatePayload, coverFile, savedItem, remember, uploading, iconFile, uploaded, generateIconFromCover)
-        : await saveNewItem(payload, coverFile, savedItem, remember, uploading, iconFile, uploaded, generateIconFromCover);
+      const saved = existingItem && initialForm
+        ? await saveExistingItem(existingItem.id, buildItemUpdate(form, initialForm), coverFile, savedItem, remember, uploading, iconFile, uploaded, generateIconFromCover)
+        : await saveNewItem(buildItemCreate(form), coverFile, savedItem, remember, uploading, iconFile, uploaded, generateIconFromCover);
       setSavedItem(saved);
       setStatus("saved");
       onSaved?.(saved);

@@ -30,6 +30,11 @@ def create_db_and_tables() -> None:
         columns = {column["name"] for column in inspect(connection).get_columns("item")}
         if "date_added" not in columns:
             connection.exec_driver_sql("ALTER TABLE item ADD COLUMN date_added DATE")
+        # Older collections already have addresses. Start issuing numbers above
+        # their highest live item, even if that item is deleted before the next create.
+        connection.exec_driver_sql(
+            "INSERT OR IGNORE INTO item_number (id) SELECT id FROM item ORDER BY id DESC LIMIT 1"
+        )
 
 
 def get_session():

@@ -39,11 +39,11 @@
 .copyEditorLayout .content { align-self: stretch; min-height: 0; }
 
 @media (max-width: 660px) {
-  .editorLayout {
+  .page {
     grid-template-columns: minmax(0, 1fr);
     align-content: start;
     gap: 8px;
   }
-  .editorLayout .navbar { justify-self: start; }
+  .navbar { justify-self: start; }
   .copyEditorLayout { grid-template-rows: auto minmax(0, 1fr); }
 }

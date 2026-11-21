@@ -80,6 +80,29 @@ const deletes = () => calls.filter((call) => call.method === "DELETE");
 const itemButton = (id) => [...container.querySelectorAll('button[aria-current]')].find((node) => node.textContent.startsWith(items.get(id).display_title));
 const openItem = (id) => doubleClick(itemButton(id));
 
+test("an invalid address stays editable and never loads a rounded or zero item number", async () => {
+  await render(explorer());
+  const address = container.querySelector("label[for]").control;
+  assert.equal(address.labels[0].textContent, "Address");
+  const setValue = Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value").set;
+  for (const value of ["collection://item/9007199254740993", "collection://item/0", "collection://item/1e2"]) {
+    await act(async () => {
+      setValue.call(address, value);
+      address.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await key(address, "Enter");
+    assert.equal(address.value, value);
+    assert.equal(container.querySelector("h1").textContent, "Cannot find page");
+  }
+  assert.equal(calls.some(({ path }) => /^\/items\/\d/.test(path)), false);
+  const homeLink = find("a", "Go to the home page");
+  assert.equal(homeLink.getAttribute("href"), "/collection-view");
+  await click(homeLink);
+  assert.equal(address.value, "collection://home");
+  await run("Go", "Back");
+  assert.equal(container.querySelector("h1").textContent, "Cannot find page");
+});
+
 test("menus expose available actions and disable item actions on the home page", async () => {
   await render(explorer());
   assert.deepEqual([...container.querySelectorAll('[role="menubar"] [aria-haspopup="menu"]')].map((node) => node.textContent), ["File", "Edit", "View", "Go", "Help"]);

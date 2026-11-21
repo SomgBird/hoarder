@@ -1,4 +1,6 @@
 .view {
+  container-type: inline-size;
+  overflow-wrap: anywhere;
   background-color: #D9E2AC;
   display: flow-root;
   flex: 1 0 auto; /* fills ContentFrame's wrapper, grows with content */
@@ -45,4 +47,8 @@
   border: 1px solid #8f8f88;
   border-radius: 999px;
   font-size: 0.85em;
+}
+
+@container (max-width: 560px) {
+  .container { flex-direction: column; }
 }

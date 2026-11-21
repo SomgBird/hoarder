@@ -92,9 +92,9 @@ function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKe
         >
           <TitleBar.OptionsBox>
             <HelpButton topic="collection" />
-            <TitleBar.Minimize />
-            <TitleBar.Maximize />
-            <TitleBar.Close />
+            <TitleBar.Minimize aria-label="Minimize Collection Manager" disabled />
+            <TitleBar.Maximize aria-label="Maximize Collection Manager" disabled />
+            <TitleBar.Close aria-label="Close Collection Manager" disabled />
           </TitleBar.OptionsBox>
         </TitleBar>
         <CollectionManagerToolbar view={showingFolders ? "categories" : view} onViewChange={(next) => {

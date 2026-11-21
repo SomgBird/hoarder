@@ -1,3 +1,4 @@
+import { parseItemId } from "@components/Explorer/locations";
 import {
   CollectionManager,
   Explorer,
@@ -37,9 +38,9 @@ function CollectionViewContent() {
 
 export function CollectionView() {
   const [searchParams] = useSearchParams();
-  const itemId = Number(searchParams.get("itemId"));
+  const itemId = parseItemId(searchParams.get("itemId"));
   return (
-    <ExplorerProvider initial={Number.isSafeInteger(itemId) && itemId > 0 ? { page: "item", id: itemId } : { page: "home" }}>
+    <ExplorerProvider initial={itemId !== null ? { page: "item", id: itemId } : { page: "home" }}>
       <CollectionViewContent />
     </ExplorerProvider>
   );
