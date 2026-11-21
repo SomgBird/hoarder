@@ -4,23 +4,40 @@ import { itemService, referenceService } from "@services";
 import type { ConditionTypeRead, ItemRead, OwnedCopyRead } from "@types";
 import styles from "./CopyEditor.module.css";
 
+export type CopyEditState = "ready" | "dirty" | "busy";
+
 interface Props {
   itemId: number;
   copy?: OwnedCopyRead;
   onSaved: (item: ItemRead) => void;
   onCancel: () => void;
+  onEditState: (state: CopyEditState) => void;
 }
 
-export function CopyForm({ itemId, copy, onSaved, onCancel }: Props) {
-  const [grade, setGrade] = useState(String(copy?.condition?.condition_type?.id ?? ""));
-  const [conditionNotes, setConditionNotes] = useState(copy?.condition?.notes ?? "");
-  const [notes, setNotes] = useState(copy?.notes ?? "");
+export function CopyForm({ itemId, copy, onSaved, onCancel, onEditState }: Props) {
+  const initial = {
+    grade: String(copy?.condition?.condition_type?.id ?? ""),
+    conditionNotes: copy?.condition?.notes ?? "",
+    notes: copy?.notes ?? "",
+  };
+  const [draft, setDraft] = useState(initial);
   const [requestId] = useState(() => crypto.randomUUID());
   const [grades, setGrades] = useState<ConditionTypeRead[] | null>(null);
   const [loadError, setLoadError] = useState("");
   const [attempt, setAttempt] = useState(0);
   const [saveError, setSaveError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  function draftState(values: typeof draft): CopyEditState {
+    return values.grade === initial.grade && values.conditionNotes === initial.conditionNotes && values.notes === initial.notes
+      ? "ready" : "dirty";
+  }
+
+  function change(field: keyof typeof draft, value: string) {
+    const next = { ...draft, [field]: value };
+    setDraft(next);
+    onEditState(draftState(next));
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -36,7 +53,9 @@ export function CopyForm({ itemId, copy, onSaved, onCancel }: Props) {
     event.preventDefault();
     if (busy || !grades) return;
     setBusy(true);
+    onEditState("busy");
     setSaveError("");
+    const { grade, conditionNotes, notes } = draft;
     const data = { condition_type_id: grade ? Number(grade) : null, condition_notes: conditionNotes || null, notes: notes || null };
     try {
       const item = copy
@@ -46,6 +65,7 @@ export function CopyForm({ itemId, copy, onSaved, onCancel }: Props) {
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Could not save copy.");
       setBusy(false);
+      onEditState(draftState(draft));
     }
   }
 
@@ -53,7 +73,7 @@ export function CopyForm({ itemId, copy, onSaved, onCancel }: Props) {
   return <form onSubmit={save} className={styles.form} aria-label={title}>
     <h2>{title}</h2>
     <label>Condition grade
-      <select autoFocus value={grade} disabled={busy || !grades} onChange={(event) => setGrade(event.target.value)}>
+      <select autoFocus value={draft.grade} disabled={busy || !grades} onChange={(event) => change("grade", event.target.value)}>
         <option value="">Ungraded</option>
         {grades?.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
       </select>
@@ -62,10 +82,10 @@ export function CopyForm({ itemId, copy, onSaved, onCancel }: Props) {
       setLoadError(""); setAttempt((value) => value + 1);
     }}>Retry grades</Button></div> : <p role="status">Loading condition grades…</p>)}
     <label>Condition notes
-      <textarea rows={2} value={conditionNotes} disabled={busy} onChange={(event) => setConditionNotes(event.target.value)} />
+      <textarea rows={2} value={draft.conditionNotes} disabled={busy} onChange={(event) => change("conditionNotes", event.target.value)} />
     </label>
     <label>Copy notes
-      <textarea rows={2} value={notes} disabled={busy} onChange={(event) => setNotes(event.target.value)} />
+      <textarea rows={2} value={draft.notes} disabled={busy} onChange={(event) => change("notes", event.target.value)} />
     </label>
     {saveError && <p role="alert">{saveError}</p>}
     <div className={styles.actions}>

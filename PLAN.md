@@ -18,18 +18,18 @@ Let a collector write an article about a game, close the app, then reopen the ar
 | Owner priority, 2026-11-21 · Build rich collections and custom pages first. Schedule marketplace tracking later. | The pre-alpha demo should let someone explore a collection they authored. |
 | Implemented in 0.5 · A recorded copy makes the item owned. Without copies, the collection uses the stored flag. | Older records keep their original flag, including an unset value. The Owned filter can find both manually marked items and individually recorded copies. |
 | Implemented in 0.5 · Reserve each copy number for the lifetime of its item and reuse the submission ID when retrying a create. | A lost response can be retried, and delayed edits or removals cannot affect a replacement copy. |
-| Owner decision · Keep Explorer item pages read-only. Manage copies in the separate Copy Editor window. | Collectors can read grades and notes while browsing, then open the same item for editing from Explorer’s Edit menu or toolbar. The Collection submenu opens an item picker. |
+| Owner decision · Keep Explorer item pages read-only. Show Collection Manager beside Copy Editor and confirm before switching away from a changed copy. | Collectors can browse the list while editing, keep their search and filters when switching items, and choose whether to discard a draft. Explorer’s Edit menu and toolbar open the same layout for the displayed item. |
 | Proposed page scope · Start with an article that can link to an item. Reuse text, gallery and link blocks for custom pages. | The first saved article exercises authoring, persistence, navigation and editing before adding more page types. |
 
 ## Session handoff
 
 | Field | Current checkpoint |
 | --- | --- |
-| Branch and tested revision | `hoarder-pre-alpha-0.5`, [VERSION](VERSION) `0.5.0-pre-alpha`. Commit `955a58b` contains the original owned-copy release. The Copy Editor window was tested in the working tree based on that commit. |
+| Branch and tested revision | `hoarder-pre-alpha-0.5`, [VERSION](VERSION) `0.5.0-pre-alpha`. The two-pane Copy Editor was tested in the working tree based on `8faf96d`. |
 | Completed | All [0.5 owned-copy checks](ROADMAP.md#05-owned-copies). Explorer shows saved copies, and Copy Editor handles adding, editing and removal. Both windows have contextual Help. |
-| Automated verification | 113 frontend tests, frontend lint and the production build passed for the separate window. Tests cover targeting the displayed item when another row is selected, saving through the item picker and returning to the read-only page. The original 0.5 release passed 50 backend tests and the API contract check. |
+| Automated verification | 117 frontend tests, frontend lint and the production build passed. Switching tests cover unchanged and reverted forms, keeping or discarding a draft, pending and failed saves, and browser history between items. The original 0.5 release passed 50 backend tests and the API contract check. |
 | Release demo | In Chrome with a disposable SQLite game and a clear Owned flag, added a Good copy with a worn-box note and a separate gift note. Interrupted the successful response and retried. Added a Like New copy and reloaded both. Changed the first copy to Acceptable, cancelled removal of the second, then confirmed both removals in turn. The Owned filter retained the game until the final removal, when the game returned to Not owned. |
-| Copy Editor walkthrough | In Chrome with a disposable collection, opened the editor from the left Collection submenu, Explorer’s Edit menu and the Copies toolbar button. Added a copy, edited its grade and notes, reloaded its editor address, cancelled and confirmed removal, and used View in Explorer to verify the read-only details and empty state. |
+| Copy Editor walkthrough | In Chrome with two disposable games, opened the split view from Explorer. Kept a new draft and saved it, then discarded an edit while opening the other game. The search stayed in place, the saved notes survived reopening, and removing the last copy updated the Owned filter in the adjacent manager. Opening Copy Editor without an item showed both panes. |
 | Open work | 0.6 begins with article storage. Adding photos to individual copies is scheduled for 0.7. |
 | Next action | Implement the article create and read path and verify that a title and multiline paragraph survive reopening the database. |
 

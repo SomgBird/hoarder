@@ -64,7 +64,7 @@ Version 0.4 delivered the display controls and Help system. The remaining ideas 
 
 **Record a copy**
 
-- [x] Show the read-only **Owned copies** section even when an item has zero copies. Open **Copy Editor** from the Collection submenu to choose an item, or use Explorer’s **Edit → Edit copies…** or **Copies** toolbar button for the open item.
+- [x] Show the read-only **Owned copies** section even when an item has zero copies. Open **Copy Editor** from the Collection submenu with Collection Manager alongside it, or use Explorer’s **Edit → Edit copies…** or **Copies** toolbar button for the open item.
 - [x] Choose an existing condition grade, enter condition notes such as “split case,” and enter separate copy notes such as “gift from Ana.”
 - [x] Use **Add copy** in Copy Editor and show the saved copy immediately. Add a second copy with different details, reopen both after reload, and return to the item with **View in Explorer**.
 - [x] Keep draft values after a failed save. If the first save succeeded but its response was lost, retrying that submission yields one copy.
@@ -73,6 +73,7 @@ Version 0.4 delivered the display controls and Help system. The remaining ideas 
 
 - [x] Open one saved copy, change its grade or notes and save it. Preserve its identity, photo references and sibling copies.
 - [x] Cancel an edit to leave the saved copy intact. Confirm a removal to delete only the selected copy.
+- [x] Browse Collection Manager while a copy is being edited. Opening a different item with unsaved changes offers **Keep editing** and **Discard changes**.
 - [x] Show an item as owned while it has recorded copies. Explain the displayed ownership when its manual Owned flag is clear.
 - [x] Use the same ownership rule in Collection Manager results and filters. After the last copy is removed, use the stored flag again. Preserve the existing treatment of true, false and unset flags on older records.
 - [x] Add Help for recording copies and finding them through the ownership filter.

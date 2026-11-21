@@ -1,7 +1,14 @@
+.page {
+  composes: page from "../CollectionView/CollectionView.module.css";
+  grid-template-columns: minmax(350px, 25%) minmax(0, 1fr);
+}
+
 .window {
   box-sizing: border-box;
-  width: min(100%, 760px);
   min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .toolbar, .actions {
@@ -14,7 +21,8 @@
 
 .content {
   padding: 12px 16px;
-  max-height: calc(100dvh - 110px);
+  flex: 1;
+  min-height: 0;
   overflow: auto;
   overflow-wrap: anywhere;
 }
@@ -30,3 +38,12 @@
 .form { gap: 12px; }
 .form select { justify-self: start; }
 .form textarea { min-width: 0; resize: vertical; font: inherit; }
+
+@media (max-width: 850px) {
+  .page {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    height: auto;
+  }
+  .window { min-height: 240px; }
+}

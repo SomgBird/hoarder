@@ -1,9 +1,8 @@
-import { useState, useEffect, useId, useRef, type ReactElement } from "react";
+import { useState, useEffect, useId, useRef } from "react";
 import { Button, Frame, TitleBar } from "@react95/core";
 import { Close, Notepad } from "@react95/icons";
 import { Icon } from "@components";
 import { HelpButton } from "@components/HelpButton/HelpButton";
-import type { HelpTopicId } from "@config/help";
 import { ITEM_TYPES, ITEM_TYPE_LABELS, type ItemFilters, type ItemListPage, type ItemOrdering, type ItemType } from "@types";
 import { itemService } from "@services";
 import CollectionManagerToolbar, { type CollectionItemViewMode } from "./CollectionManagerToolbar";
@@ -17,13 +16,13 @@ interface Props {
   onSelectItem: (id: number) => void;
   onOpenItem: (id: number) => void;
   refreshKey?: number;
-  picker?: { title: string; icon: ReactElement; helpTopic: HelpTopicId; actionLabel: string };
+  openLabel?: string;
 }
 
 const PAGE_SIZE = 20;
 type Result = { key: string; page?: ItemListPage; error?: string };
 
-function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKey = 0, picker }: Props) {
+function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKey = 0, openLabel }: Props) {
   const [view, setView] = useState<CollectionItemViewMode>("table");
   const [folder, setFolder] = useState<"all" | "categories" | ItemType>("all");
   const category = folder === "all" || folder === "categories" ? null : folder;
@@ -82,11 +81,11 @@ function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKe
     <>
       <Frame className={styles.manager} bgColor="$material" boxShadow="$out" padding="$3">
         <TitleBar
-          title={picker?.title ?? "Collection Manager"}
-          icon={picker?.icon ?? <Notepad variant="16x16_4" />}
+          title="Collection Manager"
+          icon={<Notepad variant="16x16_4" />}
         >
           <TitleBar.OptionsBox>
-            <HelpButton topic={picker?.helpTopic ?? "collection"} />
+            <HelpButton topic="collection" />
             <TitleBar.Minimize />
             <TitleBar.Maximize />
             <TitleBar.Close />
@@ -189,10 +188,10 @@ function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKe
             <Button disabled={loading || !page || offset + PAGE_SIZE >= page.total} onClick={() => setOffset((value) => value + PAGE_SIZE)}>
               Next
             </Button>
-            {picker && <Button style={{ marginLeft: "auto" }}
+            {openLabel && <Button style={{ marginLeft: "auto" }}
               disabled={!page?.items.some((item) => item.id === selectedItemId)}
               onClick={() => { if (selectedItemId !== null) onOpenItem(selectedItemId); }}>
-              {picker.actionLabel}
+              {openLabel}
             </Button>}
           </div>
         )}

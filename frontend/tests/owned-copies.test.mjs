@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import { JSDOM } from "jsdom";
 import { act, createElement as h } from "react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { existingItem } from "./fixtures/item.mjs";
 
 const dom = new JSDOM("<body></body>", { url: "http://localhost" });
@@ -18,6 +18,7 @@ const good = { id: 4, name: "Good" };
 const likeNew = { id: 2, name: "Like New" };
 const first = { id: 17, notes: "Gift", condition: { condition_type: good, notes: "Worn box" }, photos: [] };
 const second = { id: 21, notes: "Spare", condition: { condition_type: likeNew, notes: null }, photos: [] };
+const otherItem = { ...existingItem, id: 43, display_title: "Another game", owned_copies: [] };
 let root, container, item;
 
 beforeEach((t) => {
@@ -26,11 +27,13 @@ beforeEach((t) => {
   root = createRoot(container);
   item = { ...existingItem, is_owned: false, owned_copies: [] };
   t.mock.method(itemService, "get", async (id) => {
+    if (id === otherItem.id) return structuredClone(otherItem);
     if (id !== item.id) throw new Error("Item not found");
     return structuredClone(item);
   });
   t.mock.method(itemService, "list", async () => ({
-    items: [{ id: item.id, title: item.display_title }], total: 1, offset: 0, limit: 20,
+    items: [item, otherItem].map((record) => ({ id: record.id, title: record.display_title })),
+    total: 2, offset: 0, limit: 20,
   }));
   t.mock.method(referenceService, "conditionTypes", async () => [good, likeNew]);
 });
@@ -39,10 +42,15 @@ afterEach(async () => {
   container.remove();
 });
 
-const render = (copies, path = "/copy-editor?itemId=42") => {
+function HistoryBack() {
+  const navigate = useNavigate();
+  return h("button", { onClick: () => navigate(-1) }, "History back");
+}
+
+const render = (copies, path = "/copy-editor?itemId=42", history = false) => {
   item.owned_copies = copies;
   return act(async () => root.render(h(MemoryRouter, { initialEntries: [path] },
-    h(NavBar), h(Routes, null,
+    h(NavBar), history && h(HistoryBack), h(Routes, null,
       h(Route, { path: "/copy-editor", element: h(CopyEditor) }),
       h(Route, { path: "/collection-view", element: h(CollectionView) })))));
 };
@@ -117,7 +125,7 @@ test("editing and removal address the chosen copy, and cancelling either action 
   assert.match(article(17).textContent, /Worn box/);
 });
 
-test("Collection submenu opens the picker, saves to the chosen item, and returns to its read-only page", async (t) => {
+test("Collection submenu shows both panes and returns a saved copy to its read-only Explorer page", async (t) => {
   const save = t.mock.method(itemService, "addCopy", async (id) => {
     assert.equal(id, item.id);
     item = { ...item, owned_copies: [first] };
@@ -129,9 +137,11 @@ test("Collection submenu opens the picker, saves to the chosen item, and returns
   assert.equal(readOnly().querySelector("button, input, select, textarea"), null);
   const nav = [...container.querySelectorAll("nav li")].find((entry) => entry.textContent === "Copy Editor");
   await act(async () => nav.click());
+  assert.match(container.textContent, /Open an item in Collection Manager/);
   assert.equal(button("Open copies").disabled, true);
   await click(item.display_title);
   await click("Open copies");
+  assert.ok(button(otherItem.display_title));
   await click("Add copy");
   await click("Save copy");
   assert.equal(save.mock.callCount(), 1);
@@ -141,11 +151,89 @@ test("Collection submenu opens the picker, saves to the chosen item, and returns
   assert.equal(readOnly().querySelector("button, input, select, textarea"), null);
 });
 
-test("an unavailable item in Copy Editor offers a route back to the picker", async () => {
+test("Collection Manager stays available when the open item cannot load", async () => {
   await render([], "/copy-editor?itemId=999");
   assert.match(container.querySelector('[role="alert"]').textContent, /Item not found/);
-  await click("Choose another item");
   await click(item.display_title);
   await click("Open copies");
   assert.ok(button("Add copy"));
+});
+
+test("row selection and reopening the current item keep a draft; switching asks before discarding it", async (t) => {
+  const write = t.mock.method(itemService, "updateCopy");
+  await render([first]);
+  await click("Edit copy", article(first.id));
+  await change("Condition notes", "Split case");
+  await change("Copy notes", "A gift");
+  await change("Condition grade", "2");
+  await click(item.display_title);
+  await click("Open copies");
+  assert.equal(dialog(), null);
+  await click(otherItem.display_title);
+  assert.equal(dialog(), null);
+  await act(async () => button(otherItem.display_title).dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
+  assert.equal(document.activeElement, button("Keep editing", dialog()));
+  await click("Keep editing", dialog());
+  assert.equal(button(item.display_title).getAttribute("aria-current"), "true");
+  assert.deepEqual(["Condition notes", "Copy notes", "Condition grade"].map((name) => field(name).value), ["Split case", "A gift", "2"]);
+  await act(async () => button(otherItem.display_title).dispatchEvent(new window.MouseEvent("dblclick", { bubbles: true })));
+  await click("Discard changes", dialog());
+  assert.equal(container.querySelector("h1").textContent, otherItem.display_title);
+  await click(item.display_title);
+  await click("Open copies");
+  assert.match(article(first.id).textContent, /Worn box/);
+  assert.equal(write.mock.callCount(), 0);
+});
+
+test("reverting edits or leaving an untouched new form opens the next item directly", async () => {
+  await render([first]);
+  await click("Edit copy", article(first.id));
+  await change("Copy notes", "Different");
+  await change("Copy notes", first.notes);
+  await click(otherItem.display_title);
+  await click("Open copies");
+  assert.equal(container.querySelector("h1").textContent, otherItem.display_title);
+  await click("Add copy");
+  await click(item.display_title);
+  await click("Open copies");
+  assert.equal(dialog(), null);
+  assert.ok(article(first.id));
+});
+
+test("a pending save holds the current item and a failed save still protects the draft", async (t) => {
+  let reject;
+  const save = t.mock.method(itemService, "addCopy", () => new Promise((_, fail) => { reject = fail; }));
+  await render([]);
+  await click("Add copy");
+  await change("Copy notes", "Boxed");
+  await click("Save copy");
+  await act(async () => button(otherItem.display_title).dispatchEvent(new window.MouseEvent("dblclick", { bubbles: true })));
+  assert.equal(container.querySelector("h1").textContent, item.display_title);
+  assert.equal(dialog(), null);
+  await act(async () => reject(new Error("Save failed")));
+  await click(otherItem.display_title);
+  await click("Open copies");
+  await click("Keep editing", dialog());
+  assert.equal(field("Copy notes").value, "Boxed");
+  save.mock.mockImplementation(async () => ({ ...item, owned_copies: [first] }));
+  const previousLoads = itemService.list.mock.callCount();
+  await click("Save copy");
+  assert.ok(itemService.list.mock.callCount() > previousLoads);
+  await click(otherItem.display_title);
+  await click("Open copies");
+  assert.equal(container.querySelector("h1").textContent, otherItem.display_title);
+  assert.equal(dialog(), null);
+});
+
+test("history navigation between editor items also preserves a dirty draft until confirmed", async () => {
+  await render([], "/copy-editor?itemId=42", true);
+  await click(otherItem.display_title);
+  await click("Open copies");
+  await click("Add copy");
+  await change("Condition notes", "Still editing");
+  await click("History back");
+  assert.equal(container.querySelector("h1").textContent, otherItem.display_title);
+  await click("Keep editing", dialog());
+  assert.equal(field("Condition notes").value, "Still editing");
+  assert.equal(dialog(), null);
 });
