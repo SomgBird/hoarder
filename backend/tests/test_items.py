@@ -767,6 +767,8 @@ class ItemApiTests(unittest.TestCase):
         listed = self.client.get("/items/itemlist").json()
         self.assertEqual({item["item_type"] for item in listed["items"]},
                          {"book", "game", "film", "board_game", "journal_issue", "figurine", "miniature", "lego_set"})
+        counts = {item["title"]: item["owned_copy_count"] for item in listed["items"]}
+        self.assertEqual((counts["Catan"], counts["Blade Runner"], counts["Hollow Knight"]), (4, 3, 0))
         for entry in listed["items"]:
             response = self.client.get(f"/items/{entry['id']}")
             self.assertEqual(response.status_code, 200, response.text)

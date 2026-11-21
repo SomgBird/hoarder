@@ -22,6 +22,24 @@ from app.db.schemas import (
 )
 
 
+CATAN_COPIES = [
+    dict(condition="Good", notes="Family copy"),
+    dict(condition="Like New", condition_notes="Cards are sleeved. All wooden pieces are present.",
+         notes="Teaching copy for game nights."),
+    dict(condition="Acceptable", condition_notes="One red road is missing. The box has a taped corner.",
+         notes="Thrift-store find. Keep for spare pieces."),
+    dict(condition=None, notes="Donated to the club. Contents still need counting."),
+]
+
+BLADE_RUNNER_COPIES = [
+    dict(condition="Very Good", notes="Steelbook"),
+    dict(condition="Good", condition_notes="Light scratches on the case. Both discs play.",
+         notes="Viewing copy, filed with the science-fiction films."),
+    dict(condition="Sealed", condition_notes="Factory wrap intact with the price sticker on the back.",
+         notes="Birthday gift. Store with the collector's editions."),
+]
+
+
 def _id(session: Session, model: type[SQLModel], value: str, key: str = "name") -> int:
     obj = session.exec(select(model).where(getattr(model, key) == value)).first()
     if obj is None:
@@ -38,12 +56,14 @@ def _named(session, model, name: str) -> int:
     return get_or_create_named(session, model, name).id
 
 
-def _add_copy(session: Session, item_id: int, condition: str, notes: str,
+def _add_copy(session: Session, item_id: int, condition: str | None, notes: str,
               condition_notes: str | None = None, photos: tuple[str, ...] = ()) -> None:
     copy = OwnedCopy(item_id=item_id, notes=notes)
-    copy.condition = Condition(
-        condition_type_id=_id(session, ConditionType, condition), notes=condition_notes
-    )
+    if condition is not None or condition_notes is not None:
+        copy.condition = Condition(
+            condition_type_id=_id(session, ConditionType, condition) if condition else None,
+            notes=condition_notes,
+        )
     copy.photos = [CopyPhoto(file_path=p, name=p.rsplit("/", 1)[-1]) for p in photos]
     session.add(copy)
 
@@ -60,7 +80,7 @@ def seed_examples(session: Session) -> None:
     frank_herbert = crud.resolve_author(session, name="Frank Herbert").id
     nintendo = crud.resolve_company(session, name="Nintendo").id
 
-    items: list[tuple[ItemCreate, dict | None]] = [
+    items: list[tuple[ItemCreate, list[dict]]] = [
         # ---- books
         (ItemCreate(
             release_date=date(2005, 8, 2), is_owned=True,
@@ -79,8 +99,8 @@ def seed_examples(session: Session) -> None:
             author_credits=[AuthorCreditCreate(author_id=frank_herbert, role_name="Writer")],
             company_credits=[CompanyCreditCreate(company_name="Ace Books", role_name="Publisher")],
             details=BookDetailsCreate(type_name="book", page_count=544),
-        ), dict(condition="Good", notes="Bought second-hand", condition_notes="Spine slightly creased",
-                photos=("samples/dune_front.jpg", "samples/dune_spine.jpg"))),
+        ), [dict(condition="Good", notes="Bought second-hand", condition_notes="Spine slightly creased",
+                 photos=("samples/dune_front.jpg", "samples/dune_spine.jpg"))]),
         # Same author again, selected explicitly by id.
         (ItemCreate(
             release_date=date(2008, 5, 1), is_owned=False,
@@ -93,7 +113,7 @@ def seed_examples(session: Session) -> None:
             franchise_ids=[dune], tags=["wishlist"],
             author_credits=[AuthorCreditCreate(author_id=frank_herbert, role_name="writer")],
             details=BookDetailsCreate(type_name="book", page_count=256),
-        ), None),
+        ), []),
         # ---- video games
         (ItemCreate(
             release_date=date(2017, 3, 3), is_owned=True,
@@ -112,7 +132,7 @@ def seed_examples(session: Session) -> None:
             company_credits=[CompanyCreditCreate(company_id=nintendo, role_name="Developer"),
                              CompanyCreditCreate(company_id=nintendo, role_name="Publisher")],
             details=GameDetailsCreate(type_name="game", game_platform_id=_id(session, GamePlatform, "Nintendo Switch")),
-        ), dict(condition="Like New", notes="Launch copy", photos=("samples/botw_box.jpg",))),
+        ), [dict(condition="Like New", notes="Launch copy", photos=("samples/botw_box.jpg",))]),
         (ItemCreate(
             release_date=date(2017, 2, 24), is_owned=True,
             description="Sample: digital game, no physical copy.",
@@ -123,7 +143,7 @@ def seed_examples(session: Session) -> None:
             tags=["indie", "inspiration"],
             company_credits=[CompanyCreditCreate(company_name="Team Cherry", role_name="Developer")],
             details=GameDetailsCreate(type_name="game", game_platform_id=_id(session, GamePlatform, "PC")),
-        ), None),
+        ), []),
         # ---- film
         (ItemCreate(
             release_date=date(1982, 6, 25), is_owned=True,
@@ -138,7 +158,7 @@ def seed_examples(session: Session) -> None:
                             AuthorCreditCreate(author_name="Vangelis", role_name="Composer")],
             company_credits=[CompanyCreditCreate(company_name="The Ladd Company", role_name="Production Company")],
             details=FilmDetailsCreate(type_name="film", length=117),
-        ), dict(condition="Very Good", notes="Steelbook")),
+        ), BLADE_RUNNER_COPIES),
         # ---- board game
         (ItemCreate(
             release_date=date(1995, 1, 1), is_owned=True,
@@ -150,7 +170,7 @@ def seed_examples(session: Session) -> None:
             author_credits=[AuthorCreditCreate(author_name="Klaus Teuber", role_name="Game Designer")],
             company_credits=[CompanyCreditCreate(company_name="Kosmos", role_name="Publisher")],
             details=BoardGameDetailsCreate(type_name="board_game"),
-        ), dict(condition="Good", notes="Family copy")),
+        ), CATAN_COPIES),
         # ---- journal issue
         (ItemCreate(
             release_date=date(1988, 7, 1), is_owned=True,
@@ -163,7 +183,7 @@ def seed_examples(session: Session) -> None:
             details=JournalIssueDetailsCreate(
                 type_name="journal_issue", journal_id=_named(session, Journal, "Nintendo Power"),
                 issue="Vol. 1, Jul/Aug 1988", page_count=96),
-        ), dict(condition="Acceptable", notes="Yellowed pages")),
+        ), [dict(condition="Acceptable", notes="Yellowed pages")]),
         # ---- figurine
         (ItemCreate(
             release_date=date(2022, 3, 1), is_owned=True,
@@ -173,7 +193,7 @@ def seed_examples(session: Session) -> None:
             franchise_ids=[zelda], tags=["shelf"],
             company_credits=[CompanyCreditCreate(company_name="Good Smile Company", role_name="Manufacturer")],
             details=FigurineDetailsCreate(type_name="figurine", scale_id=_id(session, Scale, "1:7", key="scale")),
-        ), dict(condition="Sealed", notes="Still in box")),
+        ), [dict(condition="Sealed", notes="Still in box")]),
         # ---- miniature
         (ItemCreate(
             release_date=date(2019, 6, 1), is_owned=True,
@@ -184,7 +204,7 @@ def seed_examples(session: Session) -> None:
             company_credits=[CompanyCreditCreate(company_name="Reaper Miniatures", role_name="Manufacturer")],
             details=MiniatureDetailsCreate(
                 type_name="miniature", height=32.0, width=20.0, scale_id=_id(session, Scale, "28 mm", key="scale")),
-        ), None),
+        ), []),
         # ---- lego
         (ItemCreate(
             release_date=date(2021, 1, 1), is_owned=True,
@@ -194,12 +214,13 @@ def seed_examples(session: Session) -> None:
             tags=["shelf"],
             company_credits=[CompanyCreditCreate(company_name="The LEGO Group", role_name="Manufacturer")],
             details=LegoSetDetailsCreate(type_name="lego_set", number_of_pieces=878),
-        ), dict(condition="Like New", notes="Built once")),
+        ), [dict(condition="Like New", notes="Built once")]),
     ]
 
-    for data, copy in items:
+    for data, copies in items:
         created = crud.create_item(session, data)
-        if copy:
+        for copy in copies:
             _add_copy(session, created.id, **copy)
+        if copies:
             session.commit()
         print(f"inserted #{created.id} [{created.item_type.name}] {created.titles[0].title_text}")

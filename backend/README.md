@@ -9,6 +9,8 @@ python -m unittest discover -s tests
 python export_openapi.py
 ```
 
+For a fresh demo collection, run `python -m app.db.seed --examples`. Open **Collection → Copy Editor** and choose **Catan** for four copies, including one awaiting a grade, or **Blade Runner** for three Blu-ray copies. The example seed skips collections that already contain items.
+
 ## Structure
 
 ```text
