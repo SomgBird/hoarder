@@ -31,7 +31,7 @@ Let a collector write an article about a game, close the app, then reopen the ar
 
 | Field | Current checkpoint |
 | --- | --- |
-| Branch and tested revision | `hoarder-pre-alpha-0.5` at `e642197`, [VERSION](VERSION) `0.5.0-pre-alpha`. This checkpoint includes the copy examples in `a7c65c0`, the Collection Manager header fix in `ac9e86a`, and the Copy Editor redesign. |
+| Working branch and version | `hoarder-pre-alpha-0.6` starts at `ed0b294`. About reads `0.6.0-pre-alpha` from [VERSION](VERSION). Article implementation is the next task. |
 | Completed | All [0.5 owned-copy checks](ROADMAP.md#05-owned-copies) and the copy attachment portion of [0.7 Photos and galleries](ROADMAP.md#07-photos-and-galleries). Copy Editor saves notes, image files and descriptions together. Explorer and Media Viewer open the saved originals. |
 | Copy-photo verification | 53 backend tests, 122 frontend tests, lint, the production build and the API contract check passed. Coverage includes retrying uploads, rolling back invalid batches, protecting drafts and preserving photos shared by older records. |
 | Page Editor | The New Page Wizard and the item editor use Windows-style controls and React95 icons. General, Catalog, Languages, Credits and Images group the existing fields. Each tab keeps its draft while the collector visits another tab. |
