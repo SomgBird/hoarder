@@ -1,5 +1,8 @@
+import { FileIcons, Wangimg128 } from "@react95/icons";
+import { Button } from "@react95/core";
 import { useEffect, useRef, useState } from "react";
 import { coverUrl } from "@services";
+import { imageRequirements, imageTypes, isValidImageFile } from "@services/imageUpload";
 import styles from "./PageEditorWorkspace.module.css";
 
 interface Props {
@@ -25,20 +28,23 @@ export function ImageUpload({ label, file, savedPath, error, onSelect }: Props) 
   }, [file]);
   const url = file ? preview?.file === file ? preview.url : null : coverUrl(savedPath);
 
+  const Placeholder = label === "Icon" ? FileIcons : Wangimg128;
   return <div className={styles.image_upload}>
-    {url && <img className={styles.image_preview} src={url} alt={`${label} preview`} />}
+    <div className={styles.preview}>
+      {url ? <img className={styles.image_preview} src={url} alt={`${label} preview`} />
+        : <><Placeholder variant="32x32_4" aria-hidden="true" /><small>{file ? file.name : `No ${label.toLowerCase()} selected`}</small></>}
+    </div>
     <label>
       Upload {label.toLowerCase()}
-      <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => {
+      <input ref={input} type="file" accept={imageTypes.join(",")} onChange={(event) => {
         const selected = event.target.files?.[0] ?? null;
-        const invalid = selected && (!["image/jpeg", "image/png", "image/webp"].includes(selected.type)
-          || selected.size > 5 * 1024 * 1024);
+        const invalid = selected && !isValidImageFile(selected);
         onSelect(invalid ? null : selected, invalid ? "Choose a JPEG, PNG or WebP image no larger than 5 MB." : "");
         if (invalid) event.target.value = "";
       }} />
     </label>
-    <small>JPEG, PNG or WebP, up to 5 MB.</small>
-    {(file || error) && <button type="button" className={styles.link_button} onClick={() => onSelect(null, "")}>Clear selection</button>}
+    <small>{imageRequirements}</small>
+    {(file || error) && <Button type="button" className={styles.button} onClick={() => onSelect(null, "")}>Clear selection</Button>}
     {error && <p role="alert" className={styles.error}>{error}</p>}
   </div>;
 }

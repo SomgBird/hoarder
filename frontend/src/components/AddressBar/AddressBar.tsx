@@ -1,4 +1,4 @@
-import type { ChangeEvent, KeyboardEvent } from "react";
+import { useId, type ChangeEvent, type KeyboardEvent } from "react";
 import { Dropdown } from "@react95/core";
 import styles from "./AddressBar.module.css";
 import Separator from "@components/Separator";
@@ -20,6 +20,7 @@ function AddressBar({
   label = "Address",
   icon,
 }: AddressBarProps) {
+  const inputId = useId();
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     onChange?.(e.target.value);
   };
@@ -37,10 +38,11 @@ function AddressBar({
     <div className={styles.container}>
       <Separator orientation="vertical" variant="grip" />
       <div className={styles.wrapper}>
-        <span className={styles.label}>{label}</span>
+        <label className={styles.label} htmlFor={inputId}>{label}</label>
         <div className={styles.fieldGroup}>
           {icon && <span className={styles.icon}>{icon}</span>}
           <input
+            id={inputId}
             type="text"
             className={styles.input}
             value={value}

@@ -8,10 +8,11 @@ import styles from "./ImageViewer.module.css";
 interface Props {
   src: string;
   name: string;
+  caption?: string | null;
   onClose: () => void;
 }
 
-export function ImageViewer({ src, name, onClose }: Props) {
+export function ImageViewer({ src, name, caption, onClose }: Props) {
   const dialog = useRef<HTMLDivElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const [previousFocus] = useState(() => document.activeElement as HTMLElement | null);
@@ -61,7 +62,7 @@ export function ImageViewer({ src, name, onClose }: Props) {
             <Button onClick={() => { setError(false); setAttempt((value) => value + 1); }}>Retry</Button>
           </div> : <img key={attempt} src={src} alt={name} className={styles.image} onError={() => setError(true)} />}
         </Frame>
-        <div className={styles.status}>{name}</div>
+        <div className={caption ? styles.caption : styles.status}>{caption || name}</div>
       </Frame>
     </div>,
     document.body,

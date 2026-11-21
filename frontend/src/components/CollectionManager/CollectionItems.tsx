@@ -3,11 +3,13 @@ import { FileText } from "@react95/icons";
 import { ITEM_TYPES, ITEM_TYPE_LABELS, type ItemListEntryRead } from "@types";
 import { coverUrl } from "@services";
 import type { CollectionItemViewMode } from "./CollectionManagerToolbar";
+import { TABLE_COLUMNS, type TableColumn } from "@config/tableColumns";
 import styles from "./CollectionManager.module.css";
 
 interface Props {
   items: ItemListEntryRead[];
   view: CollectionItemViewMode;
+  columns: TableColumn[];
   selectedItemId: number | null;
   onSelectItem: (id: number) => void;
   onOpenItem: (id: number) => void;
@@ -31,6 +33,12 @@ function ItemDate({ value }: { value: string | null }) {
   return value ? <time dateTime={value}>{value}</time> : <>—</>;
 }
 
+function tableValue(item: ItemListEntryRead, column: TableColumn) {
+  if (column === "title") return item.title;
+  if (column === "owned_copy_count") return item.owned_copy_count || "-";
+  return <ItemDate value={item[column]} />;
+}
+
 function ItemSummary({ item }: { item: ItemListEntryRead }) {
   const type = ITEM_TYPES.find((type) => type === item.item_type);
   return (
@@ -40,6 +48,8 @@ function ItemSummary({ item }: { item: ItemListEntryRead }) {
         <span>{type ? ITEM_TYPE_LABELS[type] : item.item_type}</span>
         <span aria-hidden="true"> · </span>
         <span>{item.is_owned ? "Owned" : "Not owned"}</span>
+        <span aria-hidden="true"> · </span>
+        <span className={styles.copyCount}>Copies: {item.owned_copy_count || "-"}</span>
       </span>
       <span className={styles.summaryDetails}>
         <span>Release date: <ItemDate value={item.release_date} /></span>
@@ -49,7 +59,7 @@ function ItemSummary({ item }: { item: ItemListEntryRead }) {
   );
 }
 
-export default function CollectionItems({ items, view, selectedItemId, onSelectItem, onOpenItem }: Props) {
+export default function CollectionItems({ items, view, columns, selectedItemId, onSelectItem, onOpenItem }: Props) {
   const openItem = (id: number) => {
     onSelectItem(id);
     onOpenItem(id);
@@ -61,24 +71,24 @@ export default function CollectionItems({ items, view, selectedItemId, onSelectI
     }
   };
   if (view === "table") {
+    const visibleColumns = TABLE_COLUMNS.filter(({ key }) => columns.includes(key));
     return (
       <table className={styles.table} aria-label="Collection items">
         <thead>
-          <tr><th scope="col">Title</th><th scope="col">Release date</th><th scope="col">Date added</th></tr>
+          <tr>{visibleColumns.map(({ key, label }) => <th key={key} scope="col">{label}</th>)}</tr>
         </thead>
         <tbody>
           {items.map((item) => (
             <tr key={item.id} data-selected={item.id === selectedItemId} onClick={() => onSelectItem(item.id)}
               onDoubleClick={() => openItem(item.id)}>
-              <td>
-                <button type="button" className={styles.tableTitle} aria-current={item.id === selectedItemId}
+              {visibleColumns.map(({ key, label }, index) => <td key={key} className={key === "title" ? styles.titleCell : undefined}>
+                {index === 0 ? <button type="button" className={styles.tableTitle} aria-current={item.id === selectedItemId}
+                  aria-label={key === "title" ? undefined : `${item.title}, ${label}: ${item[key] ?? "—"}`} title={item.title}
                   onClick={(event) => { event.stopPropagation(); onSelectItem(item.id); }}
                   onKeyDown={(event) => openOnEnter(event, item.id)}>
-                  {item.title}
-                </button>
-              </td>
-              <td><ItemDate value={item.release_date} /></td>
-              <td><ItemDate value={item.date_added} /></td>
+                  {tableValue(item, key)}
+                </button> : tableValue(item, key)}
+              </td>)}
             </tr>
           ))}
         </tbody>

@@ -2,10 +2,10 @@ import "./helpers/register-source-loader.mjs";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { existingItem } from "./fixtures/item.mjs";
-const { itemToFormState, buildItemUpdate } = await import("../src/pages/PageEditor/PageEditorWorkspace/pageEditorFields.ts");
+const { itemToFormState, buildItemCreate, buildItemUpdate } = await import("../src/pages/PageEditor/PageEditorWorkspace/pageEditorFields.ts");
 
 test("an existing item's editable data round trips without losing references or metadata", () => {
-  const payload = JSON.parse(JSON.stringify(buildItemUpdate(itemToFormState(existingItem))));
+  const payload = JSON.parse(JSON.stringify(buildItemCreate(itemToFormState(existingItem))));
   assert.deepEqual(payload, {
     release_date: "2001-02-03", is_owned: true, description: "Original description",
     format_id: 3, selected_language_code: "ru", genre_ids: [5], franchise_ids: [7], tags: ["One, two"],
@@ -26,7 +26,7 @@ test("clearing fields sends explicit nulls and clearing collections sends empty 
   form.item = { is_owned: false };
   form.details = {};
   for (const key of ["languages", "barcodes", "authorCredits", "companyCredits"]) form[key] = [];
-  const payload = JSON.parse(JSON.stringify(buildItemUpdate(form)));
+  const payload = JSON.parse(JSON.stringify(buildItemUpdate(form, itemToFormState(existingItem))));
   for (const key of ["release_date", "description", "format_id", "selected_language_code"]) assert.equal(payload[key], null, key);
   for (const key of ["genre_ids", "franchise_ids", "tags", "languages", "barcodes", "author_credits", "company_credits"]) assert.deepEqual(payload[key], [], key);
   assert.deepEqual(payload.details, { type_name: "book", page_count: null });
@@ -37,15 +37,14 @@ test("clearing fields sends explicit nulls and clearing collections sends empty 
 
 test("editing another field preserves null, false and true checkbox values", () => {
   for (const value of [null, false, true]) {
-    const form = itemToFormState({
+    const initial = itemToFormState({
       ...existingItem,
       is_owned: value,
       languages: [{ ...existingItem.languages[0], ui: value, text: value, voice: value }],
     });
+    const form = structuredClone(initial);
     form.item.description = "Updated description";
-    const payload = JSON.parse(JSON.stringify(buildItemUpdate(form)));
-    assert.equal(payload.is_owned, value);
-    assert.deepEqual(payload.languages, [{ language_code: "ru", ui: value, text: value, voice: value }]);
+    assert.deepEqual(buildItemUpdate(form, initial), { description: "Updated description" });
   }
 });
 
@@ -62,8 +61,20 @@ test("all subtype values and nested references load into the form and can be cle
   ];
   for (const [type_name, details, expected] of cases) {
     const form = itemToFormState({ ...existingItem, item_type: { id: 1, name: type_name }, details: { type_name, ...details } });
-    assert.deepEqual(buildItemUpdate(form).details, { type_name, ...expected });
+    const initial = structuredClone(form);
+    assert.deepEqual(buildItemCreate(form).details, { type_name, ...expected });
     form.details = {};
-    assert.deepEqual(buildItemUpdate(form).details, { type_name, ...Object.fromEntries(Object.keys(expected).map((key) => [key, null])) });
+    const cleared = Object.fromEntries(Object.keys(expected).map((key) => [key, null]));
+    assert.deepEqual(buildItemUpdate(form, initial), Object.keys(cleared).length ? { details: { type_name, ...cleared } } : {});
   }
+});
+
+test("updating one dimension preserves other dimensions and untouched legacy titles", () => {
+  const initial = itemToFormState({
+    ...existingItem, item_type: { name: "miniature" }, details: { width: 2, height: 3 },
+    titles: [{ id: 1, title_text: "Older title", language: null }],
+  });
+  const form = structuredClone(initial);
+  form.details.height = "4";
+  assert.deepEqual(buildItemUpdate(form, initial), { details: { type_name: "miniature", height: 4 } });
 });

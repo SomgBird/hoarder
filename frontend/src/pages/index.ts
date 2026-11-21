@@ -1,6 +1,7 @@
 import { CollectionView } from "./CollectionView/CollectionView";
 import About from "./About/About";
 import { PageEditor } from "./PageEditor/PageEditor";
+export { CopyEditor } from "./CopyEditor/CopyEditor";
 import { MediaViewer } from "./MediaViewer/MediaViewer";
 import Settings from "./Settings/Settings";
 import Help from "./Help/Help";

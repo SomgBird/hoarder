@@ -1,0 +1,13 @@
+.prompt { margin: 0 0 12px; }
+.choices { display: grid; gap: 5px; }
+.choices label { min-height: 24px; margin: 0; }
+.choices label > span:first-of-type { top: 5px; }
+.choices label > span:last-of-type { width: max-content; max-width: calc(100% - 20px); }
+.choice svg { flex: none; }
+.choice { min-height: 21px; display: inline-flex; gap: 7px; align-items: center; vertical-align: middle; }
+.availability { margin: 15px 0 2px; }
+.fields { display: grid; gap: 4px; }
+.fields label:not(:first-child) { margin-top: 8px; }
+.fields input, .fields select { min-width: 0; width: 100%; }
+.review { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 7px 14px; margin: 0; padding: 10px; box-shadow: var(--r95-shadow-in); background: var(--r95-color-inputBackground); }
+.review dd { margin: 0; overflow-wrap: anywhere; }

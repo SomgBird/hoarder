@@ -1,8 +1,7 @@
-// ExplorerToolbar/ExplorerToolbar.tsx
-import { Icon, Separator } from "@components";
+import { Icon, Separator, Toolbar } from "@components";
 import { openHelp } from "@config/help";
-import { Toolbar } from "@components";
 import {
+  Files,
   Progman44,
   Progman45,
   Shell32134,
@@ -22,7 +21,7 @@ function ExplorerToolbar() {
   return (
     <div className={styles.container}>
       <Separator orientation="vertical" variant="grip" />
-      <Toolbar>
+      <Toolbar aria-label="Explorer commands" className={styles.commands}>
         <Toolbar.Button
           icon={<Progman44 variant="32x32_4" />}
           label="Back"
@@ -31,36 +30,42 @@ function ExplorerToolbar() {
         />
         <Toolbar.Button
           icon={<Progman45 variant="32x32_4" />}
+          title="Forward" aria-label="Forward"
           onClick={forward}
           disabled={!canForward}
         />
-        <Toolbar.Button icon={<Icon name="stop" />} />
-        <Toolbar.Button icon={<Icon name="refresh_page" />} aria-label="Refresh" onClick={refresh} />
+        <Toolbar.Button icon={<Icon name="stop" />} title="Stop" aria-label="Stop" disabled />
+        <Toolbar.Button icon={<Icon name="refresh_page" />} title="Refresh" aria-label="Refresh" onClick={refresh} />
         <Toolbar.Button
           icon={<Icon name="home" />}
+          title="Home" aria-label="Home"
           onClick={() => navigate({ page: "home" })}
         />
 
         <Toolbar.Separator />
 
-        <Toolbar.Button
-          icon={<Shell32134 variant="32x32_4" />}
-          label="Search"
-        />
-        <Toolbar.Button
-          icon={<Wmsui323934 variant="32x32_4" />}
-          label="Favorites"
-        />
+        <Toolbar.Button icon={<Shell32134 variant="32x32_4" />} label="Search" disabled />
+        <Toolbar.Button icon={<Wmsui323934 variant="32x32_4" />} label="Favorites" disabled />
 
         <Toolbar.Separator />
 
-        <Toolbar.Button icon={<Shell3217 variant="32x32_4" />} />
+        <Toolbar.Button icon={<Shell3217 variant="32x32_4" />} aria-label="Unassigned command" disabled />
         <Toolbar.Button
           icon={<Write1 variant="32x32_4" />}
           label="Edit"
           disabled={current.page !== "item"}
           onClick={() => {
             if (current.page === "item") navigateTo(`/page-editor?itemId=${current.id}`);
+          }}
+        />
+
+        <Toolbar.Button
+          icon={<Files variant="32x32_4" />}
+          label="Copies"
+          title="Edit copies of this item"
+          disabled={current.page !== "item"}
+          onClick={() => {
+            if (current.page === "item") navigateTo(`/copy-editor?itemId=${current.id}`);
           }}
         />
 

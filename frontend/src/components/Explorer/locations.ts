@@ -11,9 +11,16 @@ export function toUrl(loc: ExplorerLocation): string {
   }
 }
 
+export function parseItemId(value: string | null): number | null {
+  if (!value || !/^\d+$/.test(value)) return null;
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
 export function parseUrl(url: string): ExplorerLocation {
-  if (url === "collection://home") return { page: "home" };
-  const m = url.match(/^collection:\/\/item\/(\d+)$/);
-  if (m) return { page: "item", id: Number(m[1]) };
-  return { page: "error", kind: "bad-address", url };
+  const address = url.trim();
+  if (address === "collection://home") return { page: "home" };
+  const match = /^collection:\/\/item\/(\d+)$/.exec(address);
+  const id = parseItemId(match?.[1] ?? null);
+  return id === null ? { page: "error", kind: "bad-address", url } : { page: "item", id };
 }

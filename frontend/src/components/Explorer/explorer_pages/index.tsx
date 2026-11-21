@@ -8,12 +8,12 @@ export function renderPage(loc: ExplorerLocation) {
     case "home":
       return <HomePage />;
     case "item":
-      return <ItemPage id={loc.id} />;
+      return <ItemPage key={loc.id} id={loc.id} />;
     case "error":
       return (
         <ErrorPage
           heading="Cannot find page"
-          message={`The address ${loc.url} is not valid.`}
+          message={<>The address <code>{loc.url}</code> is not valid.</>}
           hint="Check the address for typos."
         />
       );

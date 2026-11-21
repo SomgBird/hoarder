@@ -13,6 +13,7 @@ export function Wizard({
   title,
   icon,
   imageSrc,
+  illustration,
   showImage,
   showSteps,
   helpTopic = "welcome",
@@ -62,24 +63,26 @@ export function Wizard({
         bgColor="$material"
         boxShadow="$out"
         className={styles.wizard_frame}
+        role="region" aria-label={title} inert={confirmingCancel}
       >
-        <TitleBar icon={icon} title={title}>
-          <TitleBar.OptionsBox><HelpButton topic={helpTopic} /></TitleBar.OptionsBox>
+        <TitleBar className={styles.caption} icon={icon} title={title}>
+          <TitleBar.OptionsBox>
+            <HelpButton topic={helpTopic} />
+            <TitleBar.Close aria-label="Close wizard" onClick={handleCancel} />
+          </TitleBar.OptionsBox>
         </TitleBar>
         <div className={styles.wizard_content_wrapper}>
           <div className={styles.wizard_inner_content_wrapper}>
-            {showImage && <WizardBanner bannerImage={imageSrc} />}
-            {showSteps && <WizardStepList steps={steps} currentIndex={index} />}
+            {(showImage || showSteps) && <WizardBanner bannerImage={showImage ? imageSrc : undefined}>
+              {showImage && illustration}
+              {showSteps && <WizardStepList steps={steps} currentIndex={index} />}
+            </WizardBanner>}
 
-            {/* Content column: heading, step content */}
             <div className={styles.content_column}>
-              <h3 className={styles.step_title}>{step.title}</h3>
-              <div
-                className={styles.step_content}
-                onChange={() => setError("")}
-              >
+              <h1 className={styles.step_title}>{step.title}</h1>
+              <div onChange={() => setError("")}>
                 {step.content}
-                {error && <div className={styles.error_text}>{error}</div>}
+                {error && <div role="alert" className={styles.error_text}>{error}</div>}
               </div>
             </div>
           </div>

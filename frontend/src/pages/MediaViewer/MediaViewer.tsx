@@ -56,7 +56,10 @@ export function MediaViewer() {
           {current?.files ? `${current.files.length} ${current.files.length === 1 ? "file" : "files"}` : ""}
         </div>
       </Frame>
-      {openFile && <ImageViewer key={openFile.path} src={coverUrl(openFile.path)!} name={openFile.relative_path} onClose={() => setOpenFile(null)} />}
+      {openFile && <ImageViewer key={openFile.path} src={coverUrl(openFile.path)!}
+        name={openFile.copy_photos?.[0]?.name || openFile.relative_path}
+        caption={openFile.copy_photos?.map((photo) => `Copy #${photo.copy_id}${photo.description ? " · " + photo.description : ""}`).join("\n")}
+        onClose={() => setOpenFile(null)} />}
     </>
   );
 }

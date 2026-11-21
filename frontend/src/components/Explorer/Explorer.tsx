@@ -34,7 +34,7 @@ function Explorer() {
       <TitleBar icon={<Ie variant="16x16_8" />} title="Explorer">
         <TitleBar.OptionsBox>
           <HelpButton topic="explorer" />
-          <TitleBar.Close />
+          <TitleBar.Close aria-label="Close Explorer" disabled />
         </TitleBar.OptionsBox>
       </TitleBar>
 
@@ -46,7 +46,7 @@ function Explorer() {
         <AddressBar
           value={draft}
           onChange={setDraft}
-          onSubmit={() => navigate(parseUrl(draft))}
+          onSubmit={(address) => navigate(parseUrl(address))}
           icon={<HtmlPage variant="16x16_8" />}
         />
       </EtchedBox>

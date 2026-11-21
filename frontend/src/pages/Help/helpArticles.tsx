@@ -7,18 +7,18 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
     content: <>
       <h2>Getting started</h2>
       <ol>
-        <li>Open <strong>Collection → Page Editor</strong> to create your first item.</li>
-        <li>Choose an item type and title, then fill in its details and save.</li>
-        <li>Open <strong>Collection → Collection Manager</strong> to browse your items.</li>
+        <li>Open <strong>Collection → Collection Manager</strong>. On Explorer’s home page, choose <strong>Create an item page…</strong>.</li>
+        <li>In the wizard, choose <strong>Item page</strong>, enter a title and choose its type. Select <strong>Finish</strong> to open Page Editor, then <strong>Create</strong> to save.</li>
+        <li>Return to Collection Manager. Double-click the title or select it and press Enter. Explorer shows the saved page.</li>
+        <li>To record a physical copy, choose <strong>Copies → Add copy</strong>. Enter its condition, add photos if you have them, and choose <strong>Save copy</strong>.</li>
       </ol>
       <h2>Using Help</h2>
       <p>Select a folder in the tree on the left to see its topics, then open a topic from the list or the tree. Use the + and − controls to expand or collapse folders.</p>
       <p>Back and Forward revisit folders and topics. Up opens the containing folder. The address path also links to parent folders. Print prints the current page.</p>
       <p>The question mark in a window opens its relevant topic in a separate Help window. Your current work stays open.</p>
-      <h2>Available features</h2>
-      <p>You can manage item pages, browse uploaded images, and change the display colors. Tracker, Barcode Scanner, Shopping List, and the other page types are not available yet.</p>
+      <p>Choose <strong>Contents</strong> to hide the topic tree when you need more reading space. Choose it again to bring the tree back.</p>
     </>,
-    related: ["new-item", "collection", "settings"],
+    related: ["new-item", "collection", "copies", "settings"],
   },
   collection: {
     introduction: "Collection Manager lists the items in your collection. Explorer displays the item page you open.",
@@ -27,6 +27,8 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <p>Click an item once to select it. Double-click it, or select it and press Enter, to open its page in Explorer.</p>
       <h2>Choosing a view</h2>
       <p>Use <strong>View</strong> to choose Table, List, Icons, or Mini pages. Mini pages include a cover icon and a short summary. Categories shows folders for the supported item types; double-click a folder or press Enter to open it.</p>
+      <p>Table and Mini pages show how many physical copies you have recorded. A dash (<code>-</code>) means there are zero recorded copies, even if you checked Owned on the item.</p>
+      <p>Choose <strong>View → Table columns…</strong>, select the columns you want, and click <strong>Apply</strong>. Collection Manager remembers the selection in this browser.</p>
       <h2>Ordering and paging</h2>
       <p>Use <strong>Order</strong> to sort by title, release date, or date added, in ascending or descending order. Use Previous and Next to move through the results.</p>
       <p>Changing the selection does not change the page currently open in Explorer.</p>
@@ -36,23 +38,41 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
     introduction: "Search and filters narrow the items shown in Collection Manager.",
     content: <>
       <h2>Searching</h2>
-      <ol><li>Click <strong>Search</strong> in the Collection Manager toolbar.</li><li>Enter a title and submit the search.</li><li>Use Clear to remove the search text.</li></ol>
+      <ol><li>Click <strong>Search</strong> in the Collection Manager toolbar.</li><li>Enter part of a title, translated title or short title and choose <strong>Find</strong>.</li><li>Choose <strong>Clear search</strong> to see the other items again. Your filters still apply.</li></ol>
       <h2>Filtering</h2>
       <p>Click <strong>Filter</strong> to choose a category, ownership state, and release or added date ranges. Blank values leave that condition unrestricted. The end date must be on or after the start date.</p>
       <p>Apply updates the list. Cancel closes the dialog without changing the filters. Reset filters clears the filter conditions and category.</p>
+      <p>Choose <strong>Owned</strong> to find items with a recorded copy or a checked Owned box. After you remove the last copy, the filter uses the item’s Owned box again. A clear or unset box then places it under <strong>Not owned</strong>.</p>
       <p>Search and filter conditions work together. If no items match, clear the search or loosen the filters.</p>
-    </>, related: ["collection"],
+    </>, related: ["collection", "explorer"],
   },
   explorer: {
     introduction: "Explorer shows an item’s titles, description, images, credits, and type-specific details.",
     content: <>
       <h2>Navigating</h2>
       <p>Use Back and Forward to revisit pages opened in Explorer. Home returns to the collection welcome page. Refresh reloads the current page and collection list.</p>
-      <p>The address bar accepts <code>collection://home</code> and addresses such as <code>collection://item/42</code>. Press Enter to open an address.</p>
+      <p>Copy the address shown while an item is open, for example <code>collection://item/42</code>. To revisit it, paste it into Explorer’s <strong>Address</strong> field and press Enter. Renaming the item keeps its address.</p>
+      <p>If Explorer says <strong>Cannot find page</strong>, check the address format. If it says <strong>Item not found</strong>, check the number or search Collection Manager by title. <strong>Home</strong> opens the collection welcome page, also available at <code>collection://home</code>.</p>
       <h2>Working with a page</h2>
       <p>Use <strong>File → New page…</strong> to start a new item. When an item is open, <strong>Edit → Edit page…</strong> opens its editor and <strong>File → Delete item…</strong> asks for confirmation before deleting it.</p>
       <p>Explorer’s Help menu and toolbar open this topic. About Hoarder opens the application information page.</p>
-    </>, related: ["collection", "edit-item", "delete-item"],
+      <h2>Owned copies</h2>
+      <p>The item page shows the grade and notes for each recorded copy. To make changes, use <strong>Edit → Edit copies…</strong> or the <strong>Copies</strong> toolbar button. Both open Copy Editor for the item shown in Explorer.</p>
+    </>, related: ["copies", "collection", "filters", "edit-item", "delete-item"],
+  },
+  copies: {
+    introduction: "Use Copy Editor to record and maintain the individual copies of a catalog item.",
+    content: <>
+      <h2>Choose an item</h2>
+      <p>Open <strong>Collection → Copy Editor</strong>. Collection Manager stays beside the editor while you work. Select a row and choose <strong>Open copies</strong>, double-click the row, or press Enter to open that item. From Explorer, the <strong>Copies</strong> toolbar button opens the same layout with the current item ready to edit.</p>
+      <h2>Record a copy</h2>
+      <p>Select <strong>Add copy</strong>. Choose a condition grade, describe wear in Condition notes, and use Copy notes for details such as who gave it to you. Select <strong>Save copy</strong>. Repeat for each physical copy.</p>
+      <p>On the <strong>Photos</strong> tab, choose <strong>Add photos…</strong> to attach images and give each an optional description. Select <strong>Save copy</strong> to keep them. Open a saved thumbnail to see the original, or find it by filename and copy number in Media Viewer.</p>
+      <p>Select a copy in the list to read its notes and see its photos. Choose <strong>Edit copy</strong>, double-click the row, or press Enter to change it. Cancel discards your edits. If a save fails, your entries stay in the form so you can retry. <strong>Remove copy</strong> asks you to confirm the copy number and grade.</p>
+      <p>To change a saved photo’s caption or remove the attachment, open the copy for editing and use the <strong>Photos</strong> tab. <strong>Save copy</strong> applies the changes. <strong>Cancel</strong> keeps the saved photos and captions.</p>
+      <p>If you open another item or close Copy Editor with its × button while a copy has unsaved changes, choose <strong>Keep editing</strong> to return to the draft or <strong>Discard changes</strong> to leave it.</p>
+      <p>Choose <strong>View in Explorer</strong> to read the saved item page. Find the item again in Collection Manager under <strong>Filter → Ownership → Owned</strong>.</p>
+    </>, related: ["explorer", "filters"],
   },
   "new-item": {
     introduction: "The New page wizard starts an item page and then opens the full editor.",
@@ -61,7 +81,7 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <ol><li>Open <strong>Collection → Page Editor</strong> or choose <strong>File → New page…</strong> in Explorer.</li><li>Choose Item page. Other page types are not implemented yet.</li><li>Enter a title and select an item type. Both are required.</li><li>Review the details and click Finish.</li><li>Complete the editor and click Create to save the item.</li></ol>
       <p>Finish opens the editor; it does not save an item by itself. Back returns to an earlier wizard step. Cancel asks before discarding the wizard’s entered data.</p>
       <h2>Adding details</h2>
-      <p>Fill in the information relevant to your item. Selection lists let you choose existing entries. Where creation is offered, you can add an entry by name. Languages use the predefined choices.</p>
+      <p>Use <strong>General</strong> for the title, description and item details. <strong>Catalog</strong> holds classifications and barcodes. The other tabs contain languages and alternative titles, credits, and images. You can switch tabs while editing and save them together.</p>
     </>, related: ["edit-item", "images", "collection"],
   },
   "edit-item": {
@@ -69,7 +89,7 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
     content: <>
       <h2>Saving changes</h2>
       <ol><li>Open the item and choose <strong>Edit → Edit page…</strong> or click Edit in the toolbar.</li><li>Update its title, description, references, credits, languages, barcodes, or other details.</li><li>Click Save to update that item. Cancel returns without saving.</li></ol>
-      <p>An existing item’s type cannot be changed. Checkboxes may retain an unknown value until you explicitly set them.</p>
+      <p>The item keeps its type and Explorer address. Save applies the fields you changed. When you edit a list such as alternative titles or credits, Save replaces that list with the rows shown in the editor.</p>
       <h2>If saving fails</h2>
       <p>The editor keeps your entered values so you can correct an error and retry. If the item saved but an image failed, retrying continues the image save without creating another item or repeating the completed item update.</p>
     </>, related: ["images", "explorer"],
@@ -78,12 +98,12 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
     introduction: "Covers illustrate an item page. Icons identify it in collection views.",
     content: <>
       <h2>Adding images</h2>
-      <p>Use the Cover and Icon sections in the item editor to select image files. The editor reports unsupported or invalid files. Images are uploaded when the item is saved.</p>
+      <p>Open the <strong>Images</strong> tab in Page Editor. Choose a JPEG, PNG or WebP file up to 5 MB under Cover or Icon and check its preview. Images are uploaded when the item is saved. Use Copy Editor’s <strong>Photos</strong> tab for images of an individual copy, such as a signed title page.</p>
       <h2>Generating an icon</h2>
       <p><strong>Generate icon from cover</strong> creates 16×16, 32×32, and 64×64 icon sizes from the cover. It replaces the existing icon when saving. A cover must be available.</p>
       <p>Generation is enabled by default for a new item when a cover is selected. When editing an existing item, enable it explicitly to replace the icon. Disable generation if you want to upload an icon yourself.</p>
       <p>If an upload or generation fails, keep the editor open and retry, or choose another image.</p>
-    </>, related: ["new-item", "edit-item", "media"],
+    </>, related: ["new-item", "edit-item", "copies", "media"],
   },
   "delete-item": {
     introduction: "Deleting an item permanently removes it and its page from your collection.",
@@ -99,14 +119,15 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
     content: <>
       <h2>Browsing images</h2>
       <p>Open <strong>Collection → Media Viewer</strong>. Each file appears with a thumbnail and its name. Click to select it, then double-click or press Enter to open the original image.</p>
+      <p>Photos uploaded in Copy Editor also show their copy number and description.</p>
       <p>Refresh reloads the file list. If loading fails, use Retry. An empty list means there are no media files to display.</p>
     </>, related: ["image-viewer", "images"],
   },
   "image-viewer": {
     introduction: "The image window displays an original image at its full size.",
     content: <>
-      <p>Scroll inside the image viewport when the image is larger than the window. Close it with the titlebar’s × button or press Escape to return to Media Viewer.</p>
-      <p>If an image cannot load, use Retry. Closing the window returns keyboard focus to the selected thumbnail.</p>
+      <p>Scroll inside the image viewport when the image is larger than the window. If an image cannot load, choose <strong>Retry</strong>.</p>
+      <p>Close the image with the titlebar’s × button or press Escape. You return to the window where you opened it, which can be Media Viewer, Explorer or Copy Editor.</p>
     </>, related: ["media", "images"],
   },
   settings: {
@@ -120,8 +141,10 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <p>Center places the image at its original size in the middle of the desktop. Tile repeats it across the desktop. Stretch resizes it to fill the screen. The desktop color shows wherever the image does not cover the screen, including transparent areas.</p>
       <p>Fit horizontally scales the image to the desktop width while keeping its proportions. It stays centered vertically; tall images may extend beyond the top and bottom of the screen.</p>
       <p>Select (None) to remove the wallpaper. Wallpapers are saved in this browser along with your other appearance preferences.</p>
+      <h2>Collection table columns</h2>
+      <p>On the <strong>Collection</strong> tab, choose which columns appear in Collection Manager’s Table view and click Apply. Reset to default on this tab selects all columns.</p>
       <h2>Restoring the defaults</h2>
-      <p>Click Reset to default, then Apply or OK. The project defaults are the Brick scheme, the teal background <code>#008080</code>, and no wallpaper.</p>
+      <p>On the Background or Appearance tab, click Reset to default, then Apply or OK. This restores the Brick scheme, the teal background <code>#008080</code>, and no wallpaper.</p>
       <p>Appearance preferences are saved in this browser. If browser storage is unavailable, changes work for the current session.</p>
     </>, related: ["color-picker"],
   },

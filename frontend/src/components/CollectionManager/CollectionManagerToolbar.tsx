@@ -19,6 +19,7 @@ export type CollectionViewMode = CollectionItemViewMode | "categories";
 interface Props {
   view: CollectionViewMode;
   onViewChange: (view: CollectionViewMode) => void;
+  onTableColumns: () => void;
   ordering: ItemOrdering;
   onOrderingChange: (ordering: ItemOrdering) => void;
   onSearch: () => void;
@@ -30,7 +31,7 @@ interface Props {
   filterDialogId: string;
 }
 
-function CollectionManagerToolbar({ view, onViewChange, ordering, onOrderingChange, onSearch, searchVisible, searchPanelId,
+function CollectionManagerToolbar({ view, onViewChange, onTableColumns, ordering, onOrderingChange, onSearch, searchVisible, searchPanelId,
   onFilter, filterVisible, filterActive, filterDialogId }: Props) {
   const sortFields = [
     { value: "title", label: "Title" },
@@ -95,6 +96,11 @@ function CollectionManagerToolbar({ view, onViewChange, ordering, onOrderingChan
           onClick={() => onViewChange("categories")}
           onKeyDown={(event: KeyboardEvent<HTMLLIElement>) => activateOnKeyDown(event, () => onViewChange("categories"))}>
           Categories
+        </Toolbar.MenuItem>
+        <Toolbar.MenuDivider />
+        <Toolbar.MenuItem tabIndex={0} aria-haspopup="dialog" onClick={onTableColumns}
+          onKeyDown={(event: KeyboardEvent<HTMLLIElement>) => activateOnKeyDown(event, onTableColumns)}>
+          Table columns…
         </Toolbar.MenuItem>
       </Toolbar.Menu>
     </Toolbar>

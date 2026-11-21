@@ -2,6 +2,7 @@ import styles from "./ItemView.module.css";
 import type { ItemRead } from "@types";
 import { coverUrl } from "@services";
 import { detailRows } from "./details";
+import { OwnedCopies } from "@components/OwnedCopies/OwnedCopies";
 import { groupByRole, isEmpty, type Row } from "./rows";
 
 interface Props {
@@ -74,20 +75,7 @@ function ItemView({ item }: Props) {
             </div>
           )}
 
-          {item.owned_copies.length > 0 && (
-            <div className={styles.section}>
-              <h2>Owned copies</h2>
-              {item.owned_copies.map((copy) => (
-                <div key={copy.id}>
-                  <strong>
-                    {copy.condition?.condition_type?.name ?? "Copy"}
-                  </strong>
-                  {copy.condition?.notes && <> — {copy.condition.notes}</>}
-                  {copy.notes && <p>{copy.notes}</p>}
-                </div>
-              ))}
-            </div>
-          )}
+          <div className={styles.section}><OwnedCopies item={item} /></div>
         </div>
 
         <div className={styles.right_column}>

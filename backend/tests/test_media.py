@@ -8,7 +8,10 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
 from PIL import Image
+from sqlalchemy.pool import StaticPool
+from sqlmodel import Session, SQLModel, create_engine
 
+from app.database import get_session
 from app.routers import media
 
 
@@ -20,6 +23,15 @@ class MediaApiTests(unittest.TestCase):
         self.media_patch = patch("app.routers.media.MEDIA_DIR", self.root)
         self.media_patch.start()
         app = FastAPI()
+        engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+        SQLModel.metadata.create_all(engine)
+        self.addCleanup(engine.dispose)
+
+        def session_override():
+            with Session(engine) as session:
+                yield session
+
+        app.dependency_overrides[get_session] = session_override
         app.include_router(media.router)
         app.mount("/media", StaticFiles(directory=self.root))
         self.client = TestClient(app)

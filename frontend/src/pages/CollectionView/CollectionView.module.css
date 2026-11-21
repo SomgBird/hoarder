@@ -1,9 +1,9 @@
 .page {
   display: grid;
-  grid-template-columns: minmax(350px, 25%) minmax(650px, 1fr);
+  grid-template-columns: minmax(350px, 25%) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   gap: 1rem;
-  height: 100dvh;          
+  height: 100dvh;
 }
 
 .explorer_column {
@@ -22,4 +22,13 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 950px) {
+  .page {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(420px, 70dvh);
+    gap: 8px;
+  }
 }

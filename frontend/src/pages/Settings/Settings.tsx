@@ -5,12 +5,14 @@ import { Settings as SettingsIcon } from "@react95/icons";
 import { useAppearance } from "@components/AppearanceProvider";
 import { HelpButton } from "@components/HelpButton/HelpButton";
 import { ColorPicker } from "@components/ColorPicker/ColorPicker";
+import { TableColumnSettings } from "@components/CollectionManager/TableColumnSettings";
+import { DEFAULT_TABLE_COLUMNS, readTableColumns, saveTableColumns } from "@config/tableColumns";
 import { DEFAULT_APPEARANCE, themeOptions } from "@config/appearance";
 import { AppearancePreview } from "./AppearancePreview";
 import { BackgroundSettings } from "./BackgroundSettings";
 import styles from "./Settings.module.css";
 
-const TABS = ["Background", "Appearance"] as const;
+const TABS = ["Background", "Appearance", "Collection"] as const;
 
 export default function Settings() {
   const { settings, updateSettings } = useAppearance();
@@ -19,14 +21,21 @@ export default function Settings() {
   const [choosingColor, setChoosingColor] = useState(false);
   const [backgroundRevision, setBackgroundRevision] = useState(0);
   const [saveFailed, setSaveFailed] = useState(false);
+  const [columns, setColumns] = useState(readTableColumns);
+  const [draftColumns, setDraftColumns] = useState(columns);
+  const [columnSaveFailed, setColumnSaveFailed] = useState(false);
   const navigate = useNavigate();
   const changed = draft.theme !== settings.theme || draft.backgroundColor !== settings.backgroundColor
     || draft.wallpaper !== settings.wallpaper || draft.wallpaperMode !== settings.wallpaperMode;
+  const columnsChanged = draftColumns.join() !== columns.join();
   const close = () => navigate("/");
   const apply = () => {
-    const saved = updateSettings(draft);
+    const saved = changed || saveFailed ? updateSettings(draft) : true;
     setSaveFailed(!saved);
-    return saved;
+    const columnsSaved = columnsChanged || columnSaveFailed ? saveTableColumns(draftColumns) : true;
+    setColumnSaveFailed(!columnsSaved);
+    setColumns(draftColumns);
+    return saved && columnsSaved;
   };
 
   const tabKeyDown = (event: KeyboardEvent<HTMLLIElement>) => {
@@ -63,10 +72,12 @@ export default function Settings() {
               aria-selected={activeTab === title} aria-controls={`settings-panel-${title}`}
               tabIndex={activeTab === title ? 0 : -1} onKeyDown={tabKeyDown}>
               <div className={styles.panel} id={`settings-panel-${title}`} role="tabpanel" aria-labelledby={`settings-tab-${title}`}>
-                <AppearancePreview settings={draft} showWindows={title === "Appearance"} />
-                {title === "Background" ? <BackgroundSettings key={backgroundRevision} settings={draft}
+                {title !== "Collection" && <AppearancePreview settings={draft} showWindows={title === "Appearance"} />}
+                {title === "Collection" && <TableColumnSettings columns={draftColumns} onChange={setDraftColumns} />}
+                {title === "Background" && <BackgroundSettings key={backgroundRevision} settings={draft}
                   onChange={(changes) => setDraft((current) => ({ ...current, ...changes }))}
-                  onChooseColor={() => setChoosingColor(true)} /> : <Fieldset legend="Color scheme">
+                  onChooseColor={() => setChoosingColor(true)} />}
+                {title === "Appearance" && <Fieldset legend="Color scheme">
                   <div className={styles.scheme}>
                     <label htmlFor="react95-theme">Scheme:</label>
                     <Dropdown id="react95-theme" aria-label="React95 theme" width="100%"
@@ -83,8 +94,11 @@ export default function Settings() {
           </Tabs>
           <div className={styles.resetRow}>
             <Button type="button" onClick={() => {
-              setDraft({ ...DEFAULT_APPEARANCE });
-              setBackgroundRevision((revision) => revision + 1);
+              if (activeTab === "Collection") setDraftColumns(DEFAULT_TABLE_COLUMNS);
+              else {
+                setDraft({ ...DEFAULT_APPEARANCE });
+                setBackgroundRevision((revision) => revision + 1);
+              }
             }}>Reset to default</Button>
             <span>Click Apply to save changes.</span>
           </div>
@@ -92,11 +106,12 @@ export default function Settings() {
             Changes are applied for this session, but could not be saved in this browser.
             Try a smaller wallpaper or free some browser storage, then click Apply again.
           </p>}
+          {columnSaveFailed && <p role="alert">Column choices apply for this session. Browser storage is unavailable.</p>}
         </div>
         <div className={styles.actions}>
           <Button type="button" onClick={() => { if (apply()) close(); }}>OK</Button>
           <Button type="button" onClick={close}>Cancel</Button>
-          <Button type="button" disabled={!changed && !saveFailed} onClick={apply}>Apply</Button>
+          <Button type="button" disabled={!changed && !columnsChanged && !saveFailed && !columnSaveFailed} onClick={apply}>Apply</Button>
         </div>
       </Frame>
       {choosingColor && <ColorPicker value={draft.backgroundColor}

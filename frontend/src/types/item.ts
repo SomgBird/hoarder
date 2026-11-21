@@ -61,7 +61,10 @@ export type BarcodeRead = Schemas["BarcodeRead"];
 export type BarcodeCreate = Schemas["BarcodeCreate"];
 export type ConditionRead = Schemas["ConditionRead"];
 export type CopyPhotoRead = Schemas["CopyPhotoRead"];
+export type CopyWithPhotosWrite = Schemas["CopyWithPhotosWrite"];
 export type OwnedCopyRead = Schemas["OwnedCopyRead"];
+export type OwnedCopyWrite = Schemas["OwnedCopyWrite"];
+export type OwnedCopyCreate = Schemas["OwnedCopyCreate"];
 export type ItemBase = Pick<ItemRead,
   "release_date" | "cover_image_path" | "icon_image_path" | "is_owned" | "description"
 >;

@@ -1,3 +1,4 @@
+import { Button, Fieldset } from "@react95/core";
 import type { ReactNode } from "react";
 import type { FieldSpec, Values } from "./pageEditorFields";
 import { ReferencePicker } from "./ReferencePicker";
@@ -54,14 +55,8 @@ export function FieldInput({ spec, value, onChange }: FieldInputProps) {
   );
 }
 
-/** The page's section box: light panel with a heading, like the view page. */
 export function Box({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className={styles.box}>
-      <h2>{title}</h2>
-      {children}
-    </section>
-  );
+  return <Fieldset legend={title} className={styles.box}>{children}</Fieldset>;
 }
 
 interface InfoTableProps {
@@ -81,7 +76,7 @@ export function InfoTable({ specs, values, onChange, children }: InfoTableProps)
           <tr key={s.key}>
             <th scope="row">
               {s.label}
-              {s.required && " *"}:
+              {s.required && " *"}
             </th>
             <td>
               <FieldInput
@@ -113,18 +108,18 @@ export function RowsEditor({ specs, rows, onChange }: RowsEditorProps) {
       {rows.map((row, i) => (
         <div key={i} className={styles.row}>
           <InfoTable specs={specs} values={row} onChange={(next) => setRow(i, next)} />
-          <button
+          <Button
             type="button"
-            className={styles.link_button}
+            className={styles.button}
             onClick={() => onChange(rows.filter((_, idx) => idx !== i))}
           >
             Remove
-          </button>
+          </Button>
         </div>
       ))}
-      <button type="button" className={styles.button} onClick={() => onChange([...rows, {}])}>
+      <Button type="button" className={styles.button} onClick={() => onChange([...rows, {}])}>
         + Add
-      </button>
+      </Button>
     </>
   );
 }

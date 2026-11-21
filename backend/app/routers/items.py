@@ -1,16 +1,22 @@
 from datetime import date
+from hashlib import sha256
+from pathlib import PureWindowsPath
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Query, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile, status
 from fastapi.exceptions import RequestValidationError
+from pydantic import Json
 from sqlmodel import Session
 
 from app.database import get_session
 from app.config import MAX_UPLOAD_BYTES
 from app.db import crud
-from app.db.models import Item
+from app.db.crud import copies
+from app.db.models import CopyPhoto, Item
 from app.db.schemas import ItemCreate, ItemListEntryRead, ItemRead, ItemSortDirection, ItemSortField, ItemUpdate, Page
-from app.errors import NotFoundError, PayloadTooLargeError
-from app.media import remove_unused_image, store_cover, store_icon, store_icon_from_cover
+from app.db.schemas.parts import CopyWithPhotosWrite, OwnedCopyCreate, OwnedCopyWrite
+from app.errors import AppError, NotFoundError, PayloadTooLargeError
+from app.media import remove_unused_image, store_copy_photo, store_cover, store_icon, store_icon_from_cover
 
 router = APIRouter(prefix="/items", tags=["items"])
 
@@ -87,6 +93,58 @@ def delete_item(item_id: int, session: Session = Depends(get_session)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.post("/{item_id}/copies", response_model=ItemRead)
+def create_copy(item_id: int, payload: OwnedCopyCreate, session: Session = Depends(get_session)):
+    copies.create_copy(session, item_id, payload)
+    return crud.get_item(session, item_id)
+
+
+@router.post("/{item_id}/copies/with-photos", response_model=ItemRead)
+def save_copy_with_photos(
+    item_id: int,
+    draft: Annotated[Json[CopyWithPhotosWrite], Form()],
+    files: Annotated[list[UploadFile], File()] = [],
+    session: Session = Depends(get_session),
+):
+    if len(files) != len(draft.descriptions):
+        raise AppError("Supply one description per uploaded photo. A description can be empty.")
+    fingerprint = sha256(draft.model_dump_json().encode())
+    uploads = []
+    try:
+        for file, description in zip(files, draft.descriptions):
+            content = _read_image(file)
+            name = PureWindowsPath(file.filename or "Photo").name
+            try:
+                path = store_copy_photo(item_id, content, file.content_type)
+            except AppError as error:
+                raise AppError(f"{name}: {error.message}", code=error.code) from error
+            uploads.append(CopyPhoto(file_path=path, name=name, description=description))
+            fingerprint.update(sha256(name.encode()).digest())
+            fingerprint.update(sha256(content).digest())
+        unused = copies.save_copy_with_photos(session, item_id, draft, uploads, fingerprint.hexdigest())
+    except Exception:
+        session.rollback()
+        for photo in uploads:
+            remove_unused_image(session, photo.file_path)
+        raise
+    for path in unused:
+        remove_unused_image(session, path)
+    return crud.get_item(session, item_id)
+
+
+@router.put("/{item_id}/copies/{copy_id}", response_model=ItemRead)
+def update_copy(item_id: int, copy_id: int, payload: OwnedCopyWrite, session: Session = Depends(get_session)):
+    copies.update_copy(session, item_id, copy_id, payload)
+    return crud.get_item(session, item_id)
+
+
+@router.delete("/{item_id}/copies/{copy_id}", response_model=ItemRead)
+def delete_copy(item_id: int, copy_id: int, session: Session = Depends(get_session)):
+    for path in copies.delete_copy(session, item_id, copy_id):
+        remove_unused_image(session, path)
+    return crud.get_item(session, item_id)
+
+
 @router.post("/{item_id}/cover", response_model=ItemRead)
 def upload_cover(item_id: int, file: UploadFile = File(...), session: Session = Depends(get_session)):
     return _upload_image(item_id, file, session, "cover")
@@ -113,11 +171,15 @@ def _upload_image(item_id: int, file: UploadFile, session: Session, kind: str):
         raise NotFoundError("item", item_id)
     field = f"{kind}_image_path"
     previous_cover = getattr(item, field)
+    path = (store_cover if kind == "cover" else store_icon)(item_id, _read_image(file), file.content_type)
+    return _replace_image(item_id, path, previous_cover, session, kind)
+
+
+def _read_image(file: UploadFile) -> bytes:
     content = file.file.read(MAX_UPLOAD_BYTES + 1)
     if len(content) > MAX_UPLOAD_BYTES:
         raise PayloadTooLargeError("Image must be no larger than 5 MB.")
-    path = (store_cover if kind == "cover" else store_icon)(item_id, content, file.content_type)
-    return _replace_image(item_id, path, previous_cover, session, kind)
+    return content
 
 
 def _replace_image(item_id: int, path: str, previous_path: str | None, session: Session, kind: str):

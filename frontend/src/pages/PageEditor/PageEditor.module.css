@@ -1,0 +1,14 @@
+.window {
+  box-sizing: border-box;
+  width: min(100%, 430px);
+  min-width: 0;
+  padding: 3px;
+}
+.message { display: flex; align-items: center; gap: 12px; padding: 14px; }
+.message svg { flex: none; }
+.message p { margin: 0; overflow-wrap: anywhere; }
+.actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 6px; padding: 0 8px 8px; }
+.actions button { min-width: 75px; }
+.launch { display: inline-flex; align-items: center; gap: 6px; }
+
+.caption { background-image: var(--editor-caption); }

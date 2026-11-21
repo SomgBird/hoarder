@@ -1,0 +1,35 @@
+.tabs { display: flex; flex-wrap: wrap; align-items: end; gap: 1px; padding: 0 6px 0 10px; }
+.tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 25px;
+  padding: 3px 10px;
+  font: inherit;
+  color: inherit;
+  background: var(--r95-color-material);
+  border: 1px solid var(--r95-color-borderDark);
+  border-top-color: var(--r95-color-borderLightest);
+  border-left-color: var(--r95-color-borderLightest);
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+}
+.tabs button[aria-selected="true"] {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -2px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  box-shadow: inset 1px 0 var(--r95-color-borderLighter), 1px 0 var(--r95-color-borderDarkest);
+}
+.tabs button:focus-visible { outline: 1px dotted currentColor; outline-offset: -4px; }
+
+.tabs svg { flex-shrink: 0; }
+@container (max-width: 565px) {
+  .tabs { padding-left: 6px; }
+  .tabs button { padding-inline: 5px; gap: 3px; }
+}
+@container (max-width: 405px) {
+  .tabs svg { display: none; }
+  .tabs button { padding-inline: 7px; }
+}

@@ -19,6 +19,7 @@ export interface WizardProps {
     title: string;
     icon?: ReactElement;
     imageSrc?: string;
+    illustration?: ReactElement;
     showImage?: boolean;
     showSteps?: boolean;
     helpTopic?: HelpTopicId;

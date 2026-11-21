@@ -3,6 +3,7 @@ import { itemService } from "./itemService"
 import { request } from "./client"
 
 export {coverUrl, itemService, request}
+export { copyPhotoUrl } from "./utils";
 export { ApiError, type ValidationIssue } from "./client";
 export { referenceService } from "./referenceService";
 export { mediaService } from "./mediaService";

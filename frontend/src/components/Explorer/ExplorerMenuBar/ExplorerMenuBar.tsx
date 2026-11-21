@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { HelpBook, Mshtml32541, Progman44, Progman45, RecycleEmpty, Winhlp324000, Write1 } from "@react95/icons";
+import { Files, HelpBook, Mshtml32541, Progman44, Progman45, RecycleEmpty, Winhlp324000, Write1 } from "@react95/icons";
 import { openHelp } from "@config/help";
 import { Icon } from "@components/Icon/Icon";
 import MenuBar from "@components/MenuBar/MenuBar";
@@ -30,6 +30,8 @@ export function ExplorerMenuBar() {
           { label: "Edit", mnemonicIndex: 0, entries: [
             { label: "Edit page…", mnemonicIndex: 0, icon: <Write1 variant="16x16_4" />, disabled: !isItem,
               onClick: () => { if (current.page === "item") navigateTo(`/page-editor?itemId=${current.id}`); } },
+            { label: "Edit copies…", mnemonicIndex: 5, icon: <Files variant="16x16_4" />, disabled: !isItem,
+              onClick: () => { if (current.page === "item") navigateTo(`/copy-editor?itemId=${current.id}`); } },
           ] },
           { label: "View", mnemonicIndex: 0, entries: [
             { label: "Refresh", mnemonicIndex: 0, icon: <Icon name="refresh_page" size={16} />, onClick: refresh },

@@ -62,3 +62,9 @@
 .error {
   padding: 16px;
 }
+
+.caption {
+  padding: 4px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}

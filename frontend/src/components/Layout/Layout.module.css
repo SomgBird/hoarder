@@ -24,3 +24,26 @@
   flex-direction: column;
   padding: 8px;
 }
+
+.editorLayout {
+  --editor-caption: linear-gradient(90deg, var(--r95-color-headerBackground) 12%,
+    color-mix(in srgb, var(--r95-color-headerBackground) 35%, #c8e0f4));
+}
+
+.copyEditorLayout {
+  composes: editorLayout;
+  height: 100dvh;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+}
+.copyEditorLayout .content { align-self: stretch; min-height: 0; }
+
+@media (max-width: 660px) {
+  .page {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 8px;
+  }
+  .navbar { justify-self: start; }
+  .copyEditorLayout { grid-template-rows: auto minmax(0, 1fr); }
+}

@@ -15,6 +15,13 @@ if TYPE_CHECKING:
     from .reference import Format, Franchise, Genre, ItemTag, ItemType, Language
 
 
+class ItemNumber(SQLModel, table=True):
+    """Keep issued Explorer addresses reserved after their items are deleted."""
+    __tablename__ = "item_number"
+
+    id: int | None = Field(default=None, primary_key=True)
+
+
 class Item(ItemBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     # Older collections have no recorded creation date; keep that unknown.

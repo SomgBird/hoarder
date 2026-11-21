@@ -1,15 +1,9 @@
-.list_wrapper {
-    width: 150px;
-    flex-shrink: 0;
-    padding: 8px;
-}
-
-.step_list {
-    display: flex;
-    gap: 6;
-    padding: 2px 0;
-}
-
-.list_element_marker {
-    width: 12px;
+.steps { display: grid; gap: 11px; margin: 0; padding: 0; list-style: none; }
+.steps li { display: flex; align-items: center; gap: 7px; }
+.steps span { display: grid; place-items: center; width: 11px; height: 11px; border: 1px solid #c0cfeb; font: 10px sans-serif; }
+.steps li[aria-current] { font-weight: bold; }
+.steps li[aria-current] span { background: white; box-shadow: inset 0 0 0 2px #204283; }
+@container (max-width: 470px) {
+  .steps { display: flex; gap: 10px; flex-wrap: wrap; }
+  .steps li { gap: 4px; }
 }

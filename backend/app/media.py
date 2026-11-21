@@ -11,8 +11,8 @@ from sqlalchemy import or_
 from sqlmodel import Session, select
 
 from app.config import (
-    ALLOWED_IMAGE_TYPES, COVERS_DIR, COVERS_URL_PREFIX,
-    ICONS_DIR, ICONS_URL_PREFIX, MAX_COVER_PIXELS,
+    ALLOWED_IMAGE_TYPES, COVERS_DIR, COVERS_URL_PREFIX, COPY_PHOTOS_DIR, COPY_PHOTOS_URL_PREFIX,
+    ICONS_DIR, ICONS_URL_PREFIX, MAX_COVER_PIXELS, MEDIA_URL_PREFIX,
 )
 from app.db.models import CopyPhoto, Item
 from app.errors import AppError
@@ -28,6 +28,10 @@ def store_cover(item_id: int, content: bytes, content_type: str | None) -> str:
 
 def store_icon(item_id: int, content: bytes, content_type: str | None) -> str:
     return _store_uploaded_image(item_id, content, content_type, ICONS_DIR, ICONS_URL_PREFIX)
+
+
+def store_copy_photo(item_id: int, content: bytes, content_type: str | None) -> str:
+    return _store_uploaded_image(item_id, content, content_type, COPY_PHOTOS_DIR, COPY_PHOTOS_URL_PREFIX)
 
 
 def _store_uploaded_image(item_id: int, content: bytes, content_type: str | None, directory: Path, url_prefix: str) -> str:
@@ -99,7 +103,8 @@ def _store_image(item_id: int, content: bytes, extension: str, directory: Path, 
 
 
 def _image_location(path: str | None) -> Path | None:
-    for prefix, directory in ((COVERS_URL_PREFIX, COVERS_DIR), (ICONS_URL_PREFIX, ICONS_DIR)):
+    for prefix, directory in ((COVERS_URL_PREFIX, COVERS_DIR), (ICONS_URL_PREFIX, ICONS_DIR),
+                              (COPY_PHOTOS_URL_PREFIX, COPY_PHOTOS_DIR)):
         if path and path.startswith(f"{prefix}/"):
             filename = path.removeprefix(f"{prefix}/")
             if re.fullmatch(IMAGE_FILENAME, filename):
@@ -109,12 +114,15 @@ def _image_location(path: str | None) -> Path | None:
 
 def remove_unused_image(session: Session, path: str | None) -> None:
     """Never delete arbitrary user paths or an image still used by an item or photo."""
+    if path and not path.startswith("/"):
+        path = f"{MEDIA_URL_PREFIX}/{path}"
     source = _image_location(path)
     if source is None:
         return
-    if session.exec(select(Item.id).where(or_(Item.cover_image_path == path, Item.icon_image_path == path)).limit(1)).first() is not None:
+    aliases = (path, path.removeprefix(f"{MEDIA_URL_PREFIX}/"))
+    if session.exec(select(Item.id).where(or_(Item.cover_image_path.in_(aliases), Item.icon_image_path.in_(aliases))).limit(1)).first() is not None:
         return
-    if session.exec(select(CopyPhoto.id).where(CopyPhoto.file_path == path).limit(1)).first() is not None:
+    if session.exec(select(CopyPhoto.id).where(CopyPhoto.file_path.in_(aliases)).limit(1)).first() is not None:
         return
     try:
         source.unlink(missing_ok=True)

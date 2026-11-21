@@ -1,12 +1,17 @@
+import { Link } from "react-router-dom";
+import { helpUrl } from "@config/help";
+import styles from "./ExplorerMessage.module.css";
+
 export function HomePage() {
   return (
-    <div>
+    <section className={styles.home}>
       <h1>Welcome to your collection</h1>
       <hr />
-      <div>
-        <p>Pick an item from the Collection Manager on the left to see its details here.</p>
-        <p>Use Back and Forward in the toolbar to move between pages you've visited.</p>
-      </div>
-    </div>
+      <p>Double-click an item in Collection Manager or select it and press Enter to read its page here.</p>
+      <ul>
+        <li><Link to="/page-editor">Create an item page…</Link></li>
+        <li><a href={helpUrl("collection", true)} target="hoarder-help">Collection Manager Help</a></li>
+      </ul>
+    </section>
   );
 }

@@ -39,6 +39,58 @@ export interface paths {
         patch: operations["update_item_items__item_id__patch"];
         trace?: never;
     };
+    "/items/{item_id}/copies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Copy */
+        post: operations["create_copy_items__item_id__copies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/items/{item_id}/copies/{copy_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Copy */
+        put: operations["update_copy_items__item_id__copies__copy_id__put"];
+        post?: never;
+        /** Delete Copy */
+        delete: operations["delete_copy_items__item_id__copies__copy_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/items/{item_id}/copies/with-photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Copy With Photos */
+        post: operations["save_copy_with_photos_items__item_id__copies_with_photos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/items/{item_id}/cover": {
         parameters: {
             query?: never;
@@ -480,6 +532,16 @@ export interface components {
              */
             type_name: "board_game";
         };
+        /** Body_save_copy_with_photos_items__item_id__copies_with_photos_post */
+        Body_save_copy_with_photos_items__item_id__copies_with_photos_post: {
+            /** Draft */
+            draft: string;
+            /**
+             * Files
+             * @default []
+             */
+            files?: string[];
+        };
         /** Body_upload_cover_items__item_id__cover_post */
         Body_upload_cover_items__item_id__cover_post: {
             /** File */
@@ -569,6 +631,20 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** CopyPhotoChange */
+        CopyPhotoChange: {
+            /** Description */
+            description?: string | null;
+            /** File Path */
+            file_path: string;
+            /** Id */
+            id: number;
+            /**
+             * Remove
+             * @default false
+             */
+            remove?: boolean;
+        };
         /** CopyPhotoRead */
         CopyPhotoRead: {
             /** Description */
@@ -579,6 +655,26 @@ export interface components {
             id: number;
             /** Name */
             name: string | null;
+        };
+        /** CopyWithPhotosWrite */
+        CopyWithPhotosWrite: {
+            /** Changes */
+            changes?: components["schemas"]["CopyPhotoChange"][];
+            /** Condition Notes */
+            condition_notes?: string | null;
+            /** Condition Type Id */
+            condition_type_id?: number | null;
+            /** Copy Id */
+            copy_id?: number | null;
+            /** Descriptions */
+            descriptions?: (string | null)[];
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
         };
         /** FigurineDetailsCreate */
         FigurineDetailsCreate: {
@@ -782,6 +878,8 @@ export interface components {
             is_owned: boolean;
             /** Item Type */
             item_type: string;
+            /** Owned Copy Count */
+            owned_copy_count: number;
             /** Release Date */
             release_date: string | null;
             /** Title */
@@ -956,8 +1054,19 @@ export interface components {
              */
             type_name: "lego_set";
         };
+        /** MediaCopyPhotoRead */
+        MediaCopyPhotoRead: {
+            /** Copy Id */
+            copy_id: number;
+            /** Description */
+            description: string | null;
+            /** Name */
+            name: string | null;
+        };
         /** MediaFileRead */
         MediaFileRead: {
+            /** Copy Photos */
+            copy_photos: components["schemas"]["MediaCopyPhotoRead"][];
             /** Name */
             name: string;
             /** Path */
@@ -994,6 +1103,20 @@ export interface components {
             /** Width */
             width: number | null;
         };
+        /** OwnedCopyCreate */
+        OwnedCopyCreate: {
+            /** Condition Notes */
+            condition_notes?: string | null;
+            /** Condition Type Id */
+            condition_type_id?: number | null;
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+        };
         /** OwnedCopyRead */
         OwnedCopyRead: {
             condition: components["schemas"]["ConditionRead"] | null;
@@ -1003,6 +1126,15 @@ export interface components {
             notes: string | null;
             /** Photos */
             photos: components["schemas"]["CopyPhotoRead"][];
+        };
+        /** OwnedCopyWrite */
+        OwnedCopyWrite: {
+            /** Condition Notes */
+            condition_notes?: string | null;
+            /** Condition Type Id */
+            condition_type_id?: number | null;
+            /** Notes */
+            notes?: string | null;
         };
         /** Page[ItemListEntryRead] */
         Page_ItemListEntryRead_: {
@@ -1184,6 +1316,144 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ItemUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_copy_items__item_id__copies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnedCopyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_copy_items__item_id__copies__copy_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                copy_id: number;
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnedCopyWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_copy_items__item_id__copies__copy_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                copy_id: number;
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_copy_with_photos_items__item_id__copies_with_photos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_save_copy_with_photos_items__item_id__copies_with_photos_post"];
             };
         };
         responses: {

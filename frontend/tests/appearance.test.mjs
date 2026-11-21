@@ -116,6 +116,31 @@ test("Settings opens as a tabbed properties window with every built-in theme and
   assert.equal(css("--hoarder-background"), "#008080");
 });
 
+test("collection settings retain applied columns and support Cancel and Reset", async () => {
+  const copies = () => [...settingsWindow().querySelectorAll('input[type="checkbox"]')]
+    .find((node) => node.labels[0]?.textContent === "Owned copies");
+  await render();
+  await click(tab("Collection"));
+  assert.equal(copies().checked, true);
+  await click(copies());
+  await click(button("Apply"));
+  assert.equal(button("Apply").disabled, true);
+  assert.equal(saved(), null);
+  await click(button("Reset to default"));
+  assert.equal(copies().checked, true);
+  await click(button("Cancel"));
+  window.history.replaceState({}, "", "/settings");
+  await remount();
+  await click(tab("Collection"));
+  assert.equal(copies().checked, false);
+  await click(button("Reset to default"));
+  await click(button("OK"));
+  window.history.replaceState({}, "", "/settings");
+  await remount();
+  await click(tab("Collection"));
+  assert.equal(copies().checked, true);
+});
+
 test("each theme previews locally and Apply saves its colors and shadows while retaining the chosen background", async () => {
   await render();
   await changeBackground("#123456");

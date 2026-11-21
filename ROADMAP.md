@@ -2,13 +2,13 @@
 
 Pre-alpha ends when a collector can catalog a game and a book from the same franchise, document individual copies, and build an illustrated exhibit that connects their items and authored pages. The exhibit must still work after restarting Hoarder. The owner chose this collection and authoring workflow on 2026-11-21. Marketplace tracking comes later.
 
-The next release is [0.5 Owned copies](#05-owned-copies). [PLAN.md](PLAN.md) holds its active task and handoff. Checked boxes record implemented features. For new work, check a box when its described behavior works and record the verification in the handoff. Check off the release demo after completing it through the app.
+The next release is [0.6 Articles](#06-articles). [PLAN.md](PLAN.md) holds its active task and handoff. Checked boxes record implemented features. For new work, check a box when its described behavior works and record the verification in the handoff. Check off the release demo after completing it through the app.
 
 | Baseline | Planned releases | Finish line |
 | --- | --- | --- |
-| [0.1 Book demo](#01-book-demo) · [0.2 Item catalog](#02-item-catalog) · [0.3 Collection browsing](#03-collection-browsing) · [0.4 Appearance and Help](#04-appearance-and-help) | [0.5 Owned copies](#05-owned-copies) · [0.6 Articles](#06-articles) · [0.7 Photos and galleries](#07-photos-and-galleries) · [0.8 Franchise pages](#08-franchise-pages) · [0.9 Custom pages and item layouts](#09-custom-pages-and-item-layouts) | [0.10 Vertical-slice demo](#010-vertical-slice-demo) · [Later backlog](#later-backlog) |
+| [0.1 Book demo](#01-book-demo) · [0.2 Item catalog](#02-item-catalog) · [0.3 Collection browsing](#03-collection-browsing) · [0.4 Appearance and Help](#04-appearance-and-help) · [0.5 Owned copies](#05-owned-copies) | [0.6 Articles](#06-articles) · [0.7 Photos and galleries](#07-photos-and-galleries) · [0.8 Franchise pages](#08-franchise-pages) · [0.9 Custom pages and item layouts](#09-custom-pages-and-item-layouts) | [0.10 Vertical-slice demo](#010-vertical-slice-demo) · [Later backlog](#later-backlog) |
 
-The current branch is `hoarder-pre-alpha-0.4` at application revision `28662cd`. About reads `0.2.0-pre-alpha` from [VERSION](VERSION). Reconcile that value when cutting the next release. Versions 0.5–0.10 are proposed milestones. At two or three subversions per week, six releases would span roughly two to three weeks. Revisit the estimate after the first copy editor and article are working.
+About reads the application version from [VERSION](VERSION). The [session handoff](PLAN.md#session-handoff) records the working branch and baseline. Versions 0.6–0.10 are proposed milestones. Revisit the schedule after the first article can be saved and reopened.
 
 ## 0.1 Book demo
 
@@ -49,7 +49,7 @@ This release made it possible to find a particular item as the catalog grew.
 
 ## 0.4 Appearance and Help
 
-The current branch delivers the display controls and Help system. The remaining ideas from the original 0.4 list have entries in the [later backlog](#later-backlog).
+Version 0.4 delivered the display controls and Help system. The remaining ideas from the original 0.4 list have entries in the [later backlog](#later-backlog).
 
 - [x] Choose a React95 color scheme and preview it before applying it.
 - [x] Set the desktop color with swatches or numeric color controls. Save custom swatches for reuse.
@@ -60,23 +60,25 @@ The current branch delivers the display controls and Help system. The remaining 
 
 ## 0.5 Owned copies
 
-**Outcome.** A collector with two copies of the same game can tell which box is worn and edit that copy. SQLite already has copy and condition records, and Explorer displays their notes. The first missing action is adding a copy from the open item.
+**Outcome.** A collector with two copies of the same game can read their grades and notes in Explorer and edit either copy in Copy Editor. Collection Manager includes the item in the Owned filter while any copy remains.
 
 **Record a copy**
 
-- [ ] Expose the Owned copies section on an item with zero copies and offer **Add copy** there.
-- [ ] Choose an existing condition grade, enter condition notes such as “split case,” and enter separate copy notes such as “gift from Ana.”
-- [ ] Save the copy against the open item and show it immediately. Add a second copy with different details and reopen both after reload.
-- [ ] Keep draft values after a failed save. If the first save succeeded but its response was lost, retrying that submission yields one copy.
+- [x] Show the read-only **Owned copies** section even when an item has zero copies. Open **Copy Editor** from the Collection submenu with Collection Manager alongside it, or use Explorer’s **Edit → Edit copies…** or **Copies** toolbar button for the open item.
+- [x] Choose an existing condition grade, enter condition notes such as “split case,” and enter separate copy notes such as “gift from Ana.”
+- [x] Use **Add copy** in Copy Editor and show the saved copy immediately. Add a second copy with different details, reopen both after reload, and return to the item with **View in Explorer**.
+- [x] Keep draft values after a failed save. If the first save succeeded but its response was lost, retrying that submission yields one copy.
 
 **Edit, remove and filter**
 
-- [ ] Open one saved copy, change its grade or notes and save it. Preserve its identity, photo references and sibling copies.
-- [ ] Cancel an edit to leave the saved copy intact. Confirm a removal to delete only the selected copy.
-- [ ] Show an item as owned while it has recorded copies. Explain the displayed ownership when its manual Owned flag is clear.
-- [ ] Use the same ownership rule in Collection Manager results and filters. After the last copy is removed, use the stored flag again. Preserve the existing treatment of true, false and unset flags on older records.
-- [ ] Add Help for recording copies and finding them through the ownership filter.
-- [ ] **Release demo.** Add a Good copy with a worn-box note and a Like New copy. Reopen, edit one and cancel a removal. Confirm removal of each in turn and verify the filter before and after the last removal. Cover the retry and flag-only cases in regression tests.
+- [x] Open one saved copy, change its grade or notes and save it. Preserve its identity, photo references and sibling copies.
+- [x] Cancel an edit to leave the saved copy intact. Confirm a removal to delete only the selected copy.
+- [x] Browse Collection Manager while a copy is being edited. Opening a different item with unsaved changes offers **Keep editing** and **Discard changes**.
+- [x] Show an item as owned while it has recorded copies. Explain the displayed ownership when its manual Owned flag is clear.
+- [x] Use the same ownership rule in Collection Manager results and filters. After the last copy is removed, use the stored flag again. Preserve the existing treatment of true, false and unset flags on older records.
+- [x] Show each item’s recorded copy count in Table and Mini pages, with `-` for zero. Let collectors choose which Table columns to display and retain their choice when they reopen the app.
+- [x] Add Help for recording copies and finding them through the ownership filter.
+- [x] **Release demo.** Add a Good copy with a worn-box note and a Like New copy. Reopen, edit one and cancel a removal. Confirm removal of each in turn and verify the filter before and after the last removal. Cover the retry and flag-only cases in regression tests.
 
 ## 0.6 Articles
 
@@ -85,8 +87,8 @@ The current branch delivers the display controls and Help system. The remaining 
 **Write and edit**
 
 - [ ] Choose **Article** in the New page wizard, enter a title and open the article editor. Show a useful validation message for a blank title.
-- [ ] Write a plain-text block, including paragraph breaks. Save it and read the same text on the article page.
-- [ ] Add an item link by choosing an existing catalog item by title. Store its identity so renaming the item preserves the destination.
+- [ ] Write two paragraphs in one plain-text block and save the article. After restarting, reopen it and check the title, text and paragraph break.
+- [ ] Add an item-link block after the text by choosing an existing catalog item by title. Reopen the blocks in their saved order. Resolve the target by item ID so renaming it preserves the destination.
 - [ ] Reopen the article in Page Editor, change its title, text or link target, and save to the same page. Canceling an edit restores the saved version.
 
 **Find and follow**
@@ -102,14 +104,14 @@ The current branch delivers the display controls and Help system. The remaining 
 
 **Photograph a copy**
 
-- [ ] Open a saved copy, choose an image, preview it and add a caption. Save the photo against that copy.
-- [ ] Add a second photo to the same copy. Show its own caption and open the original image from the thumbnail.
-- [ ] Edit a caption or remove an attachment from the selected copy. Preserve the other copy's photos and the item's cover.
-- [ ] Explain an invalid file or failed upload and allow a retry without duplicating previously saved photos.
+- [x] In Copy Editor, choose one or more images for a new or saved copy, preview them and add an optional description to each.
+- [x] Reopen the copy and see its captioned thumbnails. Open an original from the copy or find it by filename and copy number in Media Viewer.
+- [x] Edit a caption or remove an attachment from the selected copy. Preserve the other copy's photos and the item's cover.
+- [x] Explain an invalid file or failed upload and allow a retry without duplicating previously saved photos.
 
 **Use collection images on a page**
 
-- [ ] Add a gallery block to an article. Show existing collection images in the picker so a copy photo can be reused.
+- [ ] Add a gallery to an existing article’s block sequence and reopen it alongside the original text and link. Show existing collection images in the picker so a copy photo can be reused.
 - [ ] Add multiple images and save their display order and captions. Reopen the article and display the gallery in that order.
 - [ ] Remove one gallery entry while retaining the source copy's photo. If a copy attachment is removed first, preserve the file while a gallery still uses it.
 - [ ] **Release demo.** Photograph a game's front and back, add both to an article and reload. Remove the front from the gallery and the back from the copy. Open each photo from its surviving location.
@@ -127,7 +129,7 @@ The current branch delivers the display controls and Help system. The remaining 
 
 ## 0.9 Custom pages and item layouts
 
-**Outcome.** A collector can curate a standalone exhibit and annotate an ordinary catalog page using the same block editor.
+**Outcome.** A collector can curate a standalone exhibit and use the same blocks to arrange an item page. Reopening the item in Explorer shows the chosen section order, authored content and page theme.
 
 **Build an exhibit**
 
@@ -137,12 +139,13 @@ The current branch delivers the display controls and Help system. The remaining 
 - [ ] Move blocks up and down, including by keyboard. Remove a block while preserving the linked record or source image.
 - [ ] Save the block sequence and reopen it for editing. Cancel a pending reorder or removal to retain the saved layout.
 
-**Annotate an item**
+**Arrange and theme an item**
 
-- [ ] From an existing item's editor, append a collector's note or a gallery to the standard item page.
-- [ ] Edit or remove the added blocks independently of the item's title, cover, type-specific fields and owned copies.
-- [ ] Open an older item with no added blocks and see its usual layout. Open an older article and see its existing text, gallery and links.
-- [ ] **Release demo.** Build an exhibit linking an article and franchise. Move its gallery above the text, save and reopen it from Explorer. Annotate a book, then remove its annotation and verify that its original metadata and cover are intact.
+- [ ] Open the item’s layout in Page Editor. Move a built-in section such as **Owned copies** above **Description**, including by keyboard. Insert a collector’s note, gallery or link between sections.
+- [ ] Preview the page, choose a theme for it and save. Reopen the item in Explorer and compare it with the preview. Open another item and check that it uses its own appearance. Cancel a second layout or theme edit and reopen the saved version.
+- [ ] Edit or remove an authored block independently of the catalog record. Add a copy in Copy Editor and verify that the repositioned **Owned copies** section shows it on the next visit.
+- [ ] Open an older item without a saved layout and see the usual sections in their original positions. Open an older article and see its existing text, gallery and links in order.
+- [ ] **Release demo.** Build an exhibit linking an article and franchise. Move its gallery above the text and reopen it. On a book, move **Owned copies** above **Description**, insert a note between them and apply a theme. Reopen the book in Explorer, remove the note in Page Editor and verify the section order, cover and catalog details.
 
 ## 0.10 Vertical-slice demo
 
@@ -153,12 +156,12 @@ The current branch delivers the display controls and Help system. The remaining 
 - [ ] Catalog a game with a platform and a book with a page count. Give each a cover and assign both to the same franchise. Find the book by title and the game by category.
 - [ ] Record two copies of the game. Give one a worn-box note and a photo. Edit the other copy's grade. Find the game using the Owned filter and identify both copies.
 - [ ] Write an article with text, a captioned gallery and a link to the game. Open it from the page list and follow the link.
-- [ ] Write the franchise introduction, follow its member link to the book and return with Back. Add a collector's note to the book.
+- [ ] Write the franchise introduction, follow its member link to the book and return with Back. Arrange the book’s sections, insert a collector’s note and choose a page theme.
 - [ ] Build a custom exhibit linking the article and franchise. Move the gallery above the text and save.
 
 **Reopen and verify**
 
-- [ ] Restart the backend and reload the browser. Find the exhibit from Explorer. Follow both links and verify the block order, captions, covers, copy photo and book note.
+- [ ] Restart the backend and reload the browser. Find the exhibit from Explorer. Follow both links and verify the block order, captions, covers and copy photo. Reopen the book and check its section order, note and page theme.
 - [ ] Use the keyboard to reach the page list, open a page, follow a link and return. Open contextual Help from the editing workflow and return to the work in progress.
 - [ ] On the older collection, open a saved item address, compare its metadata, cover and original ownership flag, then link to that item from a new page. Reload and verify both records.
 - [ ] Fix defects that prevent a step above from succeeding. Add Help at any step where the next action was unclear, then repeat the affected steps.
@@ -167,6 +170,11 @@ The current branch delivers the display controls and Help system. The remaining 
 ## Later backlog
 
 These proposals can be scheduled after the collection-and-pages demo. The PDF's original 0.5 Tracker moved here, its 0.6 owned-copy editor now starts in 0.5, and its 0.7 page ideas span 0.6–0.9.
+
+**Reusable blocks and themes**
+
+- [ ] Proposed · Let a collector define a reusable block template, such as a “Condition report” with a heading, notes and a photo. Insert it on two items and give each report its own content.
+- [ ] Proposed · Let a collector create a named page theme and reuse it on several pages. Reopen both pages and verify the chosen styling.
 
 **Marketplace tracking and shopping**
 
@@ -188,5 +196,5 @@ These proposals can be scheduled after the collection-and-pages demo. The PDF's 
 
 - [ ] Add a persistent English/Russian language choice in Settings. Translate one complete cataloging flow, including validation messages and its Help topic.
 - [ ] Expand About with a description of available features and where to start.
-- [ ] Give the Explorer home and error pages distinct styling, with a clear route back to the collection.
+- [x] Give the Explorer home and error pages distinct styling, with a clear route back to the collection.
 - [ ] Prototype the original right-side banners in unused space and check that item content remains readable in narrow windows.

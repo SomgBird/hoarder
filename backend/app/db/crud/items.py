@@ -3,6 +3,7 @@ from sqlalchemy import delete as sa_delete
 from sqlmodel import Session
 
 from app.db.models import Franchise, Item
+from app.db.models.items import ItemNumber
 from app.db.schemas import ItemCreate, ItemRead, ItemUpdate
 from app.errors import ConflictError, NotFoundError
 
@@ -33,7 +34,11 @@ def create_item(session: Session, data: ItemCreate) -> ItemRead:
         # Run every lookup/validation BEFORE building the Item: queries autoflush, and a
         # half-built Item already linked to persistent rows triggers SAWarnings.
         detail_values = _detail_values(session, spec, data.details)
+        number = ItemNumber()
+        session.add(number)
+        session.flush()
         item = Item(
+            id=number.id,
             release_date=data.release_date,
             cover_image_path=data.cover_image_path,
             icon_image_path=data.icon_image_path,
@@ -51,7 +56,6 @@ def create_item(session: Session, data: ItemCreate) -> ItemRead:
             author_credits=_build_author_credits(session, data.author_credits),
             company_credits=_build_company_credits(session, data.company_credits),
         )
-        # Use the relationship (item=item), not id=item.id: the item has no id yet.
         detail = spec.model(item=item, **detail_values)
         session.add(item)
         session.add(detail)

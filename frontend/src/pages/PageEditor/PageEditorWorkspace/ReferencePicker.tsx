@@ -1,3 +1,4 @@
+import { Button } from "@react95/core";
 import { useContext, useState } from "react";
 import type { ReferenceResource } from "../../../services/referenceService";
 import { ReferenceContext } from "./referenceData";
@@ -53,25 +54,25 @@ export function ReferencePicker({ resource, label, value, multiple, onChange }: 
       <input type="search" className={styles.input} aria-label={`Search ${label.toLowerCase()}`}
         placeholder={`Find ${label.toLowerCase()}…`} value={query} disabled={data.loading || !!data.error}
         onChange={(e) => setQuery(e.target.value)} />
-      <select className={styles.input} aria-label={label} value={multiple ? "" : selected[0] ?? ""}
+      <span className={styles.selectControl}><select className={styles.input} aria-label={label} value={multiple ? "" : selected[0] ?? ""}
         disabled={data.loading || !!data.error}
         onChange={(e) => { if (e.target.value || !multiple) choose(e.target.value); }}>
         <option value="">{data.loading ? "Loading…" : multiple ? `Choose ${label.toLowerCase()}…` : "— None selected —"}</option>
         {visible.map((entry) => <option key={entry.value} value={entry.value}>{entry.label}</option>)}
-      </select>
+      </select></span>
       {!data.loading && !data.error && visible.length === 0 && <small>No matching entries.</small>}
-      {resource !== "languages" && !adding && <button type="button" className={styles.link_button}
+      {resource !== "languages" && !adding && <Button type="button" className={styles.button}
         disabled={data.loading || !!data.error} onClick={() => { setAdding(true); setName(query); setError(""); }}>
         + Add new
-      </button>}
+      </Button>}
       {adding && <div className={styles.new_reference}>
         <label>New {label.toLowerCase()}
           <input className={styles.input} aria-label={`New ${label.toLowerCase()}`} value={name}
             onChange={(e) => setName(e.target.value)} />
         </label>
         <div className={styles.inline_actions}>
-          <button type="button" className={styles.button} disabled={!name.trim() || data.pending > 0} onClick={add}>Add and select</button>
-          <button type="button" className={styles.link_button} onClick={() => { setAdding(false); setError(""); }}>Cancel</button>
+          <Button type="button" className={styles.button} disabled={!name.trim() || data.pending > 0} onClick={add}>Add and select</Button>
+          <Button type="button" className={styles.button} onClick={() => { setAdding(false); setError(""); }}>Cancel</Button>
         </div>
         {error && <p role="alert" className={styles.error}>{error}</p>}
       </div>}

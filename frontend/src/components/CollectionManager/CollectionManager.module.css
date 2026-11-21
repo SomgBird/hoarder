@@ -103,7 +103,7 @@
   z-index: 1;
   padding: 4px 6px;
   background: var(--r95-color-material, #c0c0c0);
-  box-shadow: inset 1px 1px var(--r95-color-borderLightest, #fff), inset -1px -1px var(--r95-color-borderDark, #808080);
+  box-shadow: inset -1px -1px var(--r95-color-borderDark, #808080);
   font-weight: normal;
   white-space: nowrap;
 }
@@ -113,14 +113,22 @@
   cursor: pointer;
 }
 
-.table td:first-child {
+.table .titleCell {
   min-width: 100px;
   overflow-wrap: anywhere;
 }
 
-.table td:not(:first-child) {
+.table td:not(.titleCell), .copyCount {
   white-space: nowrap;
 }
+
+.columnChoices, .columnChoices label {
+  display: flex;
+  gap: 6px;
+}
+
+.columnChoices { flex-direction: column; }
+.columnChoices label { align-items: center; }
 
 .tableTitle,
 .item {

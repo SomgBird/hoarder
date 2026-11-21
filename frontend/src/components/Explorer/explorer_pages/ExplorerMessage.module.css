@@ -1,0 +1,36 @@
+.page {
+  flex: 1;
+  min-width: 0;
+  padding: 1em clamp(12px, 4%, 32px);
+  color: #191710;
+  font: 16px/1.45 "Times New Roman", Times, serif;
+  overflow-wrap: anywhere;
+}
+
+.page :where(h1, p, ul, li, a) { font-family: inherit; }
+.page h1 { margin: 0.4em 0; font-size: 2em; line-height: 1.1; }
+.page p { max-width: 64ch; margin: 1em 0; }
+.page hr { margin: 1em 0; }
+.page ul { padding-inline-start: 2em; list-style: square; }
+.page li { margin: 0.35em 0; }
+.page a { color: #0000aa; text-decoration: underline; }
+.page a:visited { color: #551a8b; }
+.page a:active { color: #aa0000; }
+.page a:focus-visible { outline: 1px dotted currentColor; outline-offset: 2px; }
+
+.home {
+  composes: page;
+  background: #d9e2ac;
+}
+
+.home h1 { text-align: center; color: #203419; }
+.home hr { border: 0; border-top: 4px double #52623e; }
+
+.error {
+  composes: page;
+  background: #fffdf4;
+}
+
+.error h1 { color: #70251c; }
+.error hr { border: 0; border-top: 1px solid #867865; }
+.error code { font: 0.9em "Courier New", Courier, monospace; }

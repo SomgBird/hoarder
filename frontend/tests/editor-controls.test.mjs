@@ -50,7 +50,9 @@ beforeEach(() => {
       if (options.method === "PATCH") {
         if (failUpdate) return Response.json({ detail: "Update failed" }, { status: 500 });
         savedPayload = JSON.parse(options.body);
-        storedItem = { ...storedItem, display_title: savedPayload.titles[0].title_text, description: savedPayload.description, details: savedPayload.details };
+        if (savedPayload.titles) storedItem.display_title = savedPayload.titles[0].title_text;
+        if ("description" in savedPayload) storedItem.description = savedPayload.description;
+        if (savedPayload.details) Object.assign(storedItem.details, savedPayload.details);
       } else if (failLoad) return Response.json({ detail: "Item not found" }, { status: 404 });
       return Response.json(storedItem);
     }
@@ -110,7 +112,31 @@ const type = (node, value) => act(async () => {
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(node, value);
   node.dispatchEvent(new Event("input", { bubbles: true }));
 });
-const section = (title) => [...container.querySelectorAll("section")].find((node) => node.querySelector("h2")?.textContent === title);
+const section = (title) => [...container.querySelectorAll("fieldset")].find((node) => node.querySelector(":scope > legend")?.textContent === title);
+const tab = (title) => container.querySelector(`[role="tab"][id="editor-tab-${title}"]`);
+
+test("property tabs support arrow keys and keep a reference draft when switching away", async () => {
+  await render(createElement(PageEditorWorkspace, { initialData: { pageType: "item", itemType: "book", title: "Example" }, onClose() {} }));
+  const panel = () => container.querySelector('[role="tabpanel"]:not([hidden])');
+  const press = (key) => act(async () => document.activeElement.dispatchEvent(
+    new dom.window.KeyboardEvent("keydown", { key, bubbles: true })));
+  tab("General").focus();
+  await press("ArrowRight");
+  assert.equal(document.activeElement, tab("Catalog"));
+  assert.equal(panel().id, tab("Catalog").getAttribute("aria-controls"));
+  const tags = panel().querySelector('[aria-label="Tags"]').closest("td");
+  await click(button("+ Add new", tags));
+  await type(tags.querySelector('[aria-label="New tags"]'), "Work in progress");
+  tab("Catalog").focus();
+  await press("End");
+  assert.equal(document.activeElement, tab("Images"));
+  assert.equal(panel().querySelectorAll('input[type="file"]').length, 2);
+  await press("Home");
+  assert.equal(document.activeElement, tab("General"));
+  await click(tab("Catalog"));
+  assert.equal(panel().querySelector('[aria-label="New tags"]').value, "Work in progress");
+  assert.equal(container.querySelectorAll('[role="tab"][tabindex="0"]').length, 1);
+});
 
 test("franchises can be selected, created by name, and removed without manual IDs", async () => {
   await render(createElement(Harness, { resource: "franchises", multiple: true }));
@@ -154,14 +180,18 @@ test("editor clears scoped selections on type change and submits chosen language
   await render(createElement(PageEditorWorkspace, { initialData: { pageType: "item", itemType: "book", title: "Example" }, onClose() {} }));
   assert.equal(container.querySelectorAll('input[type="file"]').length, 2);
   assert.equal(container.querySelectorAll('input[aria-label*="ID"], input[aria-label*="path"], input[aria-label*="code"]').length, 0);
+  await click(tab("Catalog"));
   await choose(container.querySelector('[aria-label="Format"]'), "3");
   await choose(container.querySelector('[aria-label="Genres"]'), "5");
+  await click(tab("General"));
   await choose(container.querySelector('[aria-label="Title language"]'), "ru");
+  await click(tab("Languages"));
   await click(button("+ Add", section("Alternative titles")));
   await type(section("Alternative titles").querySelector('[aria-label="Title"]'), "Alternative");
   await choose(section("Alternative titles").querySelector('[aria-label="Language"]'), "en");
   await click(button("+ Add", section("Languages")));
   await choose(section("Languages").querySelector('[aria-label="Language"]'), "ru");
+  await click(tab("General"));
   await choose(container.querySelector('[aria-label="Item type"]'), "game");
   assert.equal(container.querySelector('[aria-label="Format"]').value, "");
   assert.equal(container.querySelector('[aria-label="Genres"]').closest("td").querySelector("ul"), null);
@@ -222,6 +252,7 @@ test("explorer enables Edit for an item, loads the full form, and displays saved
   assert.match(section("Cover").querySelector("img").src, /cover.png$/);
   assert.match(section("Icon").querySelector("img").src, /icon.png$/);
 
+  storedItem.description = "Changed in another editor";
   await type(container.querySelector('input[aria-label="Title"]'), "Updated title");
   await type(container.querySelector('input[aria-label="Short title"]'), "Updated");
   await type(container.querySelector('[aria-label="Page count"]'), "");
@@ -231,7 +262,8 @@ test("explorer enables Edit for an item, loads the full form, and displays saved
   assert.equal(savedPayload.titles[0].short_text, "Updated");
   assert.equal(savedPayload.format_id, null);
   assert.equal(savedPayload.details.page_count, null);
-  assert.deepEqual(savedPayload.author_credits.map((credit) => credit.author_id), [11]);
+  assert.equal("author_credits" in savedPayload, false);
+  assert.match(container.textContent, /Changed in another editor/);
   assert.equal(calls.some((call) => call.method === "POST"), false);
   assert.equal(container.querySelector("h1").textContent, "Updated title");
   assert.equal(editButton().disabled, false);

@@ -58,6 +58,7 @@ const render = (element) => act(async () => { root.render(element); });
 const explorer = (path = "/collection-view") => h(MemoryRouter, { initialEntries: [path] }, h(Routes, null,
   h(Route, { path: "/collection-view", element: h(CollectionView) }),
   h(Route, { path: "/page-editor", element: h(Destination) }),
+  h(Route, { path: "/copy-editor", element: h(Destination) }),
   h(Route, { path: "/", element: h(Destination) })));
 const find = (selector, text, scope = container) => [...scope.querySelectorAll(selector)].find((node) => node.textContent.trim() === text);
 const menu = (text) => find('[role="menubar"] > [role="none"] > button', text);
@@ -79,6 +80,29 @@ const deletes = () => calls.filter((call) => call.method === "DELETE");
 const itemButton = (id) => [...container.querySelectorAll('button[aria-current]')].find((node) => node.textContent.startsWith(items.get(id).display_title));
 const openItem = (id) => doubleClick(itemButton(id));
 
+test("an invalid address stays editable and never loads a rounded or zero item number", async () => {
+  await render(explorer());
+  const address = container.querySelector("label[for]").control;
+  assert.equal(address.labels[0].textContent, "Address");
+  const setValue = Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value").set;
+  for (const value of ["collection://item/9007199254740993", "collection://item/0", "collection://item/1e2"]) {
+    await act(async () => {
+      setValue.call(address, value);
+      address.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await key(address, "Enter");
+    assert.equal(address.value, value);
+    assert.equal(container.querySelector("h1").textContent, "Cannot find page");
+  }
+  assert.equal(calls.some(({ path }) => /^\/items\/\d/.test(path)), false);
+  const homeLink = find("a", "Go to the home page");
+  assert.equal(homeLink.getAttribute("href"), "/collection-view");
+  await click(homeLink);
+  assert.equal(address.value, "collection://home");
+  await run("Go", "Back");
+  assert.equal(container.querySelector("h1").textContent, "Cannot find page");
+});
+
 test("menus expose available actions and disable item actions on the home page", async () => {
   await render(explorer());
   assert.deepEqual([...container.querySelectorAll('[role="menubar"] [aria-haspopup="menu"]')].map((node) => node.textContent), ["File", "Edit", "View", "Go", "Help"]);
@@ -88,6 +112,8 @@ test("menus expose available actions and disable item actions on the home page",
   assert.equal(dialog(), null);
   await click(menu("Edit"));
   assert.equal(command("Edit page…").disabled, true);
+  assert.equal(command("Edit copies…").disabled, true);
+  assert.equal(button("Copies").disabled, true);
   await click(menu("Go"));
   assert.equal(command("Back").disabled, true);
   assert.equal(command("Forward").disabled, true);
@@ -156,6 +182,16 @@ test("Edit and About menu commands open their existing destinations", async () =
   await render(h("div", { key: "about" }, explorer()));
   await run("Help", "About Hoarder…");
   assert.equal(container.querySelector("output").textContent, "/");
+});
+
+test("both copies commands open the displayed item even when a different collection row is selected", async () => {
+  for (const entry of ["menu", "toolbar"]) {
+    await render(h("div", { key: entry }, explorer("/collection-view?itemId=42")));
+    await click(itemButton(43));
+    if (entry === "menu") await run("Edit", "Edit copies…");
+    else await click(button("Copies"));
+    assert.equal(container.querySelector("output").textContent, "/copy-editor?itemId=42");
+  }
 });
 
 test("deletion requires confirmation, focuses Cancel, traps focus, and Escape cancels", async () => {

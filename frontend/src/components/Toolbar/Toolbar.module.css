@@ -45,6 +45,11 @@
   gap: 2px;
 }
 
+.toolbarButton:focus-visible {
+  outline: 1px dotted currentColor !important;
+  outline-offset: -3px;
+}
+
 .toolbarButton:hover:not(:disabled) {
   box-shadow: var(--raised) !important;
 }
