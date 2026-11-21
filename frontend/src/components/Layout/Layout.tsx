@@ -10,7 +10,7 @@ function Layout() {
     return <main className={styles.helpWindow}><Suspense fallback="Loading…"><Outlet /></Suspense></main>;
   }
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${pathname === "/page-editor" ? styles.editorLayout : ""}`}>
       <NavBar className={styles.navbar} />
       <main className={styles.content}>
         <Suspense fallback="Loading…">

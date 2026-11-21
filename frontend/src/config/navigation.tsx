@@ -13,7 +13,7 @@ import {
   Inetcpl1319,
   MicrosoftExchange,
   Notepad2,
-  Progman17,
+  FilePen,
   Settings,
   Wangimg128,
   Winhlp324000,
@@ -45,7 +45,7 @@ export const navigation: readonly NavEntry[] = [
       {
         path: "/page-editor",
         label: "Page Editor",
-        icon: <Progman17 variant="32x32_4" />,
+        icon: <FilePen variant="32x32_4" />,
         Component: lazy(() =>
           import("@pages").then(({ PageEditor }) => ({
             default: PageEditor,

@@ -1,3 +1,4 @@
+import { Button } from "@react95/core";
 import { useEffect, useState } from "react";
 import { referenceService } from "@services";
 import { InfoTable } from "./FormControls";
@@ -41,11 +42,11 @@ function CreditRow({ kind, row, onChange }: {
     <>
       <label>
         {kind === "author" ? "Author" : "Company"}
-        <select className={styles.input} value={creating ? "new" : "existing"}
+        <span className={styles.selectControl}><select className={styles.input} value={creating ? "new" : "existing"}
           onChange={(event) => onChange({ ...row, reference_mode: event.target.value, [`${kind}_id`]: "", [`${kind}_name`]: "", selected_name: "" })}>
           <option value="existing">Select existing {label}</option>
           <option value="new">Create new {label}</option>
-        </select>
+        </select></span>
       </label>
       {creating ? (
         <label>
@@ -57,7 +58,7 @@ function CreditRow({ kind, row, onChange }: {
       ) : selectedId ? (
         <div>
           <span>{row.selected_name} (#{selectedId}) </span>
-          <button type="button" onClick={() => onChange({ ...row, [`${kind}_id`]: "", selected_name: "" })}>Change</button>
+          <Button type="button" onClick={() => onChange({ ...row, [`${kind}_id`]: "", selected_name: "" })}>Change</Button>
         </div>
       ) : (
         <div>
@@ -90,10 +91,10 @@ export function CreditsEditor({ kind, rows, onChange }: Props) {
       {rows.map((row, index) => (
         <div key={String(row.row_key)} className={styles.row}>
           <CreditRow kind={kind} row={row} onChange={(next) => onChange(rows.map((value, i) => i === index ? next : value))} />
-          <button type="button" className={styles.link_button} onClick={() => onChange(rows.filter((_, i) => i !== index))}>Remove</button>
+          <Button type="button" className={styles.button} onClick={() => onChange(rows.filter((_, i) => i !== index))}>Remove</Button>
         </div>
       ))}
-      <button type="button" className={styles.button} onClick={() => onChange([...rows, { row_key: crypto.randomUUID(), reference_mode: "existing" }])}>+ Add</button>
+      <Button type="button" className={styles.button} onClick={() => onChange([...rows, { row_key: crypto.randomUUID(), reference_mode: "existing" }])}>+ Add</Button>
     </>
   );
 }

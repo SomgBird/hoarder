@@ -79,7 +79,7 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <ol><li>Open <strong>Collection → Page Editor</strong> or choose <strong>File → New page…</strong> in Explorer.</li><li>Choose Item page. Other page types are not implemented yet.</li><li>Enter a title and select an item type. Both are required.</li><li>Review the details and click Finish.</li><li>Complete the editor and click Create to save the item.</li></ol>
       <p>Finish opens the editor; it does not save an item by itself. Back returns to an earlier wizard step. Cancel asks before discarding the wizard’s entered data.</p>
       <h2>Adding details</h2>
-      <p>Fill in the information relevant to your item. Selection lists let you choose existing entries. Where creation is offered, you can add an entry by name. Languages use the predefined choices.</p>
+      <p>Use <strong>General</strong> for the title, description and item details. <strong>Catalog</strong> holds classifications and barcodes. The other tabs contain languages and alternative titles, credits, and images. You can switch tabs while editing and save them together.</p>
     </>, related: ["edit-item", "images", "collection"],
   },
   "edit-item": {
@@ -96,7 +96,7 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
     introduction: "Covers illustrate an item page. Icons identify it in collection views.",
     content: <>
       <h2>Adding images</h2>
-      <p>Use the Cover and Icon sections in the item editor to select image files. The editor reports unsupported or invalid files. Images are uploaded when the item is saved.</p>
+      <p>Open the <strong>Images</strong> tab in Page Editor. Choose a file under Cover or Icon and check its preview. Images are uploaded when the item is saved.</p>
       <h2>Generating an icon</h2>
       <p><strong>Generate icon from cover</strong> creates 16×16, 32×32, and 64×64 icon sizes from the cover. It replaces the existing icon when saving. A cover must be available.</p>
       <p>Generation is enabled by default for a new item when a cover is selected. When editing an existing item, enable it explicitly to replace the icon. Disable generation if you want to upload an icon yourself.</p>

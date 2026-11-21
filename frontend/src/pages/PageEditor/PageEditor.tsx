@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { FileFind, FileText } from "@react95/icons";
+import { PageEditorWindow } from "./PageEditorWindow";
+import styles from "./PageEditor.module.css";
 import { Button } from "@react95/core";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { itemService } from "@services";
@@ -17,10 +20,11 @@ export function PageEditor() {
   if (itemIdParam !== null) {
     const itemId = Number(itemIdParam);
     if (!Number.isSafeInteger(itemId) || itemId <= 0) {
-      return <div style={{ padding: 24 }}>
-        <p role="alert">Invalid item ID.</p>
-        <Button onClick={() => navigate("/collection-view")}>Back to collection</Button>
-      </div>;
+      const back = () => navigate("/collection-view");
+      return <PageEditorWindow editing onClose={back}>
+        <div className={styles.message}><FileFind variant="32x32_4" aria-hidden="true" /><p role="alert">Invalid item ID.</p></div>
+        <div className={styles.actions}><Button onClick={back}>Back to collection</Button></div>
+      </PageEditorWindow>;
     }
     return <ExistingPageEditor key={itemId} id={itemId}
       onClose={() => navigate(`/collection-view?itemId=${itemId}`)} />;
@@ -59,11 +63,14 @@ function ExistingPageEditor({ id, onClose }: { id: number; onClose: () => void }
 
   if (item) return <PageEditorWorkspace existingItem={item} onClose={onClose} onSaved={onClose} />;
 
-  return <div style={{ padding: 24 }}>
-    {error ? <>
-      <p role="alert">Could not load item. {error}</p>
-      <Button onClick={() => { setError(""); setAttempt((value) => value + 1); }}>Retry</Button>
-    </> : <p role="status">Loading item…</p>}
-    <Button onClick={onClose}>Cancel</Button>
-  </div>;
+  return <PageEditorWindow editing onClose={onClose}>
+    <div className={styles.message}>
+      <FileText variant="32x32_4" aria-hidden="true" />
+      {error ? <p role="alert">Could not load item. {error}</p> : <p role="status">Loading item…</p>}
+    </div>
+    <div className={styles.actions}>
+      {error && <Button onClick={() => { setError(""); setAttempt((value) => value + 1); }}>Retry</Button>}
+      <Button onClick={onClose}>Cancel</Button>
+    </div>
+  </PageEditorWindow>;
 }

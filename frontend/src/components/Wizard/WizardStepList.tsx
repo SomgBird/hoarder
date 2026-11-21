@@ -1,27 +1,10 @@
 import type { WizardStep } from "./wizardTypes";
 import styles from "./WizardStepList.module.css";
 
-interface WizardStepListProps {
-  steps: WizardStep[];
-  currentIndex: number;
-}
-
-export function WizardStepList({ steps, currentIndex }: WizardStepListProps) {
-  return (
-    <div aria-label="Steps" className={styles.list_wrapper}>
-      {steps.map((s, i) => (
-        <div
-          key={i}
-          aria-current={i === currentIndex ? "step" : undefined}
-          className={styles.step_list}
-          style={{ fontWeight: i === currentIndex ? "bold" : "normal" }}
-        >
-          <span className={styles.list_element_marker}>
-            {i < currentIndex ? "✓" : i === currentIndex ? ">" : ""}
-          </span>
-          <span>{s.title}</span>
-        </div>
-      ))}
-    </div>
-  );
+export function WizardStepList({ steps, currentIndex }: { steps: WizardStep[]; currentIndex: number }) {
+  return <ol aria-label="Steps" className={styles.steps}>
+    {steps.map((step, index) => <li key={step.title} aria-current={index === currentIndex ? "step" : undefined}>
+      <span aria-hidden="true">{index < currentIndex ? "✓" : ""}</span>{step.title}
+    </li>)}
+  </ol>;
 }

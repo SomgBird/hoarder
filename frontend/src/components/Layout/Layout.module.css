@@ -24,3 +24,17 @@
   flex-direction: column;
   padding: 8px;
 }
+
+.editorLayout {
+  --editor-caption: linear-gradient(90deg, var(--r95-color-headerBackground) 12%,
+    color-mix(in srgb, var(--r95-color-headerBackground) 35%, #c8e0f4));
+}
+
+@media (max-width: 660px) {
+  .editorLayout {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 8px;
+  }
+  .editorLayout .navbar { justify-self: start; }
+}

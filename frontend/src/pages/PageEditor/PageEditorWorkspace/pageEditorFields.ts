@@ -14,16 +14,22 @@ export interface FieldSpec {
   multiple?: boolean;
 }
 
-// ---------- item-level fields ----------
-// ---------- item-level fields, grouped by where they sit on the page ----------
-export const INFO_FIELDS: FieldSpec[] = [
+// Item properties grouped by editor tab.
+export const GENERAL_FIELDS: FieldSpec[] = [
   { key: "release_date", label: "Release date", kind: "date" },
   { key: "is_owned", label: "Owned", kind: "bool" },
+];
+
+export const CATALOG_FIELDS: FieldSpec[] = [
   { key: "format_id", label: "Format", kind: "reference", reference: "formats" },
-  { key: "selected_language_code", label: "Display language", kind: "reference", reference: "languages" },
   { key: "genre_ids", label: "Genres", kind: "reference", reference: "genres", multiple: true },
   { key: "franchise_ids", label: "Franchises", kind: "reference", reference: "franchises", multiple: true },
+  { key: "tags", label: "Tags", kind: "reference", reference: "tags", multiple: true },
 ];
+
+export const DISPLAY_LANGUAGE_FIELD: FieldSpec = {
+  key: "selected_language_code", label: "Display language", kind: "reference", reference: "languages",
+};
 
 export const DESCRIPTION_FIELD: FieldSpec = {
   key: "description", label: "Description", kind: "textarea",

@@ -1,8 +1,10 @@
 import type { WizardStep } from "@components/Wizard/wizardTypes";
 import { Wizard } from "@components/Wizard/Wizard";
 import { Button } from "@react95/core";
-import { Mshtml32541 } from "@react95/icons";
+import { FilePen } from "@react95/icons";
 import { useState } from "react";
+import { PageEditorWindow } from "../PageEditorWindow";
+import styles from "../PageEditor.module.css";
 import type { PageData } from "../pageTypes";
 import {
   DetailsStep,
@@ -10,16 +12,6 @@ import {
   ReviewStep,
   TypeStep,
 } from "./PageEditorWizardSteps";
-
-const BANNER =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="150" height="290">' +
-      '<rect width="150" height="290" fill="#008080"/>' +
-      '<rect x="25" y="40" width="100" height="70" fill="#c0c0c0" stroke="#000"/>' +
-      '<rect x="25" y="40" width="100" height="12" fill="#000080"/>' +
-      "</svg>",
-  );
 
 const INITIAL_DATA: PageData = { pageType: "item", title: "", itemType: null };
 
@@ -65,25 +57,15 @@ export function PageEditorWizard({ onFinish }: PageEditorWizardProps) {
         ]),
   ];
 
-  return (
-    <div style={{ padding: 24 }}>
-      <Button onClick={() => setOpen(true)}>New page...</Button>
-      {open && (
-        <div style={{ marginTop: 16 }}>
-          <Wizard
-            title="New page"
-            helpTopic="new-item"
-            icon={<Mshtml32541 variant="16x16_4" />}
-            steps={steps}
-            imageSrc={BANNER}
-            showImage
-            showSteps
-            onFinish={() => onFinish(data)}
-            onCancel={cancelWizard}
-            confirmCancel
-          />
-        </div>
-      )}
+  if (!open) return <PageEditorWindow>
+    <div className={styles.message}>
+      <Button className={styles.launch} onClick={() => setOpen(true)}>
+        <FilePen variant="16x16_4" aria-hidden="true" />New page…
+      </Button>
     </div>
-  );
+  </PageEditorWindow>;
+
+  return <Wizard title="New Page Wizard" helpTopic="new-item" icon={<FilePen variant="16x16_4" />}
+    illustration={<FilePen variant="32x32_4" width={64} height={64} aria-hidden="true" />}
+    steps={steps} showImage showSteps onFinish={() => onFinish(data)} onCancel={cancelWizard} confirmCancel />;
 }
