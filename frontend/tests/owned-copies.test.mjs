@@ -57,7 +57,12 @@ const render = (copies, path = "/copy-editor?itemId=42", history = false) => {
 const button = (name, scope = container) => [...scope.querySelectorAll("button")].find((node) => node.textContent === name);
 const click = (name, scope) => act(async () => { const node = button(name, scope); assert.ok(node, name); node.click(); });
 const dialog = () => container.querySelector('[role="alertdialog"]');
-const article = (id) => container.querySelector(`article[aria-label="Copy #${id}"]`);
+const copyRow = (id) => button(`Copy #${id}`)?.closest("tr") ?? null;
+const details = () => container.querySelector('fieldset:has(dl)');
+async function copyCommand(id, name) {
+  await click(`Copy #${id}`);
+  await click(name);
+}
 const field = (name, scope = container) => [...scope.querySelectorAll("label")].find((label) => label.firstChild.textContent === name).control;
 async function change(name, value, scope) {
   const node = field(name, scope);
@@ -78,11 +83,15 @@ test("a photo-only draft previews multiple files, keeps captions on retry and op
   });
   await render([]);
   await click("Add copy");
-  const picker = field("Add photos");
+  await click("Photos");
+  const picker = container.querySelector('input[aria-label="Add photos"]');
   Object.defineProperty(picker, "files", { value: files });
   await act(async () => picker.dispatchEvent(new Event("change", { bubbles: true })));
   assert.equal(container.querySelectorAll('fieldset img[src^="blob:"]').length, 2);
   await change("Description", "Worn label", container.querySelector('[role="group"][aria-label="front.png"]'));
+  await click("General");
+  await click("Photos");
+  assert.equal(field("Description").value, "Worn label");
   await click(otherItem.display_title);
   await click("Open copies");
   await click("Keep editing", dialog());
@@ -94,8 +103,8 @@ test("a photo-only draft previews multiple files, keeps captions on retry and op
   assert.deepEqual(draft.descriptions, ["Worn label", null]);
   assert.deepEqual(uploaded, files);
   assert.deepEqual(save.mock.calls[1].arguments, save.mock.calls[0].arguments);
-  assert.match(article(first.id).textContent, /Worn label/);
-  await act(async () => article(first.id).querySelector('[aria-label="Open front.png"]').click());
+  assert.match(details().textContent, /Worn label/);
+  await act(async () => details().querySelector('[aria-label="Open front.png"]').click());
   const viewer = document.querySelector('[role="dialog"]');
   assert.match(viewer.querySelector('[aria-label="Full size image"] img').src, /\/media\/copies\/front.png$/);
   assert.match(viewer.textContent, /Worn label/);
@@ -108,13 +117,14 @@ test("removing one saved photo and editing another stay local until Save copy", 
   }));
   await render([{ ...first, photos }, second]);
   async function editPhotos() {
-    await click("Edit copy", article(first.id));
+    await copyCommand(first.id, "Edit copy");
+    await click("Photos");
     await act(async () => container.querySelector('[aria-label="Remove a.png"]').click());
     await change("Description", "Back");
   }
   await editPhotos();
   await click("Cancel");
-  assert.equal(article(first.id).querySelectorAll("img").length, 2);
+  assert.equal(details().querySelectorAll("img").length, 2);
   assert.equal(save.mock.callCount(), 0);
   await editPhotos();
   await click("Save copy");
@@ -124,8 +134,8 @@ test("removing one saved photo and editing another stay local until Save copy", 
     { id: 1, file_path: photos[0].file_path, remove: true, description: null },
     { id: 2, file_path: photos[1].file_path, remove: false, description: "Back" },
   ]);
-  assert.equal(article(first.id).querySelectorAll("img").length, 1);
-  assert.ok(article(second.id));
+  assert.equal(details().querySelectorAll("img").length, 1);
+  assert.ok(copyRow(second.id));
 });
 
 test("a failed save keeps both notes, the grade and the submission ID until the new copy is saved", async (t) => {
@@ -147,7 +157,7 @@ test("a failed save keeps both notes, the grade and the submission ID until the 
   await click("Save copy");
   assert.ok(drafts[0].request_id);
   assert.deepEqual(drafts[1], drafts[0]);
-  assert.match(article(17).textContent, /Worn box/);
+  assert.match(details().textContent, /Worn box/);
   assert.match(container.textContent, /Owned through 1 recorded copy/);
   await click("Add copy");
   await click("Save copy");
@@ -165,24 +175,39 @@ test("editing and removal address the chosen copy, and cancelling either action 
     return { ...existingItem, owned_copies: [first] };
   });
   await render([first, second]);
-  await click("Edit copy", article(21));
+  await copyCommand(21, "Edit copy");
   await change("Copy notes", "Unsaved");
   await click("Cancel");
   assert.equal(put.mock.callCount(), 0);
-  assert.match(article(21).textContent, /Spare/);
-  await click("Edit copy", article(21));
+  assert.match(details().textContent, /Spare/);
+  await copyCommand(21, "Edit copy");
   await change("Copy notes", "Shelf 2");
   await click("Save copy");
-  assert.match(article(21).textContent, /Shelf 2/);
-  await click("Remove copy", article(21));
+  assert.match(details().textContent, /Shelf 2/);
+  await copyCommand(21, "Remove copy");
   assert.match(dialog().textContent, /#21 \(Like New\)/);
   await click("Cancel", dialog());
   assert.equal(remove.mock.callCount(), 0);
-  assert.ok(article(21));
-  await click("Remove copy", article(21));
+  assert.ok(copyRow(21));
+  await copyCommand(21, "Remove copy");
   await click("Remove copy", dialog());
-  assert.equal(article(21), null);
-  assert.match(article(17).textContent, /Worn box/);
+  assert.equal(copyRow(21), null);
+  assert.match(details().textContent, /Worn box/);
+});
+
+test("arrow keys select the copy shown in details and Enter opens its properties", async () => {
+  await render([first, second]);
+  const key = (node, key) => act(async () => node.dispatchEvent(new window.KeyboardEvent("keydown", { key, bubbles: true })));
+  await key(button("Copy #17"), "ArrowDown");
+  assert.equal(document.activeElement, button("Copy #21"));
+  assert.equal(button("Copy #21").getAttribute("aria-pressed"), "true");
+  assert.match(details().textContent, /Spare/);
+  await key(button("Copy #21"), "Enter");
+  assert.equal(field("Copy notes").value, "Spare");
+  await key(button("General"), "End");
+  assert.equal(button("Photos").getAttribute("aria-selected"), "true");
+  await click("Cancel");
+  assert.equal(document.activeElement, button("Copy #21"));
 });
 
 test("Collection submenu shows both panes and returns a saved copy to its read-only Explorer page", async (t) => {
@@ -222,7 +247,7 @@ test("Collection Manager stays available when the open item cannot load", async 
 test("row selection and reopening the current item keep a draft; switching asks before discarding it", async (t) => {
   const write = t.mock.method(itemService, "updateCopy");
   await render([first]);
-  await click("Edit copy", article(first.id));
+  await copyCommand(first.id, "Edit copy");
   await change("Condition notes", "Split case");
   await change("Copy notes", "A gift");
   await change("Condition grade", "2");
@@ -241,13 +266,13 @@ test("row selection and reopening the current item keep a draft; switching asks 
   assert.equal(container.querySelector("h1").textContent, otherItem.display_title);
   await click(item.display_title);
   await click("Open copies");
-  assert.match(article(first.id).textContent, /Worn box/);
+  assert.match(details().textContent, /Worn box/);
   assert.equal(write.mock.callCount(), 0);
 });
 
 test("reverting edits or leaving an untouched new form opens the next item directly", async () => {
   await render([first]);
-  await click("Edit copy", article(first.id));
+  await copyCommand(first.id, "Edit copy");
   await change("Copy notes", "Different");
   await change("Copy notes", first.notes);
   await click(otherItem.display_title);
@@ -257,7 +282,7 @@ test("reverting edits or leaving an untouched new form opens the next item direc
   await click(item.display_title);
   await click("Open copies");
   assert.equal(dialog(), null);
-  assert.ok(article(first.id));
+  assert.ok(copyRow(first.id));
 });
 
 test("a pending save holds the current item and a failed save still protects the draft", async (t) => {
@@ -283,6 +308,20 @@ test("a pending save holds the current item and a failed save still protects the
   await click("Open copies");
   assert.equal(container.querySelector("h1").textContent, otherItem.display_title);
   assert.equal(dialog(), null);
+});
+
+test("closing the window offers to keep a changed draft or return to the open item in Explorer", async () => {
+  await render([first]);
+  const close = () => act(async () => container.querySelector('button[aria-label="Close Copy Editor"]').click());
+  await click("Add copy");
+  await change("Copy notes", "Pending note");
+  await close();
+  await click("Keep editing", dialog());
+  assert.equal(field("Copy notes").value, "Pending note");
+  await close();
+  await click("Discard changes", dialog());
+  assert.equal(container.querySelector("h1").textContent, item.display_title);
+  assert.ok(container.querySelector('section[aria-label="Owned copies"]'));
 });
 
 test("history navigation between editor items also preserves a dirty draft until confirmed", async () => {

@@ -9,8 +9,10 @@ function Layout() {
   if (pathname === "/help" && params.get("window") === "1") {
     return <main className={styles.helpWindow}><Suspense fallback="Loading…"><Outlet /></Suspense></main>;
   }
+  const editorLayout = pathname === "/copy-editor" ? styles.copyEditorLayout
+    : pathname === "/page-editor" ? styles.editorLayout : "";
   return (
-    <div className={`${styles.page} ${pathname === "/page-editor" ? styles.editorLayout : ""}`}>
+    <div className={`${styles.page} ${editorLayout}`}>
       <NavBar className={styles.navbar} />
       <main className={styles.content}>
         <Suspense fallback="Loading…">

@@ -21,18 +21,23 @@ export function OwnedCopies({ item, actions }: Props) {
       <h3>Copy #{copy.id} · {copy.condition?.condition_type?.name ?? "Ungraded"}</h3>
       {copy.condition?.notes && <p><strong>Condition notes</strong><br />{copy.condition.notes}</p>}
       {copy.notes && <p><strong>Copy notes</strong><br />{copy.notes}</p>}
-      {copy.photos.length > 0 && <ul className={styles.photos} aria-label={`Photos of copy #${copy.id}`}>
-        {copy.photos.map((photo) => <li key={photo.id}>
-          <button type="button" onClick={() => setOpen(photo)} aria-label={`Open ${photo.name || "photo #" + photo.id}`}>
-            <img src={copyPhotoUrl(photo.file_path)} alt="" width={80} height={80} loading="lazy" />
-          </button>
-          <span>{photo.description || photo.name || `Photo #${photo.id}`}</span>
-        </li>)}
-      </ul>}
+      <CopyPhotoList copy={copy} onOpen={setOpen} />
       {actions?.(copy)}
     </article>)}
   </section>
     {open && <ImageViewer src={copyPhotoUrl(open.file_path)} name={open.name || `Photo #${open.id}`}
       caption={open.description} onClose={() => setOpen(null)} />}
   </>;
+}
+
+export function CopyPhotoList({ copy, onOpen }: { copy: OwnedCopyRead; onOpen: (photo: CopyPhotoRead) => void }) {
+  if (!copy.photos.length) return null;
+  return <ul className={styles.photos} aria-label={`Photos of copy #${copy.id}`}>
+    {copy.photos.map((photo) => <li key={photo.id}>
+      <button type="button" onClick={() => onOpen(photo)} aria-label={`Open ${photo.name || "photo #" + photo.id}`}>
+        <img src={copyPhotoUrl(photo.file_path)} alt="" width={80} height={80} loading="lazy" />
+      </button>
+      <span>{photo.description || photo.name || `Photo #${photo.id}`}</span>
+    </li>)}
+  </ul>;
 }

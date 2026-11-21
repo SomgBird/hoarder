@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@react95/core";
+import { Button, Fieldset, Input } from "@react95/core";
 import { copyPhotoUrl } from "@services";
 import { imageRequirements, imageTypes, isValidImageFile } from "@services/imageUpload";
 import type { CopyPhotoRead } from "@types";
@@ -26,10 +26,12 @@ export function CopyPhotos({ photos, disabled, onChange }: {
   photos: DraftPhoto[]; disabled: boolean; onChange: (photos: DraftPhoto[]) => void;
 }) {
   const [error, setError] = useState("");
-  return <fieldset disabled={disabled} className={styles.photos}>
-    <legend>Photos</legend>
-    <label>Add photos
-      <input type="file" multiple accept={imageTypes.join(",")} onChange={(event) => {
+  const picker = useRef<HTMLInputElement>(null);
+  return <Fieldset legend="Attached photos" disabled={disabled} className={styles.group}>
+    <div className={styles.photoTools}>
+      <Button type="button" onClick={() => picker.current?.click()}>Add photos…</Button>
+      <span>{imageRequirements}</span>
+      <input ref={picker} aria-label="Add photos" hidden type="file" multiple accept={imageTypes.join(",")} onChange={(event) => {
         const selected = Array.from(event.target.files ?? []);
         const valid = selected.filter(isValidImageFile);
         const skipped = selected.filter((file) => !isValidImageFile(file));
@@ -37,9 +39,9 @@ export function CopyPhotos({ photos, disabled, onChange }: {
         onChange([...photos, ...valid.map((file) => ({ key: crypto.randomUUID(), file, description: "" }))]);
         event.target.value = "";
       }} />
-    </label>
-    <small>{imageRequirements}</small>
+    </div>
     {error && <p role="alert">{error}</p>}
+    {!photos.length && <p className={styles.noPhotos}>No photos attached.</p>}
     {photos.map((photo) => {
       const name = photo.file?.name || photo.saved?.name || `Photo #${photo.saved?.id}`;
       return <div key={photo.key} role="group" aria-label={name} className={styles.photo}>
@@ -47,7 +49,7 @@ export function CopyPhotos({ photos, disabled, onChange }: {
         <div>
           <strong>{name}</strong>
           <label>Description
-            <input type="text" maxLength={240} value={photo.description} onChange={(event) => {
+            <Input type="text" maxLength={240} value={photo.description} onChange={(event) => {
               onChange(photos.map((entry) => entry.key === photo.key ? { ...entry, description: event.target.value } : entry));
             }} />
           </label>
@@ -55,5 +57,5 @@ export function CopyPhotos({ photos, disabled, onChange }: {
         </div>
       </div>;
     })}
-  </fieldset>;
+  </Fieldset>;
 }

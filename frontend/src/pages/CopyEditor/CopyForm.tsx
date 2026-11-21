@@ -1,9 +1,13 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Button } from "@react95/core";
+import { Button, Fieldset, Frame, TextArea } from "@react95/core";
+import { Camera, FileText } from "@react95/icons";
+import { PropertyPanel, PropertyTabs } from "@components/PropertyTabs/PropertyTabs";
 import { itemService, referenceService } from "@services";
 import type { ConditionTypeRead, CopyWithPhotosWrite, ItemRead, OwnedCopyRead } from "@types";
 import { CopyPhotos, type DraftPhoto } from "./CopyPhotos";
 import styles from "./CopyEditor.module.css";
+
+const sections = [{ title: "General", icon: FileText }, { title: "Photos", icon: Camera }] as const;
 
 export type CopyEditState = "ready" | "dirty" | "busy";
 
@@ -16,6 +20,7 @@ interface Props {
 }
 
 export function CopyForm({ itemId, copy, onSaved, onCancel, onEditState }: Props) {
+  const [active, setActive] = useState<typeof sections[number]["title"]>("General");
   const initial = {
     grade: String(copy?.condition?.condition_type?.id ?? ""),
     conditionNotes: copy?.condition?.notes ?? "",
@@ -93,29 +98,39 @@ export function CopyForm({ itemId, copy, onSaved, onCancel, onEditState }: Props
 
   const title = copy ? `Edit copy #${copy.id}` : "Add copy";
   return <form onSubmit={save} className={styles.form} aria-label={title}>
-    <h2>{title}</h2>
-    <label>Condition grade
-      <select autoFocus value={draft.grade} disabled={busy || !grades} onChange={(event) => change("grade", event.target.value)}>
-        <option value="">Ungraded</option>
-        {grades?.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
-      </select>
-    </label>
-    {!grades && (loadError ? <div role="alert">{loadError} <Button type="button" onClick={() => {
+    <PropertyTabs prefix="copy" label={title} sections={sections} active={active} onSelect={setActive} focusOnMount />
+    <Frame className={styles.sheet} bgColor="$material" boxShadow="$out">
+      <PropertyPanel prefix="copy" title="General" active={active} className={styles.panel}>
+        <Fieldset legend="Condition" className={styles.group} disabled={busy}>
+          <label>Condition grade
+            <span className={styles.selectControl}><select value={draft.grade} disabled={!grades} onChange={(event) => change("grade", event.target.value)}>
+              <option value="">Ungraded</option>
+              {grades?.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
+            </select></span>
+          </label>
+          <label>Condition notes
+            <TextArea rows={2} value={draft.conditionNotes} onChange={(event) => change("conditionNotes", event.target.value)} />
+          </label>
+        </Fieldset>
+        <Fieldset legend="Notes" className={styles.group} disabled={busy}>
+          <label>Copy notes
+            <TextArea rows={2} value={draft.notes} onChange={(event) => change("notes", event.target.value)} />
+          </label>
+        </Fieldset>
+      </PropertyPanel>
+      <PropertyPanel prefix="copy" title="Photos" active={active} className={styles.panel}>
+        <CopyPhotos photos={photos} disabled={busy} onChange={(next) => {
+          setPhotos(next);
+          onEditState(draftState(draft, next));
+        }} />
+      </PropertyPanel>
+    </Frame>
+    {!grades && (loadError ? <div role="alert" className={styles.error}>{loadError} <Button type="button" onClick={() => {
       setLoadError(""); setAttempt((value) => value + 1);
-    }}>Retry grades</Button></div> : <p role="status">Loading condition grades…</p>)}
-    <label>Condition notes
-      <textarea rows={2} value={draft.conditionNotes} disabled={busy} onChange={(event) => change("conditionNotes", event.target.value)} />
-    </label>
-    <label>Copy notes
-      <textarea rows={2} value={draft.notes} disabled={busy} onChange={(event) => change("notes", event.target.value)} />
-    </label>
-    <CopyPhotos photos={photos} disabled={busy} onChange={(next) => {
-      setPhotos(next);
-      onEditState(draftState(draft, next));
-    }} />
-    {saveError && <p role="alert">{saveError}</p>}
+    }}>Retry grades</Button></div> : <p role="status" className={styles.error}>Loading condition grades…</p>)}
+    {saveError && <p role="alert" className={styles.error}>{saveError}</p>}
     <div className={styles.actions}>
-      <Button type="submit" disabled={busy || !grades}>{busy ? "Saving…" : "Save copy"}</Button>
+      <Button className={styles.defaultAction} type="submit" disabled={busy || !grades}>{busy ? "Saving…" : "Save copy"}</Button>
       <Button type="button" disabled={busy} onClick={onCancel}>Cancel</Button>
     </div>
   </form>;
