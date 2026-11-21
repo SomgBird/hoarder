@@ -8,6 +8,7 @@ import {
 import {
   ComputerFind,
   Defrag9,
+  HelpBook,
   Inetcpl1319,
   MicrosoftExchange,
   Notepad2,
@@ -15,7 +16,6 @@ import {
   Settings,
   Wangimg128,
   Winhlp324000,
-  Winhlp324001,
 } from "@react95/icons";
 
 export interface NavEntry {
@@ -74,12 +74,20 @@ export const navigation: readonly NavEntry[] = [
     icon: <Notepad2 variant="32x32_4" />,
   },
   {
+    path: "/settings",
     label: "Settings",
     icon: <Settings variant="32x32_4" />,
+    Component: lazy(() =>
+      import("@pages").then(({ Settings }) => ({ default: Settings })),
+    ),
   },
   {
+    path: "/help",
     label: "Help",
-    icon: <Winhlp324001 variant="32x32_4" />,
+    icon: <HelpBook variant="32x32_4" />,
+    Component: lazy(() =>
+      import("@pages").then(({ Help }) => ({ default: Help })),
+    ),
   },
   {
     path: "/",

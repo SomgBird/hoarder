@@ -45,6 +45,7 @@ export function DeleteItemDialog({ id, onDeleted, onDismiss }: Props) {
 
   return <ConfirmDialog
     title="Delete item"
+    helpTopic="delete-item"
     icon={<RecycleEmpty variant="32x32_4" />}
     confirmLabel={busy ? "Deleting…" : "Delete item"}
     dismissLabel="Cancel"

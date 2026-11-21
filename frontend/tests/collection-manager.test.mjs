@@ -95,7 +95,7 @@ test("filter dialog drafts can be cancelled with focus restored and keyboard foc
   assert.equal(calls.length, count);
   button("Cancel").focus();
   await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true })));
-  assert.equal(document.activeElement, button("Close filters"));
+  assert.equal(document.activeElement, filterDialog().querySelector('[aria-label="Help: Searching and filtering"]'));
   await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true })));
   assert.equal(document.activeElement, button("Cancel"));
   await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true })));

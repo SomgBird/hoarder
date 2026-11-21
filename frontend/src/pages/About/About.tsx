@@ -1,6 +1,7 @@
 import { Frame, TitleBar } from "@react95/core";
 import styles from "./About.module.css";
 import { Winhlp324000 } from "@react95/icons";
+import { HelpButton } from "@components/HelpButton/HelpButton";
 
 interface AppInfo {
   name: string;
@@ -27,6 +28,7 @@ export default function About() {
       <Frame bgColor="$material" boxShadow="$out" padding="$2">
         <TitleBar icon={<Winhlp324000 variant="16x16_4" />} title="About">
           <TitleBar.OptionsBox>
+            <HelpButton topic="about" />
             <TitleBar.Close />
           </TitleBar.OptionsBox>
         </TitleBar>

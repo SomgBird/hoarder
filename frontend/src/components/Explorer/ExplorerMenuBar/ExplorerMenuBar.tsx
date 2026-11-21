@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mshtml32541, Progman44, Progman45, RecycleEmpty, Winhlp324000, Write1 } from "@react95/icons";
+import { HelpBook, Mshtml32541, Progman44, Progman45, RecycleEmpty, Winhlp324000, Write1 } from "@react95/icons";
+import { openHelp } from "@config/help";
 import { Icon } from "@components/Icon/Icon";
 import MenuBar from "@components/MenuBar/MenuBar";
 import Separator from "@components/Separator";
@@ -40,6 +41,8 @@ export function ExplorerMenuBar() {
             { label: "Home", mnemonicIndex: 0, icon: <Icon name="home" size={16} />, onClick: () => navigate({ page: "home" }) },
           ] },
           { label: "Help", mnemonicIndex: 0, entries: [
+            { label: "Help topics…", mnemonicIndex: 0, icon: <HelpBook variant="16x16_4" />, onClick: () => openHelp("explorer") },
+            { separator: true },
             { label: "About Hoarder…", mnemonicIndex: 0, icon: <Winhlp324000 variant="16x16_4" />, onClick: () => navigateTo("/") },
           ] },
         ]}

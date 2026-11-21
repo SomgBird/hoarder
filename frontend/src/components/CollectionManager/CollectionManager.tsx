@@ -2,6 +2,7 @@ import { useState, useEffect, useId, useRef } from "react";
 import { Button, Frame, TitleBar } from "@react95/core";
 import { Close, Notepad } from "@react95/icons";
 import { Icon } from "@components";
+import { HelpButton } from "@components/HelpButton/HelpButton";
 import { ITEM_TYPES, ITEM_TYPE_LABELS, type ItemFilters, type ItemListPage, type ItemOrdering, type ItemType } from "@types";
 import { itemService } from "@services";
 import CollectionManagerToolbar, { type CollectionItemViewMode } from "./CollectionManagerToolbar";
@@ -83,7 +84,7 @@ function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKe
           icon={<Notepad variant="16x16_4" />}
         >
           <TitleBar.OptionsBox>
-            <TitleBar.Help />
+            <HelpButton topic="collection" />
             <TitleBar.Minimize />
             <TitleBar.Maximize />
             <TitleBar.Close />

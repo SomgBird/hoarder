@@ -1,0 +1,137 @@
+.window {
+  width: 460px;
+  max-width: 100%;
+}
+
+.content {
+  padding: 14px 8px 0;
+}
+
+.panel {
+  min-height: 350px;
+  padding: 16px 12px 12px;
+}
+
+.backgroundSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wallpaperChooser {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 135px;
+  gap: 12px;
+}
+
+.wallpaperList,
+.wallpaperControls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wallpaperList select {
+  width: 100%;
+  min-height: 82px;
+  padding: 3px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: var(--r95-shadow-in);
+  background: var(--r95-color-inputBackground);
+  color: var(--r95-color-materialText);
+  font: inherit;
+}
+
+.wallpaperControls .wallpaperDisplay {
+  width: 100%;
+  min-width: 0;
+}
+
+.wallpaperList option {
+  padding: 2px 4px;
+}
+
+.wallpaperList option:checked {
+  background: var(--r95-color-headerBackground);
+  color: var(--r95-color-headerText);
+}
+
+.wallpaperHint {
+  margin: 8px 0 2px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.wallpaperError {
+  margin: 6px 0 2px;
+  line-height: 1.5;
+}
+
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+
+.colorButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 150px;
+  padding: 4px 7px;
+}
+
+.colorSample {
+  display: inline-block;
+  width: 30px;
+  height: 16px;
+}
+
+.arrow {
+  margin-left: auto;
+  font-size: 9px;
+}
+
+.scheme {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 8px;
+}
+
+.resetRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 2px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0 8px 8px;
+}
+
+.actions button {
+  min-width: 75px;
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 12px 4px 0;
+  }
+
+  .panel {
+    padding: 12px 6px;
+  }
+
+  .wallpaperChooser {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

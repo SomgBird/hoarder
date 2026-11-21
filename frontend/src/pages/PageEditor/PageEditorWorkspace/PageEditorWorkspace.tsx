@@ -1,4 +1,5 @@
 import { Button, Frame, TitleBar } from "@react95/core";
+import { HelpButton } from "@components/HelpButton/HelpButton";
 import { Mshtml32541 } from "@react95/icons";
 import { useState } from "react";
 import { ITEM_TYPE_LABELS, ITEM_TYPE_OPTIONS, type ItemRead, type ItemType } from "@types";
@@ -133,7 +134,9 @@ export function PageEditorWorkspace({ initialData, existingItem, onClose, onSave
   return (
     <ReferenceContext.Provider value={references}>
     <Frame bgColor="$material" boxShadow="$out" className={styles.window}>
-      <TitleBar icon={<Mshtml32541 variant="16x16_4" />} title={existingItem ? "Page editor - edit item" : "Page editor - new item"} />
+      <TitleBar icon={<Mshtml32541 variant="16x16_4" />} title={existingItem ? "Page editor - edit item" : "Page editor - new item"}>
+        <TitleBar.OptionsBox><HelpButton topic={existingItem ? "edit-item" : "new-item"} /></TitleBar.OptionsBox>
+      </TitleBar>
 
       {/* Win95 chrome: toolbar */}
       <div className={styles.toolbar}>

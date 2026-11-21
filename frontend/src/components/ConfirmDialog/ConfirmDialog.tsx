@@ -1,9 +1,12 @@
 import { Button, Frame, TitleBar } from "@react95/core";
 import { useEffect, useId, useRef, useState, type ReactElement, type ReactNode } from "react";
 import styles from "./ConfirmDialog.module.css";
+import { HelpButton } from "@components/HelpButton/HelpButton";
+import type { HelpTopicId } from "@config/help";
 
 interface ConfirmDialogProps {
   title: string;
+  helpTopic?: HelpTopicId;
   message: ReactNode;
   titlebar_icon?: ReactElement;
   icon?: ReactElement;
@@ -17,6 +20,7 @@ interface ConfirmDialogProps {
 
 export function ConfirmDialog({
   title,
+  helpTopic = "confirmations",
   message,
   titlebar_icon,
   icon,
@@ -74,7 +78,9 @@ export function ConfirmDialog({
         aria-describedby={messageId}
         aria-busy={busy}
       >
-        <TitleBar icon={titlebar_icon} title={title} />
+        <TitleBar icon={titlebar_icon} title={title}>
+          <TitleBar.OptionsBox><HelpButton topic={helpTopic} /></TitleBar.OptionsBox>
+        </TitleBar>
         <div className={styles.body}>
           {icon && <div className={styles.icon}>{icon}</div>}
           <div id={messageId}>{message}</div>

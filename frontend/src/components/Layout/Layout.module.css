@@ -17,3 +17,10 @@
   flex-direction: column;
   min-width: 0;       /* wide content can't stretch the column */
 }
+
+.helpWindow {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+}
