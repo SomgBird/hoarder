@@ -13,15 +13,17 @@ const { createRoot } = await import("react-dom/client");
 const { default: CollectionManager } = await import("../src/components/CollectionManager/CollectionManager.tsx");
 
 const originalFetch = globalThis.fetch;
-let root, container, items, calls, failLoad, selectedItemId, refreshKey;
+let root, container, items, calls, failLoad, selectedItemId, openedItemId, refreshKey;
 beforeEach(() => {
+  window.localStorage.clear();
   items = [
-    { id: 1, title: "First item", release_date: "2001-02-03", date_added: "2026-11-12", icon_image_path: "/media/covers/icon.png", item_type: "book", is_owned: true },
-    { id: 2, title: "Second item", release_date: null, date_added: null, icon_image_path: null, item_type: "game", is_owned: false },
+    { id: 1, title: "First item", release_date: "2001-02-03", date_added: "2026-11-12", icon_image_path: "/media/covers/icon.png", item_type: "book", is_owned: true, owned_copy_count: 2 },
+    { id: 2, title: "Second item", release_date: null, date_added: null, icon_image_path: null, item_type: "game", is_owned: false, owned_copy_count: 0 },
   ];
   calls = [];
   failLoad = false;
   selectedItemId = null;
+  openedItemId = null;
   refreshKey = 0;
   container = document.createElement("div");
   document.body.append(container);
@@ -51,7 +53,7 @@ function manager() {
   return h(CollectionManager, { selectedItemId, refreshKey, onSelectItem: (id) => {
     selectedItemId = id;
     root.render(manager());
-  }, onOpenItem: () => {} });
+  }, onOpenItem: (id) => { openedItemId = id; } });
 }
 const render = () => act(async () => root.render(manager()));
 const button = (title) => [...container.querySelectorAll("button")].find((node) => (node.getAttribute("aria-label") ?? node.textContent.trim()) === title);
@@ -335,17 +337,49 @@ test("a late search response cannot replace newer results", async () => {
   assert.equal(button("First item"), undefined);
 });
 
-test("table shows three columns without icons, nullable dates, and selects from any cell", async () => {
+test("table shows the copy count, a hyphen for zero, nullable dates, and selects from any cell", async () => {
   await render();
   assert.equal(option("Table").getAttribute("aria-checked"), "true");
-  assert.deepEqual([...collection().querySelectorAll("th")].map((node) => node.textContent), ["Title", "Release date", "Date added"]);
+  assert.deepEqual([...collection().querySelectorAll("th")].map((node) => node.textContent), ["Title", "Release date", "Date added", "Owned copies"]);
   assert.equal(collection().querySelector("img, svg"), null);
   const rows = collection().querySelectorAll("tbody tr");
-  assert.deepEqual([...rows[0].querySelectorAll("td")].map((node) => node.textContent), ["First item", "2001-02-03", "2026-11-12"]);
-  assert.deepEqual([...rows[1].querySelectorAll("td")].map((node) => node.textContent), ["Second item", "—", "—"]);
+  assert.deepEqual([...rows[0].querySelectorAll("td")].map((node) => node.textContent), ["First item", "2001-02-03", "2026-11-12", "2"]);
+  assert.deepEqual([...rows[1].querySelectorAll("td")].map((node) => node.textContent), ["Second item", "—", "—", "-"]);
   await click(rows[0].lastElementChild);
   assert.equal(selectedItemId, 1);
   assert.equal(button("First item").getAttribute("aria-current"), "true");
+});
+
+test("table column choices can be cancelled or applied, persist on remount, and preserve keyboard opening", async () => {
+  await render();
+  const choose = () => click(container.querySelector('[role="menuitem"][aria-haspopup="dialog"]'));
+  const checkbox = (name) => [...container.querySelectorAll('input[type="checkbox"]')].find((node) => node.labels[0].textContent === name);
+  const headers = () => [...collection().querySelectorAll("th")].map((node) => node.textContent);
+  await choose();
+  await click(checkbox("Owned copies"));
+  await click(button("Cancel"));
+  assert.ok(headers().includes("Owned copies"));
+  await choose();
+  for (const name of ["Title", "Release date", "Date added"]) await click(checkbox(name));
+  assert.equal(checkbox("Owned copies").disabled, true);
+  await click(button("Apply"));
+  assert.deepEqual(headers(), ["Owned copies"]);
+  const first = button("First item, Owned copies: 2");
+  assert.equal(first.textContent, "2");
+  await act(async () => first.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
+  assert.equal(openedItemId, 1);
+  assert.equal(calls.length, 1);
+  await act(async () => root.render(null));
+  await render();
+  assert.deepEqual(headers(), ["Owned copies"]);
+  await choose();
+  await click(checkbox("Title"));
+  await click(checkbox("Owned copies"));
+  await click(button("Apply"));
+  await click(option("Mini pages"));
+  assert.match(collection().textContent, /Copies: 2/);
+  await click(option("Table"));
+  assert.deepEqual(headers(), ["Title"]);
 });
 
 test("view switching retains selection without fetching and renders small and large icons with names", async () => {
@@ -583,9 +617,11 @@ test("mini pages show a 64px icon, item type, ownership and dates while keeping 
   assert.equal(cards[0].querySelector("img").height, 64);
   assert.match(cards[0].textContent, /First item/);
   assert.match(cards[0].textContent, /Book · Owned/);
+  assert.match(cards[0].textContent, /Copies: 2/);
   assert.match(cards[0].textContent, /Release date: 2001-02-03/);
   assert.match(cards[0].textContent, /Date added: 2026-11-12/);
   assert.match(cards[1].textContent, /Video game · Not owned/);
+  assert.match(cards[1].textContent, /Copies: -/);
   assert.match(cards[1].textContent, /Release date: —/);
   assert.match(cards[1].textContent, /Date added: —/);
   assert.equal(cards[1].querySelector("svg").getAttribute("width"), "64");

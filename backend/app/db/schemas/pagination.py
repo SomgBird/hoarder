@@ -20,6 +20,7 @@ class ItemListEntryRead(_Read):
     release_date: date | None = None
     date_added: date | None = None
     is_owned: bool
+    owned_copy_count: int
     icon_image_path: str | None = None
     description: str | None = None
 

@@ -427,24 +427,36 @@ class ItemApiTests(unittest.TestCase):
                 item = self.create(is_owned=manual_flag)
                 path = f"/items/{item['id']}/copies"
 
-                def check_ownership(expected):
+                def check_ownership(expected, copies):
                     for filtered in (True, False):
                         page = self.client.get("/items/itemlist", params={"is_owned": filtered}).json()
                         self.assertEqual(page["total"], int(filtered == expected))
                         self.assertEqual([row["is_owned"] for row in page["items"]], [expected] if filtered == expected else [])
+                        self.assertEqual([row["owned_copy_count"] for row in page["items"]], [copies] if filtered == expected else [])
                     self.assertIs(self.client.get(f"/items/{item['id']}").json()["is_owned"], manual_flag)
 
-                check_ownership(bool(manual_flag))
-                for _ in range(2):
+                check_ownership(bool(manual_flag), 0)
+                for count in (1, 2):
                     created = self.client.post(path, json={"request_id": str(uuid4())})
                     self.assertEqual(created.status_code, 200, created.text)
-                    check_ownership(True)
+                    check_ownership(True, count)
                 first, second = created.json()["owned_copies"]
                 self.client.delete(f"{path}/{first['id']}")
-                check_ownership(True)
+                check_ownership(True, 1)
                 self.client.delete(f"{path}/{second['id']}")
-                check_ownership(bool(manual_flag))
+                check_ownership(bool(manual_flag), 0)
                 self.client.delete(f"/items/{item['id']}")
+
+    def test_list_counts_preexisting_copies_separately_for_each_item(self):
+        first = self.create()
+        second = self.create(is_owned=True)
+        with Session(self.engine) as session:
+            session.add_all([OwnedCopy(item_id=first["id"]), OwnedCopy(item_id=first["id"])])
+            session.commit()
+        page = self.client.get("/items/itemlist", params={"is_owned": True}).json()
+        self.assertEqual(page["total"], 2)
+        self.assertEqual({row["id"]: row["owned_copy_count"] for row in page["items"]},
+                         {first["id"]: 2, second["id"]: 0})
 
     def test_delayed_edit_and_removal_cannot_change_a_replacement_copy(self):
         item = self.create()

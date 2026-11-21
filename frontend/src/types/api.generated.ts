@@ -817,6 +817,8 @@ export interface components {
             is_owned: boolean;
             /** Item Type */
             item_type: string;
+            /** Owned Copy Count */
+            owned_copy_count: number;
             /** Release Date */
             release_date: string | null;
             /** Title */

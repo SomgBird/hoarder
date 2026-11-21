@@ -19,17 +19,19 @@ Let a collector write an article about a game, close the app, then reopen the ar
 | Implemented in 0.5 · A recorded copy makes the item owned. Without copies, the collection uses the stored flag. | Older records keep their original flag, including an unset value. The Owned filter can find both manually marked items and individually recorded copies. |
 | Implemented in 0.5 · Reserve each copy number for the lifetime of its item and reuse the submission ID when retrying a create. | A lost response can be retried, and delayed edits or removals cannot affect a replacement copy. |
 | Owner decision · Keep Explorer item pages read-only. Show Collection Manager beside Copy Editor and confirm before switching away from a changed copy. | Collectors can browse the list while editing, keep their search and filters when switching items, and choose whether to discard a draft. Explorer’s Edit menu and toolbar open the same layout for the displayed item. |
+| Implemented in 0.5 · Table and Mini pages show a count of recorded copies, with `-` for zero. Table column choices are saved in the browser. | A collector can distinguish a manually marked item from one with recorded copies and see the same Table columns in Explorer and Copy Editor. |
 | Proposed page scope · Start with an article that can link to an item. Reuse text, gallery and link blocks for custom pages. | The first saved article exercises authoring, persistence, navigation and editing before adding more page types. |
 
 ## Session handoff
 
 | Field | Current checkpoint |
 | --- | --- |
-| Branch and tested revision | `hoarder-pre-alpha-0.5`, [VERSION](VERSION) `0.5.0-pre-alpha`. The two-pane Copy Editor was tested in the working tree based on `8faf96d`. |
+| Branch and tested revision | `hoarder-pre-alpha-0.5`, [VERSION](VERSION) `0.5.0-pre-alpha`. Copy counts and Table column preferences were tested in the working tree based on `e9a2b23`. |
 | Completed | All [0.5 owned-copy checks](ROADMAP.md#05-owned-copies). Explorer shows saved copies, and Copy Editor handles adding, editing and removal. Both windows have contextual Help. |
-| Automated verification | 117 frontend tests, frontend lint and the production build passed. Switching tests cover unchanged and reverted forms, keeping or discarding a draft, pending and failed saves, and browser history between items. The original 0.5 release passed 50 backend tests and the API contract check. |
+| Automated verification | 51 backend tests, 119 frontend tests, lint, the production build and the API contract check passed. Coverage includes counts for pre-existing copies, adding and removing copies, column preferences and keyboard opening with Title hidden. |
 | Release demo | In Chrome with a disposable SQLite game and a clear Owned flag, added a Good copy with a worn-box note and a separate gift note. Interrupted the successful response and retried. Added a Like New copy and reloaded both. Changed the first copy to Acceptable, cancelled removal of the second, then confirmed both removals in turn. The Owned filter retained the game until the final removal, when the game returned to Not owned. |
 | Copy Editor walkthrough | In Chrome with two disposable games, opened the split view from Explorer. Kept a new draft and saved it, then discarded an edit while opening the other game. The search stayed in place, the saved notes survived reopening, and removing the last copy updated the Owned filter in the adjacent manager. Opening Copy Editor without an item showed both panes. |
+| Collection Manager walkthrough | In Chrome, Table and Mini pages showed two copies for one game and `-` for a manually owned game with no copies. Adding and removing a copy updated the adjacent Table. Choices made under **View → Table columns…** survived reloading and opening Copy Editor. Hiding **Owned copies** in **Settings → Collection** hid the column and kept the count on Mini pages. |
 | Open work | 0.6 begins with article storage. Adding photos to individual copies is scheduled for 0.7. |
 | Next action | Implement the article create and read path and verify that a title and multiline paragraph survive reopening the database. |
 

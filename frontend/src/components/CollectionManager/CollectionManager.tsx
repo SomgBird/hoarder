@@ -3,12 +3,15 @@ import { Button, Frame, TitleBar } from "@react95/core";
 import { Close, Notepad } from "@react95/icons";
 import { Icon } from "@components";
 import { HelpButton } from "@components/HelpButton/HelpButton";
+import { ConfirmDialog } from "@components/ConfirmDialog/ConfirmDialog";
+import { readTableColumns, saveTableColumns, type TableColumn } from "@config/tableColumns";
 import { ITEM_TYPES, ITEM_TYPE_LABELS, type ItemFilters, type ItemListPage, type ItemOrdering, type ItemType } from "@types";
 import { itemService } from "@services";
 import CollectionManagerToolbar, { type CollectionItemViewMode } from "./CollectionManagerToolbar";
 import CollectionCategories from "./CollectionCategories";
 import CollectionItems from "./CollectionItems";
 import CollectionFiltersDialog from "./CollectionFiltersDialog";
+import { TableColumnSettings } from "./TableColumnSettings";
 import styles from "./CollectionManager.module.css";
 
 interface Props {
@@ -24,6 +27,9 @@ type Result = { key: string; page?: ItemListPage; error?: string };
 
 function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKey = 0, openLabel }: Props) {
   const [view, setView] = useState<CollectionItemViewMode>("table");
+  const [columns, setColumns] = useState(readTableColumns);
+  const [draftColumns, setDraftColumns] = useState<TableColumn[] | null>(null);
+  const [columnsSaved, setColumnsSaved] = useState(true);
   const [folder, setFolder] = useState<"all" | "categories" | ItemType>("all");
   const category = folder === "all" || folder === "categories" ? null : folder;
   const showingFolders = folder === "categories";
@@ -98,7 +104,8 @@ function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKe
             setView(next);
             if (showingFolders) setFolder("all");
           }
-        }} ordering={ordering} searchVisible={searchVisible} searchPanelId={`${searchId}-panel`}
+        }} onTableColumns={() => setDraftColumns(columns)}
+          ordering={ordering} searchVisible={searchVisible} searchPanelId={`${searchId}-panel`}
           filterVisible={filterVisible} filterActive={filterActive} filterDialogId={filterId}
           onFilter={() => setFilterVisible(true)}
           onSearch={() => setSearchVisible((visible) => !visible)}
@@ -107,6 +114,7 @@ function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKe
             setOrdering(next);
             setOffset(0);
           }} />
+        {!columnsSaved && <p role="status">Column choices apply for this session. Browser storage is unavailable.</p>}
         {searchVisible && <form id={`${searchId}-panel`} role="search" aria-label="Search collection" className={styles.search} onSubmit={(event) => {
           event.preventDefault();
           setSearchQuery(searchDraft.trim());
@@ -173,7 +181,7 @@ function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKe
                 : Object.values(filters).some((value) => value != null && value !== "") ? "No items match the selected filters."
                 : category ? "No items in this category yet." : "No items yet."}</p>}
               {page && page.total > 0 && (
-                <CollectionItems items={page.items} view={view} selectedItemId={selectedItemId}
+                <CollectionItems items={page.items} view={view} columns={columns} selectedItemId={selectedItemId}
                   onSelectItem={onSelectItem} onOpenItem={onOpenItem} />
               )}
             </>
@@ -198,6 +206,14 @@ function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKe
       </Frame>
       {filterVisible && <CollectionFiltersDialog id={filterId} category={category} filters={filters}
         onDismiss={() => setFilterVisible(false)} onApply={applyFilters} />}
+      {draftColumns && <ConfirmDialog role="dialog" title="Choose table columns" helpTopic="collection"
+        message={<TableColumnSettings columns={draftColumns} onChange={setDraftColumns} />}
+        confirmLabel="Apply" dismissLabel="Cancel" onDismiss={() => setDraftColumns(null)}
+        onConfirm={() => {
+          setColumnsSaved(saveTableColumns(draftColumns));
+          setColumns(draftColumns);
+          setDraftColumns(null);
+        }} />}
     </>
   );
 }

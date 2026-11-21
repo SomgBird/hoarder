@@ -6,6 +6,7 @@ import type { HelpTopicId } from "@config/help";
 
 interface ConfirmDialogProps {
   title: string;
+  role?: "alertdialog" | "dialog";
   helpTopic?: HelpTopicId;
   message: ReactNode;
   titlebar_icon?: ReactElement;
@@ -20,6 +21,7 @@ interface ConfirmDialogProps {
 
 export function ConfirmDialog({
   title,
+  role = "alertdialog",
   helpTopic = "confirmations",
   message,
   titlebar_icon,
@@ -72,7 +74,7 @@ export function ConfirmDialog({
         bgColor="$material"
         boxShadow="$out"
         className={styles.dialog}
-        role="alertdialog"
+        role={role}
         aria-modal="true"
         aria-label={title}
         aria-describedby={messageId}

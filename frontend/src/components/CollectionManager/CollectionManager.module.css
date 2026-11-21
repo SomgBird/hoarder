@@ -113,14 +113,22 @@
   cursor: pointer;
 }
 
-.table td:first-child {
+.table .titleCell {
   min-width: 100px;
   overflow-wrap: anywhere;
 }
 
-.table td:not(:first-child) {
+.table td:not(.titleCell), .copyCount {
   white-space: nowrap;
 }
+
+.columnChoices, .columnChoices label {
+  display: flex;
+  gap: 6px;
+}
+
+.columnChoices { flex-direction: column; }
+.columnChoices label { align-items: center; }
 
 .tableTitle,
 .item {

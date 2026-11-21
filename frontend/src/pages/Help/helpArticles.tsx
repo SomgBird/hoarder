@@ -27,6 +27,8 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <p>Click an item once to select it. Double-click it, or select it and press Enter, to open its page in Explorer.</p>
       <h2>Choosing a view</h2>
       <p>Use <strong>View</strong> to choose Table, List, Icons, or Mini pages. Mini pages include a cover icon and a short summary. Categories shows folders for the supported item types; double-click a folder or press Enter to open it.</p>
+      <p>Table and Mini pages show how many physical copies you have recorded. A dash (<code>-</code>) means there are zero recorded copies, even if you checked Owned on the item.</p>
+      <p>Choose <strong>View → Table columns…</strong>, select the columns you want, and click <strong>Apply</strong>. Collection Manager remembers the selection in this browser.</p>
       <h2>Ordering and paging</h2>
       <p>Use <strong>Order</strong> to sort by title, release date, or date added, in ascending or descending order. Use Previous and Next to move through the results.</p>
       <p>Changing the selection does not change the page currently open in Explorer.</p>
@@ -135,8 +137,10 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <p>Center places the image at its original size in the middle of the desktop. Tile repeats it across the desktop. Stretch resizes it to fill the screen. The desktop color shows wherever the image does not cover the screen, including transparent areas.</p>
       <p>Fit horizontally scales the image to the desktop width while keeping its proportions. It stays centered vertically; tall images may extend beyond the top and bottom of the screen.</p>
       <p>Select (None) to remove the wallpaper. Wallpapers are saved in this browser along with your other appearance preferences.</p>
+      <h2>Collection table columns</h2>
+      <p>On the <strong>Collection</strong> tab, choose which columns appear in Collection Manager’s Table view and click Apply. Reset to default on this tab selects all columns.</p>
       <h2>Restoring the defaults</h2>
-      <p>Click Reset to default, then Apply or OK. The project defaults are the Brick scheme, the teal background <code>#008080</code>, and no wallpaper.</p>
+      <p>On the Background or Appearance tab, click Reset to default, then Apply or OK. This restores the Brick scheme, the teal background <code>#008080</code>, and no wallpaper.</p>
       <p>Appearance preferences are saved in this browser. If browser storage is unavailable, changes work for the current session.</p>
     </>, related: ["color-picker"],
   },

@@ -95,6 +95,9 @@ def _list_query():
     type_name = (
         select(ItemType.name).where(ItemType.id == Item.item_type_id).scalar_subquery()
     )
+    owned_copy_count = (
+        select(func.count()).select_from(OwnedCopy).where(OwnedCopy.item_id == Item.id).scalar_subquery()
+    )
     return select(
         Item.id,
         func.coalesce(in_selected_language, any_language, "Untitled").label("title"),
@@ -102,6 +105,7 @@ def _list_query():
         Item.release_date,
         Item.date_added,
         or_(Item.is_owned.is_(True), Item.owned_copies.any()).label("is_owned"),
+        owned_copy_count.label("owned_copy_count"),
         Item.icon_image_path,
         Item.description,
     )

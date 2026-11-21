@@ -76,6 +76,7 @@ Version 0.4 delivered the display controls and Help system. The remaining ideas 
 - [x] Browse Collection Manager while a copy is being edited. Opening a different item with unsaved changes offers **Keep editing** and **Discard changes**.
 - [x] Show an item as owned while it has recorded copies. Explain the displayed ownership when its manual Owned flag is clear.
 - [x] Use the same ownership rule in Collection Manager results and filters. After the last copy is removed, use the stored flag again. Preserve the existing treatment of true, false and unset flags on older records.
+- [x] Show each item’s recorded copy count in Table and Mini pages, with `-` for zero. Let collectors choose which Table columns to display and retain their choice when they reopen the app.
 - [x] Add Help for recording copies and finding them through the ownership filter.
 - [x] **Release demo.** Add a Good copy with a worn-box note and a Like New copy. Reopen, edit one and cancel a removal. Confirm removal of each in turn and verify the filter before and after the last removal. Cover the retry and flag-only cases in regression tests.
 
