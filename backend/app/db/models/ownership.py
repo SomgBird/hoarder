@@ -30,7 +30,7 @@ class OwnedCopy(SQLModel, table=True):
     )
     photos: list["CopyPhoto"] = Relationship(
         back_populates="owned_copy",
-        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+        sa_relationship_kwargs={"cascade": "all, delete-orphan", "order_by": "CopyPhoto.id"},
     )
 
 
@@ -65,3 +65,12 @@ class CopyPhoto(SQLModel, table=True):
     description: str | None = None
 
     owned_copy: Optional[OwnedCopy] = Relationship(back_populates="photos")
+
+
+class CopyPhotoEditSubmission(SQLModel, table=True):
+    """Replay a multipart edit without adding the uploaded files twice."""
+    __tablename__ = "copy_photo_edit_submission"
+
+    request_id: UUID = Field(primary_key=True)
+    copy_id: int = Field(foreign_key="owned_copy.id", ondelete="CASCADE")
+    payload_hash: str

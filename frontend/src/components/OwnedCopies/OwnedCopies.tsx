@@ -1,5 +1,7 @@
-import type { ReactNode } from "react";
-import type { ItemRead, OwnedCopyRead } from "@types";
+import { useState, type ReactNode } from "react";
+import { ImageViewer } from "@components/ImageViewer/ImageViewer";
+import { copyPhotoUrl } from "@services";
+import type { CopyPhotoRead, ItemRead, OwnedCopyRead } from "@types";
 import styles from "./OwnedCopies.module.css";
 
 interface Props {
@@ -9,7 +11,8 @@ interface Props {
 
 export function OwnedCopies({ item, actions }: Props) {
   const copies = item.owned_copies;
-  return <section aria-label="Owned copies">
+  const [open, setOpen] = useState<CopyPhotoRead | null>(null);
+  return <><section aria-label="Owned copies" inert={open !== null}>
     <h2>Owned copies</h2>
     <p>{copies.length
       ? `Owned through ${copies.length} recorded ${copies.length === 1 ? "copy" : "copies"}.`
@@ -18,7 +21,18 @@ export function OwnedCopies({ item, actions }: Props) {
       <h3>Copy #{copy.id} · {copy.condition?.condition_type?.name ?? "Ungraded"}</h3>
       {copy.condition?.notes && <p><strong>Condition notes</strong><br />{copy.condition.notes}</p>}
       {copy.notes && <p><strong>Copy notes</strong><br />{copy.notes}</p>}
+      {copy.photos.length > 0 && <ul className={styles.photos} aria-label={`Photos of copy #${copy.id}`}>
+        {copy.photos.map((photo) => <li key={photo.id}>
+          <button type="button" onClick={() => setOpen(photo)} aria-label={`Open ${photo.name || "photo #" + photo.id}`}>
+            <img src={copyPhotoUrl(photo.file_path)} alt="" width={80} height={80} loading="lazy" />
+          </button>
+          <span>{photo.description || photo.name || `Photo #${photo.id}`}</span>
+        </li>)}
+      </ul>}
       {actions?.(copy)}
     </article>)}
-  </section>;
+  </section>
+    {open && <ImageViewer src={copyPhotoUrl(open.file_path)} name={open.name || `Photo #${open.id}`}
+      caption={open.description} onClose={() => setOpen(null)} />}
+  </>;
 }

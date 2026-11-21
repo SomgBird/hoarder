@@ -39,6 +39,19 @@
 .form select { justify-self: start; }
 .form textarea { min-width: 0; resize: vertical; font: inherit; }
 
+.photos { min-width: 0; margin: 0; padding: 8px; }
+.photos input { min-width: 0; max-width: 100%; font: inherit; }
+.photo {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  margin-top: 10px;
+}
+.photo img { object-fit: contain; }
+.photo > div { display: grid; gap: 4px; }
+.photo button { justify-self: start; }
+
 @media (max-width: 850px) {
   .page {
     grid-template-columns: minmax(0, 1fr);

@@ -1,6 +1,6 @@
 """Titles, languages, credits, barcodes, and owned copy schemas."""
 from datetime import date
-from typing import List, Optional
+from typing import Annotated, List, Optional
 from uuid import UUID
 
 from pydantic import ConfigDict, Field as PField, model_validator
@@ -149,3 +149,20 @@ class OwnedCopyWrite(_Strict):
 
 class OwnedCopyCreate(OwnedCopyWrite):
     request_id: UUID
+
+
+PhotoDescription = Annotated[str, PField(max_length=240)]
+
+
+class CopyPhotoChange(_Strict):
+    id: int
+    file_path: str
+    description: PhotoDescription | None = None
+    remove: bool = False
+
+
+class CopyWithPhotosWrite(OwnedCopyCreate):
+    copy_id: int | None = PField(default=None, ge=1)
+    changes: list[CopyPhotoChange] = PField(default_factory=list)
+    # One description per file, in multipart upload order.
+    descriptions: list[PhotoDescription | None] = PField(default_factory=list)

@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@react95/core";
 import { itemService, referenceService } from "@services";
-import type { ConditionTypeRead, ItemRead, OwnedCopyRead } from "@types";
+import type { ConditionTypeRead, CopyWithPhotosWrite, ItemRead, OwnedCopyRead } from "@types";
+import { CopyPhotos, type DraftPhoto } from "./CopyPhotos";
 import styles from "./CopyEditor.module.css";
 
 export type CopyEditState = "ready" | "dirty" | "busy";
@@ -21,6 +22,9 @@ export function CopyForm({ itemId, copy, onSaved, onCancel, onEditState }: Props
     notes: copy?.notes ?? "",
   };
   const [draft, setDraft] = useState(initial);
+  const [photos, setPhotos] = useState<DraftPhoto[]>(() => (copy?.photos ?? []).map((saved) => ({
+    key: String(saved.id), saved, description: saved.description ?? "",
+  })));
   const [requestId] = useState(() => crypto.randomUUID());
   const [grades, setGrades] = useState<ConditionTypeRead[] | null>(null);
   const [loadError, setLoadError] = useState("");
@@ -28,8 +32,10 @@ export function CopyForm({ itemId, copy, onSaved, onCancel, onEditState }: Props
   const [saveError, setSaveError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  function draftState(values: typeof draft): CopyEditState {
-    return values.grade === initial.grade && values.conditionNotes === initial.conditionNotes && values.notes === initial.notes
+  function draftState(values: typeof draft, images: DraftPhoto[] = photos): CopyEditState {
+    const samePhotos = images.length === (copy?.photos.length ?? 0)
+      && images.every((photo) => photo.saved && photo.description === (photo.saved.description ?? ""));
+    return samePhotos && values.grade === initial.grade && values.conditionNotes === initial.conditionNotes && values.notes === initial.notes
       ? "ready" : "dirty";
   }
 
@@ -58,9 +64,25 @@ export function CopyForm({ itemId, copy, onSaved, onCancel, onEditState }: Props
     const { grade, conditionNotes, notes } = draft;
     const data = { condition_type_id: grade ? Number(grade) : null, condition_notes: conditionNotes || null, notes: notes || null };
     try {
-      const item = copy
-        ? await itemService.updateCopy(itemId, copy.id, data)
-        : await itemService.addCopy(itemId, { ...data, request_id: requestId });
+      const changes: NonNullable<CopyWithPhotosWrite["changes"]> = [];
+      for (const saved of copy?.photos ?? []) {
+        const edited = photos.find((photo) => photo.saved?.id === saved.id);
+        if (!edited || edited.description !== (saved.description ?? "")) {
+          changes.push({ id: saved.id, file_path: saved.file_path, remove: !edited, description: edited?.description || null });
+        }
+      }
+      const uploads = photos.filter((photo) => photo.file !== undefined);
+      let item: ItemRead;
+      if (changes.length || uploads.length) {
+        item = await itemService.saveCopyWithPhotos(itemId, {
+          ...data, request_id: requestId, copy_id: copy?.id, changes,
+          descriptions: uploads.map((photo) => photo.description || null),
+        }, uploads.map((photo) => photo.file));
+      } else if (copy) {
+        item = await itemService.updateCopy(itemId, copy.id, data);
+      } else {
+        item = await itemService.addCopy(itemId, { ...data, request_id: requestId });
+      }
       onSaved(item);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Could not save copy.");
@@ -87,6 +109,10 @@ export function CopyForm({ itemId, copy, onSaved, onCancel, onEditState }: Props
     <label>Copy notes
       <textarea rows={2} value={draft.notes} disabled={busy} onChange={(event) => change("notes", event.target.value)} />
     </label>
+    <CopyPhotos photos={photos} disabled={busy} onChange={(next) => {
+      setPhotos(next);
+      onEditState(draftState(draft, next));
+    }} />
     {saveError && <p role="alert">{saveError}</p>}
     <div className={styles.actions}>
       <Button type="submit" disabled={busy || !grades}>{busy ? "Saving…" : "Save copy"}</Button>

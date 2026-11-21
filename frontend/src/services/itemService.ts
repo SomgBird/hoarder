@@ -1,6 +1,6 @@
 import type { ItemRead, ItemCreate, ItemUpdate, ItemListPage, ItemOrdering, ItemFilters } from '../types/item.ts';
 import type { ItemType } from '../types/itemTypes.ts';
-import type { OwnedCopyCreate, OwnedCopyWrite } from '../types/item.ts';
+import type { CopyWithPhotosWrite, OwnedCopyCreate, OwnedCopyWrite } from '../types/item.ts';
 import { request } from './client.ts'
 
 const PATH = "/items";
@@ -46,6 +46,13 @@ export const itemService = {
 
   removeCopy: (itemId: number, copyId: number) =>
     request<ItemRead>(`${PATH}/${itemId}/copies/${copyId}`, { method: "DELETE" }),
+
+  saveCopyWithPhotos: (itemId: number, draft: CopyWithPhotosWrite, files: File[]) => {
+    const form = new FormData();
+    form.append("draft", JSON.stringify(draft));
+    for (const file of files) form.append("files", file);
+    return request<ItemRead>(`${PATH}/${itemId}/copies/with-photos`, { method: "POST", body: form });
+  },
 
   uploadCover: (id: number, file: File) => {
     const form = new FormData();

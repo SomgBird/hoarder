@@ -104,10 +104,10 @@ Version 0.4 delivered the display controls and Help system. The remaining ideas 
 
 **Photograph a copy**
 
-- [ ] Open a saved copy, choose an image, preview it and add a caption. Save the photo against that copy.
-- [ ] Add a second photo to the same copy. Show its own caption and open the original image from the thumbnail.
-- [ ] Edit a caption or remove an attachment from the selected copy. Preserve the other copy's photos and the item's cover.
-- [ ] Explain an invalid file or failed upload and allow a retry without duplicating previously saved photos.
+- [x] In Copy Editor, choose one or more images for a new or saved copy, preview them and add an optional description to each.
+- [x] Reopen the copy and see its captioned thumbnails. Open an original from the copy or find it by filename and copy number in Media Viewer.
+- [x] Edit a caption or remove an attachment from the selected copy. Preserve the other copy's photos and the item's cover.
+- [x] Explain an invalid file or failed upload and allow a retry without duplicating previously saved photos.
 
 **Use collection images on a page**
 

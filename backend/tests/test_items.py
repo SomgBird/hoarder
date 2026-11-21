@@ -2,6 +2,7 @@ from contextlib import redirect_stdout
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timezone
 from io import BytesIO, StringIO
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from threading import Barrier
@@ -26,7 +27,7 @@ from app.db.models import (
 from app.errors import AppError, register_exception_handlers
 from app.media import migrate_icons
 from app.db.seed import seed_builtin, seed_examples
-from app.routers import items, reference
+from app.routers import items, media, reference
 
 
 class ItemApiTests(unittest.TestCase):
@@ -48,6 +49,10 @@ class ItemApiTests(unittest.TestCase):
         self.covers.mkdir()
         self.icons = media_dir / "icons"
         self.icons.mkdir()
+        self.photos = media_dir / "copies"
+        self.photos.mkdir()
+        self.enterContext(patch("app.media.COPY_PHOTOS_DIR", self.photos))
+        self.enterContext(patch("app.routers.media.MEDIA_DIR", media_dir))
         self.cover_patch = patch("app.media.COVERS_DIR", self.covers)
         self.cover_patch.start()
         self.icon_patch = patch("app.media.ICONS_DIR", self.icons)
@@ -57,6 +62,7 @@ class ItemApiTests(unittest.TestCase):
         register_exception_handlers(app)
         app.include_router(items.router)
         app.include_router(reference.router)
+        app.include_router(media.router)
         app.mount("/media", StaticFiles(directory=media_dir))
         self.client = TestClient(app)
 
@@ -475,6 +481,81 @@ class ItemApiTests(unittest.TestCase):
             self.assertEqual(self.client.put(f"{path}/{old_id}", json={"notes": "Stale"}).status_code, 404)
             self.assertEqual(self.client.delete(f"{path}/{old_id}").json()["owned_copies"], [copy])
             old_id = copy["id"]
+
+    def save_photos(self, item, draft, files=()):
+        return self.client.post(f"/items/{item['id']}/copies/with-photos",
+                                data={"draft": json.dumps(draft)}, files=[("files", file) for file in files])
+
+    def test_multiple_copy_photos_reopen_in_media_and_retries_do_not_duplicate_them(self):
+        item = self.create()
+        files = [("../../front.png", self.image(), "image/png"),
+                 ("back.jpg", self.image("JPEG"), "image/jpeg")]
+        draft = {"request_id": str(uuid4()), "notes": "Boxed", "descriptions": ["Front label", None]}
+        created = self.save_photos(item, draft, files)
+        self.assertEqual(created.status_code, 200, created.text)
+        copy, = created.json()["owned_copies"]
+        first, second = copy["photos"]
+        self.assertEqual([(p["name"], p["description"]) for p in copy["photos"]],
+                         [("front.png", "Front label"), ("back.jpg", None)])
+        self.assertEqual(self.save_photos(item, draft, files).json(), created.json())
+        edit = {"copy_id": copy["id"], "request_id": str(uuid4()), "descriptions": ["Spine"],
+                "changes": [{"id": first["id"], "file_path": first["file_path"], "description": "Worn label"},
+                            {"id": second["id"], "file_path": second["file_path"], "remove": True}]}
+        edited = self.save_photos(item, edit, [files[0]])
+        self.assertEqual(edited.status_code, 200, edited.text)
+        self.assertEqual(self.save_photos(item, edit, [files[0]]).json(), edited.json())
+        self.assertEqual(self.client.get(f"/items/{item['id']}").json(), edited.json())
+        photos = edited.json()["owned_copies"][0]["photos"]
+        self.assertEqual([p["description"] for p in photos], ["Worn label", "Spine"])
+        listed = {file["path"]: file for file in self.client.get("/media/").json()}
+        self.assertEqual(set(listed), {p["file_path"] for p in photos})
+        for photo in photos:
+            path = photo["file_path"]
+            self.assertTrue(path.startswith("/media/copies/"))
+            self.assertEqual(self.client.get(path).status_code, 200)
+            self.assertEqual(listed[path]["copy_photos"], [
+                {"copy_id": copy["id"], "description": photo["description"], "name": photo["name"]}])
+        self.assertEqual(self.client.get(second["file_path"]).status_code, 404)
+        self.client.delete(f"/items/{item['id']}/copies/{copy['id']}")
+        self.assertEqual(self.client.get("/media/").json(), [])
+
+    def test_failed_photo_batch_rolls_back_while_legacy_and_shared_photos_survive(self):
+        from app.db.models.ownership import CopyPhotoEditSubmission
+
+        item = self.create()
+        path = self.upload(item["id"]).json()["cover_image_path"]
+        with Session(self.engine) as session:
+            session.add_all([OwnedCopy(item_id=item["id"], notes="Original", photos=[CopyPhoto(file_path=path)]),
+                             OwnedCopy(item_id=item["id"], photos=[CopyPhoto(file_path=path.removeprefix("/media/"))])])
+            session.commit()
+        CopyPhotoEditSubmission.__table__.drop(self.engine)
+        with patch("app.database.engine", self.engine):
+            create_db_and_tables()
+        original = self.client.get(f"/items/{item['id']}").json()
+        first, sibling = original["owned_copies"]
+        draft = {"request_id": str(uuid4()), "copy_id": first["id"], "notes": "Changed", "descriptions": ["Front", "Back"]}
+        good = ("front.png", self.image(), "image/png")
+        invalid = ("back.png", b"invalid", "image/png")
+        self.assertEqual(self.save_photos(item, draft, [good, invalid]).status_code, 400)
+        self.assertEqual(self.save_photos(item, draft, [good]).status_code, 400)
+        self.assertEqual(self.save_photos(item, {**draft, "descriptions": ["a" * 241]}, [good]).status_code, 422)
+        with patch("app.routers.items.MAX_UPLOAD_BYTES", 4):
+            self.assertEqual(self.save_photos(item, draft, [good, good]).status_code, 413)
+        changes = [{"id": sibling["photos"][0]["id"], "file_path": path, "remove": True}]
+        self.assertEqual(self.save_photos(item, {**draft, "changes": changes}, [good, good]).status_code, 409)
+        self.assertEqual(list(self.photos.iterdir()), [])
+        self.assertEqual(self.client.get(f"/items/{item['id']}").json(), original)
+        changes[0]["id"] = first["photos"][0]["id"]
+        response = self.save_photos(item, {**draft, "changes": changes, "descriptions": []})
+        self.assertEqual(response.status_code, 200, response.text)
+        changed, untouched = response.json()["owned_copies"]
+        self.assertEqual(changed["photos"], [])
+        self.assertEqual(untouched, sibling)
+        self.assertEqual(self.client.get(path).status_code, 200)
+        self.client.patch(f"/items/{item['id']}", json={"cover_image_path": None})
+        listed, = self.client.get("/media/").json()
+        self.assertEqual(listed["copy_photos"][0]["copy_id"], sibling["id"])
+        self.assertEqual(self.client.get(path).status_code, 200)
 
     def test_concurrent_retries_commit_one_copy(self):
         from app.db.crud.copies import create_copy

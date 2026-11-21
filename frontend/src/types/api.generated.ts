@@ -74,6 +74,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/items/{item_id}/copies/with-photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Copy With Photos */
+        post: operations["save_copy_with_photos_items__item_id__copies_with_photos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/items/{item_id}/cover": {
         parameters: {
             query?: never;
@@ -515,6 +532,16 @@ export interface components {
              */
             type_name: "board_game";
         };
+        /** Body_save_copy_with_photos_items__item_id__copies_with_photos_post */
+        Body_save_copy_with_photos_items__item_id__copies_with_photos_post: {
+            /** Draft */
+            draft: string;
+            /**
+             * Files
+             * @default []
+             */
+            files?: string[];
+        };
         /** Body_upload_cover_items__item_id__cover_post */
         Body_upload_cover_items__item_id__cover_post: {
             /** File */
@@ -604,6 +631,20 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** CopyPhotoChange */
+        CopyPhotoChange: {
+            /** Description */
+            description?: string | null;
+            /** File Path */
+            file_path: string;
+            /** Id */
+            id: number;
+            /**
+             * Remove
+             * @default false
+             */
+            remove?: boolean;
+        };
         /** CopyPhotoRead */
         CopyPhotoRead: {
             /** Description */
@@ -614,6 +655,26 @@ export interface components {
             id: number;
             /** Name */
             name: string | null;
+        };
+        /** CopyWithPhotosWrite */
+        CopyWithPhotosWrite: {
+            /** Changes */
+            changes?: components["schemas"]["CopyPhotoChange"][];
+            /** Condition Notes */
+            condition_notes?: string | null;
+            /** Condition Type Id */
+            condition_type_id?: number | null;
+            /** Copy Id */
+            copy_id?: number | null;
+            /** Descriptions */
+            descriptions?: (string | null)[];
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
         };
         /** FigurineDetailsCreate */
         FigurineDetailsCreate: {
@@ -993,8 +1054,19 @@ export interface components {
              */
             type_name: "lego_set";
         };
+        /** MediaCopyPhotoRead */
+        MediaCopyPhotoRead: {
+            /** Copy Id */
+            copy_id: number;
+            /** Description */
+            description: string | null;
+            /** Name */
+            name: string | null;
+        };
         /** MediaFileRead */
         MediaFileRead: {
+            /** Copy Photos */
+            copy_photos: components["schemas"]["MediaCopyPhotoRead"][];
             /** Name */
             name: string;
             /** Path */
@@ -1349,6 +1421,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_copy_with_photos_items__item_id__copies_with_photos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_save_copy_with_photos_items__item_id__copies_with_photos_post"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

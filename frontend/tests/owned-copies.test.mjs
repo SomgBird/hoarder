@@ -58,15 +58,75 @@ const button = (name, scope = container) => [...scope.querySelectorAll("button")
 const click = (name, scope) => act(async () => { const node = button(name, scope); assert.ok(node, name); node.click(); });
 const dialog = () => container.querySelector('[role="alertdialog"]');
 const article = (id) => container.querySelector(`article[aria-label="Copy #${id}"]`);
-const field = (name) => [...container.querySelectorAll("label")].find((label) => label.firstChild.textContent === name).control;
-async function change(name, value) {
-  const node = field(name);
+const field = (name, scope = container) => [...scope.querySelectorAll("label")].find((label) => label.firstChild.textContent === name).control;
+async function change(name, value, scope) {
+  const node = field(name, scope);
   const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(node), "value").set;
   await act(async () => {
     setter.call(node, value);
     node.dispatchEvent(new Event(node.tagName === "SELECT" ? "change" : "input", { bubbles: true }));
   });
 }
+
+test("a photo-only draft previews multiple files, keeps captions on retry and opens the saved originals", async (t) => {
+  const files = ["front.png", "back.jpg"].map((name, i) => new File(["image"], name, { type: i ? "image/jpeg" : "image/png" }));
+  const photos = files.map((file, i) => ({ id: i + 1, name: file.name, file_path: "/media/copies/" + file.name,
+    description: i ? null : "Worn label" }));
+  const save = t.mock.method(itemService, "saveCopyWithPhotos", async () => {
+    if (save.mock.callCount() === 0) throw new Error("Interrupted upload");
+    return { ...item, owned_copies: [{ ...first, photos }] };
+  });
+  await render([]);
+  await click("Add copy");
+  const picker = field("Add photos");
+  Object.defineProperty(picker, "files", { value: files });
+  await act(async () => picker.dispatchEvent(new Event("change", { bubbles: true })));
+  assert.equal(container.querySelectorAll('fieldset img[src^="blob:"]').length, 2);
+  await change("Description", "Worn label", container.querySelector('[role="group"][aria-label="front.png"]'));
+  await click(otherItem.display_title);
+  await click("Open copies");
+  await click("Keep editing", dialog());
+  await click("Save copy");
+  assert.match(container.querySelector('[role="alert"]').textContent, /Interrupted upload/);
+  await click("Save copy");
+  const [id, draft, uploaded] = save.mock.calls[0].arguments;
+  assert.equal(id, item.id);
+  assert.deepEqual(draft.descriptions, ["Worn label", null]);
+  assert.deepEqual(uploaded, files);
+  assert.deepEqual(save.mock.calls[1].arguments, save.mock.calls[0].arguments);
+  assert.match(article(first.id).textContent, /Worn label/);
+  await act(async () => article(first.id).querySelector('[aria-label="Open front.png"]').click());
+  const viewer = document.querySelector('[role="dialog"]');
+  assert.match(viewer.querySelector('[aria-label="Full size image"] img').src, /\/media\/copies\/front.png$/);
+  assert.match(viewer.textContent, /Worn label/);
+});
+
+test("removing one saved photo and editing another stay local until Save copy", async (t) => {
+  const photos = ["a.png", "b.png"].map((name, i) => ({ id: i + 1, file_path: "/media/copies/" + name, name, description: null }));
+  const save = t.mock.method(itemService, "saveCopyWithPhotos", async () => ({
+    ...item, owned_copies: [{ ...first, photos: [{ ...photos[1], description: "Back" }] }, second],
+  }));
+  await render([{ ...first, photos }, second]);
+  async function editPhotos() {
+    await click("Edit copy", article(first.id));
+    await act(async () => container.querySelector('[aria-label="Remove a.png"]').click());
+    await change("Description", "Back");
+  }
+  await editPhotos();
+  await click("Cancel");
+  assert.equal(article(first.id).querySelectorAll("img").length, 2);
+  assert.equal(save.mock.callCount(), 0);
+  await editPhotos();
+  await click("Save copy");
+  const [id, draft, uploaded] = save.mock.calls[0].arguments;
+  assert.deepEqual([id, draft.copy_id, uploaded], [item.id, first.id, []]);
+  assert.deepEqual(draft.changes, [
+    { id: 1, file_path: photos[0].file_path, remove: true, description: null },
+    { id: 2, file_path: photos[1].file_path, remove: false, description: "Back" },
+  ]);
+  assert.equal(article(first.id).querySelectorAll("img").length, 1);
+  assert.ok(article(second.id));
+});
 
 test("a failed save keeps both notes, the grade and the submission ID until the new copy is saved", async (t) => {
   const drafts = [];

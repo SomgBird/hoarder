@@ -20,19 +20,21 @@ Let a collector write an article about a game, close the app, then reopen the ar
 | Implemented in 0.5 · Reserve each copy number for the lifetime of its item and reuse the submission ID when retrying a create. | A lost response can be retried, and delayed edits or removals cannot affect a replacement copy. |
 | Owner decision · Keep Explorer item pages read-only. Show Collection Manager beside Copy Editor and confirm before switching away from a changed copy. | Collectors can browse the list while editing, keep their search and filters when switching items, and choose whether to discard a draft. Explorer’s Edit menu and toolbar open the same layout for the displayed item. |
 | Implemented in 0.5 · Table and Mini pages show a count of recorded copies, with `-` for zero. Table column choices are saved in the browser. | A collector can distinguish a manually marked item from one with recorded copies and see the same Table columns in Explorer and Copy Editor. |
+| Implemented on owner request · Save multiple photos and their optional descriptions with a new or existing copy. Show the filename, copy number and description in Media Viewer. | A collector can document several details of the same copy and recognize each image when browsing the collection's media. |
 | Proposed page scope · Start with an article that can link to an item. Reuse text, gallery and link blocks for custom pages. | The first saved article exercises authoring, persistence, navigation and editing before adding more page types. |
 
 ## Session handoff
 
 | Field | Current checkpoint |
 | --- | --- |
-| Branch and tested revision | `hoarder-pre-alpha-0.5`, [VERSION](VERSION) `0.5.0-pre-alpha`. Copy counts and Table column preferences were tested in the working tree based on `e9a2b23`. |
-| Completed | All [0.5 owned-copy checks](ROADMAP.md#05-owned-copies). Explorer shows saved copies, and Copy Editor handles adding, editing and removal. Both windows have contextual Help. |
-| Automated verification | 51 backend tests, 119 frontend tests, lint, the production build and the API contract check passed. Coverage includes counts for pre-existing copies, adding and removing copies, column preferences and keyboard opening with Title hidden. |
+| Branch and tested revision | `hoarder-pre-alpha-0.5`, [VERSION](VERSION) `0.5.0-pre-alpha`. The copy-photo checks below cover the feature commit immediately following `b5f3d5f` (copy counts and Table preferences). |
+| Completed | All [0.5 owned-copy checks](ROADMAP.md#05-owned-copies) and the copy attachment portion of [0.7 Photos and galleries](ROADMAP.md#07-photos-and-galleries). Copy Editor saves notes, image files and descriptions together. Explorer and Media Viewer open the saved originals. |
+| Automated verification | 53 backend tests, 122 frontend tests, lint, the production build and the API contract check passed. Coverage includes retrying uploads, rolling back invalid batches, protecting drafts and preserving photos shared by older records. |
+| Copy photos walkthrough | In Chrome with a disposable game, selected two photos, previewed and described each, saved the copy and reopened it after reload. Cancelled a caption edit and opened the originals in Explorer and Media Viewer. Changed one description, removed the other photo and reopened Media Viewer to verify the remaining image and caption. |
 | Release demo | In Chrome with a disposable SQLite game and a clear Owned flag, added a Good copy with a worn-box note and a separate gift note. Interrupted the successful response and retried. Added a Like New copy and reloaded both. Changed the first copy to Acceptable, cancelled removal of the second, then confirmed both removals in turn. The Owned filter retained the game until the final removal, when the game returned to Not owned. |
 | Copy Editor walkthrough | In Chrome with two disposable games, opened the split view from Explorer. Kept a new draft and saved it, then discarded an edit while opening the other game. The search stayed in place, the saved notes survived reopening, and removing the last copy updated the Owned filter in the adjacent manager. Opening Copy Editor without an item showed both panes. |
 | Collection Manager walkthrough | In Chrome, Table and Mini pages showed two copies for one game and `-` for a manually owned game with no copies. Adding and removing a copy updated the adjacent Table. Choices made under **View → Table columns…** survived reloading and opening Copy Editor. Hiding **Owned copies** in **Settings → Collection** hid the column and kept the count on Mini pages. |
-| Open work | 0.6 begins with article storage. Adding photos to individual copies is scheduled for 0.7. |
+| Open work | 0.6 begins with article storage. Reusing copy photos in article galleries remains scheduled for 0.7. |
 | Next action | Implement the article create and read path and verify that a title and multiline paragraph survive reopening the database. |
 
 Open the working branch on either computer and use this prompt in a fresh implementation chat.

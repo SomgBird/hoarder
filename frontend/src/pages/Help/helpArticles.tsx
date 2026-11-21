@@ -66,6 +66,7 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <p>Open <strong>Collection → Copy Editor</strong>. Collection Manager stays beside the editor while you work. Select a row and choose <strong>Open copies</strong>, double-click the row, or press Enter to open that item. From Explorer, the <strong>Copies</strong> toolbar button opens the same layout with the current item ready to edit.</p>
       <h2>Record a copy</h2>
       <p>Select <strong>Add copy</strong>. Choose a condition grade, describe wear in Condition notes, and use Copy notes for details such as who gave it to you. Select <strong>Save copy</strong>. Repeat for each physical copy.</p>
+      <p>Under <strong>Add photos</strong>, choose one or more images and give each an optional description. Select <strong>Save copy</strong> to keep them. Open a saved thumbnail to see the original, or find it by filename and copy number in Media Viewer.</p>
       <p>Use <strong>Edit copy</strong> beside the copy you want to change. Cancel discards your edits. If a save fails, your entries stay in the form so you can retry. <strong>Remove copy</strong> asks you to confirm the copy number and grade.</p>
       <p>If you open another item with unsaved changes, choose <strong>Keep editing</strong> to return to your draft or <strong>Discard changes</strong> to open the other item.</p>
       <p>Choose <strong>View in Explorer</strong> to read the saved item page. Find the item again in Collection Manager under <strong>Filter → Ownership → Owned</strong>.</p>
@@ -116,6 +117,7 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
     content: <>
       <h2>Browsing images</h2>
       <p>Open <strong>Collection → Media Viewer</strong>. Each file appears with a thumbnail and its name. Click to select it, then double-click or press Enter to open the original image.</p>
+      <p>Photos uploaded in Copy Editor also show their copy number and description.</p>
       <p>Refresh reloads the file list. If loading fails, use Retry. An empty list means there are no media files to display.</p>
     </>, related: ["image-viewer", "images"],
   },

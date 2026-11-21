@@ -81,6 +81,18 @@ test("single click selects and double click opens the original image in a closab
   assert.equal(document.activeElement, thumbnail);
 });
 
+test("copy photos show the original filename, copy number and description in the grid and image window", async () => {
+  files = [{ name: "1-abc.png", relative_path: "copies/1-abc.png", path: "/media/copies/1-abc.png", size_bytes: 120,
+    copy_photos: [{ copy_id: 17, name: "box.png", description: "Creased corner" }] }];
+  await render();
+  const photo = container.querySelector('[aria-label="Media files"] button');
+  assert.match(photo.textContent, /box\.png.*Copy #17.*Creased corner/);
+  await key(photo, "Enter");
+  assert.equal(dialog().getAttribute("aria-label"), "Image: box.png");
+  assert.match(dialog().textContent, /Copy #17.*Creased corner/);
+  assert.match(dialog().querySelector('[aria-label="Full size image"] img').src, /\/media\/copies\/1-abc.png$/);
+});
+
 test("Enter opens an image, focus stays inside the popup, and Escape closes it in Strict Mode", async () => {
   await render(h(StrictMode, null, h(MediaViewer)));
   const thumbnail = file("icons/icon.ico");
