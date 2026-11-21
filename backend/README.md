@@ -44,6 +44,7 @@ app/
       relations.py     Related collection builders
       reads.py         Item loading, search, sorting, and pagination
       items.py         Create, update, and delete transactions
+      copies.py        Individual copy writes, stable copy numbers, and retried submissions
       reference.py     Reference lists, searches, and creation
     seed/              Builtin reference data and optional example items
 ```

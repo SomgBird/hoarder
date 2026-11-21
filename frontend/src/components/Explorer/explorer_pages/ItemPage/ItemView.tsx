@@ -2,13 +2,15 @@ import styles from "./ItemView.module.css";
 import type { ItemRead } from "@types";
 import { coverUrl } from "@services";
 import { detailRows } from "./details";
+import { OwnedCopies } from "./OwnedCopies";
 import { groupByRole, isEmpty, type Row } from "./rows";
 
 interface Props {
   item: ItemRead;
+  onChanged: (item: ItemRead) => void;
 }
 
-function ItemView({ item }: Props) {
+function ItemView({ item, onChanged }: Props) {
   const cover = coverUrl(item.cover_image_path);
   const title = item.display_title;
 
@@ -74,20 +76,7 @@ function ItemView({ item }: Props) {
             </div>
           )}
 
-          {item.owned_copies.length > 0 && (
-            <div className={styles.section}>
-              <h2>Owned copies</h2>
-              {item.owned_copies.map((copy) => (
-                <div key={copy.id}>
-                  <strong>
-                    {copy.condition?.condition_type?.name ?? "Copy"}
-                  </strong>
-                  {copy.condition?.notes && <> — {copy.condition.notes}</>}
-                  {copy.notes && <p>{copy.notes}</p>}
-                </div>
-              ))}
-            </div>
-          )}
+          <OwnedCopies item={item} onChanged={onChanged} />
         </div>
 
         <div className={styles.right_column}>

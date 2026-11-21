@@ -1,5 +1,6 @@
 """Owned copies, condition grades, and copy photos."""
 from typing import Optional
+from uuid import UUID
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -41,6 +42,17 @@ class Condition(SQLModel, table=True):
 
     owned_copy: Optional[OwnedCopy] = Relationship(back_populates="condition")
     condition_type: Optional[ConditionType] = Relationship()
+
+
+class CopySubmission(SQLModel, table=True):
+    """Reserve a copy number for its item's lifetime, including after removal."""
+    __tablename__ = "copy_submission"
+
+    copy_id: int = Field(primary_key=True)
+    item_id: int = Field(foreign_key="item.id", ondelete="CASCADE")
+    # Older copies also reserve their number on removal, without a submission.
+    request_id: UUID | None = Field(default=None, unique=True)
+    payload_hash: str | None = None
 
 
 class CopyPhoto(SQLModel, table=True):

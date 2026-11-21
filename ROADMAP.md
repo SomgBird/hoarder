@@ -2,13 +2,13 @@
 
 Pre-alpha ends when a collector can catalog a game and a book from the same franchise, document individual copies, and build an illustrated exhibit that connects their items and authored pages. The exhibit must still work after restarting Hoarder. The owner chose this collection and authoring workflow on 2026-11-21. Marketplace tracking comes later.
 
-The next release is [0.5 Owned copies](#05-owned-copies). [PLAN.md](PLAN.md) holds its active task and handoff. Checked boxes record implemented features. For new work, check a box when its described behavior works and record the verification in the handoff. Check off the release demo after completing it through the app.
+The next release is [0.6 Articles](#06-articles). [PLAN.md](PLAN.md) holds its active task and handoff. Checked boxes record implemented features. For new work, check a box when its described behavior works and record the verification in the handoff. Check off the release demo after completing it through the app.
 
 | Baseline | Planned releases | Finish line |
 | --- | --- | --- |
-| [0.1 Book demo](#01-book-demo) · [0.2 Item catalog](#02-item-catalog) · [0.3 Collection browsing](#03-collection-browsing) · [0.4 Appearance and Help](#04-appearance-and-help) | [0.5 Owned copies](#05-owned-copies) · [0.6 Articles](#06-articles) · [0.7 Photos and galleries](#07-photos-and-galleries) · [0.8 Franchise pages](#08-franchise-pages) · [0.9 Custom pages and item layouts](#09-custom-pages-and-item-layouts) | [0.10 Vertical-slice demo](#010-vertical-slice-demo) · [Later backlog](#later-backlog) |
+| [0.1 Book demo](#01-book-demo) · [0.2 Item catalog](#02-item-catalog) · [0.3 Collection browsing](#03-collection-browsing) · [0.4 Appearance and Help](#04-appearance-and-help) · [0.5 Owned copies](#05-owned-copies) | [0.6 Articles](#06-articles) · [0.7 Photos and galleries](#07-photos-and-galleries) · [0.8 Franchise pages](#08-franchise-pages) · [0.9 Custom pages and item layouts](#09-custom-pages-and-item-layouts) | [0.10 Vertical-slice demo](#010-vertical-slice-demo) · [Later backlog](#later-backlog) |
 
-The current branch is `hoarder-pre-alpha-0.4` at application revision `28662cd`. About reads `0.2.0-pre-alpha` from [VERSION](VERSION). Reconcile that value when cutting the next release. Versions 0.5–0.10 are proposed milestones. At two or three subversions per week, six releases would span roughly two to three weeks. Revisit the estimate after the first copy editor and article are working.
+About reads the application version from [VERSION](VERSION). The [session handoff](PLAN.md#session-handoff) records the working branch and baseline. Versions 0.6–0.10 are proposed milestones. Revisit the schedule after the first article can be saved and reopened.
 
 ## 0.1 Book demo
 
@@ -49,7 +49,7 @@ This release made it possible to find a particular item as the catalog grew.
 
 ## 0.4 Appearance and Help
 
-The current branch delivers the display controls and Help system. The remaining ideas from the original 0.4 list have entries in the [later backlog](#later-backlog).
+Version 0.4 delivered the display controls and Help system. The remaining ideas from the original 0.4 list have entries in the [later backlog](#later-backlog).
 
 - [x] Choose a React95 color scheme and preview it before applying it.
 - [x] Set the desktop color with swatches or numeric color controls. Save custom swatches for reuse.
@@ -60,23 +60,23 @@ The current branch delivers the display controls and Help system. The remaining 
 
 ## 0.5 Owned copies
 
-**Outcome.** A collector with two copies of the same game can tell which box is worn and edit that copy. SQLite already has copy and condition records, and Explorer displays their notes. The first missing action is adding a copy from the open item.
+**Outcome.** A collector with two copies of the same game can tell which box is worn and edit that copy. Explorer saves each copy’s grade, condition notes and copy notes on the item. Collection Manager includes it in the Owned filter while any copy remains.
 
 **Record a copy**
 
-- [ ] Expose the Owned copies section on an item with zero copies and offer **Add copy** there.
-- [ ] Choose an existing condition grade, enter condition notes such as “split case,” and enter separate copy notes such as “gift from Ana.”
-- [ ] Save the copy against the open item and show it immediately. Add a second copy with different details and reopen both after reload.
-- [ ] Keep draft values after a failed save. If the first save succeeded but its response was lost, retrying that submission yields one copy.
+- [x] Expose the Owned copies section on an item with zero copies and offer **Add copy** there.
+- [x] Choose an existing condition grade, enter condition notes such as “split case,” and enter separate copy notes such as “gift from Ana.”
+- [x] Save the copy against the open item and show it immediately. Add a second copy with different details and reopen both after reload.
+- [x] Keep draft values after a failed save. If the first save succeeded but its response was lost, retrying that submission yields one copy.
 
 **Edit, remove and filter**
 
-- [ ] Open one saved copy, change its grade or notes and save it. Preserve its identity, photo references and sibling copies.
-- [ ] Cancel an edit to leave the saved copy intact. Confirm a removal to delete only the selected copy.
-- [ ] Show an item as owned while it has recorded copies. Explain the displayed ownership when its manual Owned flag is clear.
-- [ ] Use the same ownership rule in Collection Manager results and filters. After the last copy is removed, use the stored flag again. Preserve the existing treatment of true, false and unset flags on older records.
-- [ ] Add Help for recording copies and finding them through the ownership filter.
-- [ ] **Release demo.** Add a Good copy with a worn-box note and a Like New copy. Reopen, edit one and cancel a removal. Confirm removal of each in turn and verify the filter before and after the last removal. Cover the retry and flag-only cases in regression tests.
+- [x] Open one saved copy, change its grade or notes and save it. Preserve its identity, photo references and sibling copies.
+- [x] Cancel an edit to leave the saved copy intact. Confirm a removal to delete only the selected copy.
+- [x] Show an item as owned while it has recorded copies. Explain the displayed ownership when its manual Owned flag is clear.
+- [x] Use the same ownership rule in Collection Manager results and filters. After the last copy is removed, use the stored flag again. Preserve the existing treatment of true, false and unset flags on older records.
+- [x] Add Help for recording copies and finding them through the ownership filter.
+- [x] **Release demo.** Add a Good copy with a worn-box note and a Like New copy. Reopen, edit one and cancel a removal. Confirm removal of each in turn and verify the filter before and after the last removal. Cover the retry and flag-only cases in regression tests.
 
 ## 0.6 Articles
 

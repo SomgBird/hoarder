@@ -1,10 +1,13 @@
 from contextlib import redirect_stdout
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timezone
 from io import BytesIO, StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from threading import Barrier
 import unittest
 from unittest.mock import patch
+from uuid import uuid4
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -17,7 +20,7 @@ from sqlmodel import Session, SQLModel, create_engine, select
 from app.database import create_db_and_tables, get_session
 from app.db.models import (
     Author, AuthorRoleItemLink, Book, Company, CompanyRoleItemLink, Condition,
-    CopyPhoto, Item, ItemLanguageLink, ItemTag, ItemTagLink, ItemType, Language,
+    ConditionType, CopyPhoto, Item, ItemLanguageLink, ItemTag, ItemTagLink, ItemType, Language,
     OwnedCopy, Title,
 )
 from app.errors import AppError, register_exception_handlers
@@ -349,6 +352,145 @@ class ItemApiTests(unittest.TestCase):
                 self.assertEqual(connection.exec_driver_sql("SELECT id, date_added FROM item").all(), [(42, None)])
         finally:
             legacy.dispose()
+
+    def test_copy_submission_table_upgrades_a_collection_with_existing_copies(self):
+        from app.db.models.ownership import CopySubmission
+
+        item = self.create()
+        with Session(self.engine) as session:
+            copy = OwnedCopy(item_id=item["id"], notes="Legacy copy")
+            copy.condition = Condition(notes="Ungraded")
+            copy.photos = [CopyPhoto(file_path="legacy.jpg")]
+            session.add(copy)
+            session.commit()
+        path = f"/items/{item['id']}"
+        before = self.client.get(path).json()["owned_copies"]
+        CopySubmission.__table__.drop(self.engine)
+        with patch("app.database.engine", self.engine):
+            create_db_and_tables()
+            create_db_and_tables()
+        created = self.client.post(f"{path}/copies", json={"request_id": str(uuid4())})
+        self.assertEqual(created.status_code, 200, created.text)
+        self.assertIn(before[0], created.json()["owned_copies"])
+        edited = self.client.put(f"{path}/copies/{before[0]['id']}", json={"notes": "Updated legacy copy"})
+        self.assertEqual(edited.status_code, 200, edited.text)
+        saved = next(c for c in edited.json()["owned_copies"] if c["id"] == before[0]["id"])
+        self.assertEqual(saved["photos"], before[0]["photos"])
+        self.assertIsNone(saved["condition"])
+
+    def test_copy_create_retry_and_scoped_edits_preserve_identity_and_photos(self):
+        item = self.create(details={"type_name": "game"})
+        path = f"/items/{item['id']}/copies"
+        other = self.create()
+        other_path = f"/items/{other['id']}/copies"
+        with Session(self.engine) as session:
+            grade = ConditionType(name="Good")
+            session.add(grade)
+            session.commit()
+            grade_id = grade.id
+        draft = {"request_id": str(uuid4()), "condition_type_id": grade_id,
+                 "condition_notes": "Worn box", "notes": "Gift from Ana"}
+        self.assertEqual(self.client.post("/items/99999/copies", json=draft).status_code, 404)
+        self.assertEqual(self.client.post(path, json={**draft, "condition_type_id": 9999}).status_code, 422)
+        first = self.client.post(path, json=draft)
+        self.assertEqual(first.status_code, 200, first.text)
+        copy, = first.json()["owned_copies"]
+        self.assertEqual(copy["condition"]["condition_type"]["name"], "Good")
+        self.assertEqual(copy["condition"]["notes"], "Worn box")
+        self.assertEqual(copy["notes"], "Gift from Ana")
+        self.assertEqual(self.client.post(path, json=draft).json()["owned_copies"], [copy])
+        self.assertEqual(self.client.post(other_path, json=draft).status_code, 409)
+        second = self.client.post(path, json={**draft, "request_id": str(uuid4())})
+        sibling, = [c for c in second.json()["owned_copies"] if c["id"] != copy["id"]]
+        with Session(self.engine) as session:
+            session.add(CopyPhoto(owned_copy_id=copy["id"], file_path="box.jpg"))
+            session.commit()
+        edit = {"condition_type_id": grade_id, "condition_notes": "Split case", "notes": "Reboxed"}
+        selected = f"{path}/{copy['id']}"
+        self.assertEqual(self.client.put(f"{other_path}/{copy['id']}", json=edit).status_code, 404)
+        self.assertEqual(self.client.delete(f"{other_path}/{copy['id']}").status_code, 404)
+        self.assertEqual(self.client.put(selected, json={**edit, "condition_type_id": 9999}).status_code, 422)
+        edited = self.client.put(selected, json=edit)
+        self.assertEqual(edited.status_code, 200, edited.text)
+        saved = next(c for c in edited.json()["owned_copies"] if c["id"] == copy["id"])
+        self.assertEqual((saved["condition"]["notes"], saved["notes"]), ("Split case", "Reboxed"))
+        self.assertEqual(saved["photos"][0]["file_path"], "box.jpg")
+        self.assertEqual(self.client.post(path, json=draft).json(), edited.json())
+        self.assertEqual(self.client.post(path, json={**draft, "notes": "Different"}).status_code, 409)
+        self.assertEqual(self.client.delete(selected).json()["owned_copies"], [sibling])
+        self.assertEqual(self.client.post(path, json=draft).status_code, 409)
+        self.assertEqual(self.client.delete(f"/items/{item['id']}").status_code, 204)
+
+    def test_filter_reverts_to_each_original_flag_after_last_copy_is_removed(self):
+        for manual_flag in (True, False, None):
+            with self.subTest(manual_flag=manual_flag):
+                item = self.create(is_owned=manual_flag)
+                path = f"/items/{item['id']}/copies"
+
+                def check_ownership(expected):
+                    for filtered in (True, False):
+                        page = self.client.get("/items/itemlist", params={"is_owned": filtered}).json()
+                        self.assertEqual(page["total"], int(filtered == expected))
+                        self.assertEqual([row["is_owned"] for row in page["items"]], [expected] if filtered == expected else [])
+                    self.assertIs(self.client.get(f"/items/{item['id']}").json()["is_owned"], manual_flag)
+
+                check_ownership(bool(manual_flag))
+                for _ in range(2):
+                    created = self.client.post(path, json={"request_id": str(uuid4())})
+                    self.assertEqual(created.status_code, 200, created.text)
+                    check_ownership(True)
+                first, second = created.json()["owned_copies"]
+                self.client.delete(f"{path}/{first['id']}")
+                check_ownership(True)
+                self.client.delete(f"{path}/{second['id']}")
+                check_ownership(bool(manual_flag))
+                self.client.delete(f"/items/{item['id']}")
+
+    def test_delayed_edit_and_removal_cannot_change_a_replacement_copy(self):
+        item = self.create()
+        path = f"/items/{item['id']}/copies"
+        with Session(self.engine) as session:
+            legacy = OwnedCopy(item_id=item["id"], notes="Legacy")
+            session.add(legacy)
+            session.commit()
+            old_id = legacy.id
+        for notes in ("First new copy", "Replacement"):
+            removed = self.client.delete(f"{path}/{old_id}")
+            self.assertEqual(removed.json()["owned_copies"], [])
+            new = self.client.post(path, json={"request_id": str(uuid4()), "notes": notes})
+            copy, = new.json()["owned_copies"]
+            self.assertNotEqual(copy["id"], old_id)
+            self.assertEqual(self.client.put(f"{path}/{old_id}", json={"notes": "Stale"}).status_code, 404)
+            self.assertEqual(self.client.delete(f"{path}/{old_id}").json()["owned_copies"], [copy])
+            old_id = copy["id"]
+
+    def test_concurrent_retries_commit_one_copy(self):
+        from app.db.crud.copies import create_copy
+        from app.db.schemas.parts import OwnedCopyCreate
+
+        disk = create_engine(f"sqlite:///{self.directory.name}/copies.db")
+        self.addCleanup(disk.dispose)
+        SQLModel.metadata.create_all(disk)
+        with Session(disk) as session:
+            item = Item(item_type=ItemType(name="game"))
+            session.add(item)
+            session.commit()
+            item_id = item.id
+        payload = OwnedCopyCreate(request_id=uuid4(), notes="Same submission")
+        start = Barrier(2)
+
+        def submit():
+            with Session(disk) as session:
+                start.wait(timeout=5)
+                create_copy(session, item_id, payload)
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futures = [pool.submit(submit) for _ in range(2)]
+            for future in futures:
+                future.result(timeout=10)
+        with Session(disk) as session:
+            copy, = session.exec(select(OwnedCopy)).all()
+            self.assertEqual((copy.item_id, copy.notes), (item_id, payload.notes))
 
     def test_display_title_matches_list_and_falls_back(self):
         item = self.create(selected_language_code="ru", titles=[

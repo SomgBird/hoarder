@@ -1,5 +1,6 @@
 import type { ItemRead, ItemCreate, ItemUpdate, ItemListPage, ItemOrdering, ItemFilters } from '../types/item.ts';
 import type { ItemType } from '../types/itemTypes.ts';
+import type { OwnedCopyCreate, OwnedCopyWrite } from '../types/item.ts';
 import { request } from './client.ts'
 
 const PATH = "/items";
@@ -36,6 +37,15 @@ export const itemService = {
 
   delete: (id: number) =>
     request<void>(`${PATH}/${id}`, { method: "DELETE" }),
+
+  addCopy: (itemId: number, data: OwnedCopyCreate) =>
+    request<ItemRead>(`${PATH}/${itemId}/copies`, { method: "POST", body: JSON.stringify(data) }),
+
+  updateCopy: (itemId: number, copyId: number, data: OwnedCopyWrite) =>
+    request<ItemRead>(`${PATH}/${itemId}/copies/${copyId}`, { method: "PUT", body: JSON.stringify(data) }),
+
+  removeCopy: (itemId: number, copyId: number) =>
+    request<ItemRead>(`${PATH}/${itemId}/copies/${copyId}`, { method: "DELETE" }),
 
   uploadCover: (id: number, file: File) => {
     const form = new FormData();

@@ -3,6 +3,7 @@ import type { ItemRead } from "@types";
 import { ApiError, itemService } from "@services";
 import { ErrorPage } from "../ErrorPage";
 import ItemView from "./ItemView";
+import { useExplorer } from "../../ExplorerContext";
 
 type Result =
   | { id: number; status: "ready"; item: ItemRead }
@@ -12,6 +13,7 @@ type Result =
 const isNotFound = (e: unknown) => e instanceof ApiError && e.status === 404;
 
 export function ItemPage({ id }: { id: number }) {
+  const { refreshCollection } = useExplorer();
   const [result, setResult] = useState<Result | null>(null);
 
   useEffect(() => {
@@ -53,6 +55,9 @@ export function ItemPage({ id }: { id: number }) {
         <ErrorPage heading="Something went wrong" message={result.message} />
       );
     case "ready":
-      return <ItemView key={id} item={result.item} />;
+      return <ItemView item={result.item} onChanged={(item) => {
+        setResult({ id, status: "ready", item });
+        refreshCollection();
+      }} />;
   }
 }

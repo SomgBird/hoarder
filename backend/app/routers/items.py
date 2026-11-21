@@ -7,8 +7,10 @@ from sqlmodel import Session
 from app.database import get_session
 from app.config import MAX_UPLOAD_BYTES
 from app.db import crud
+from app.db.crud import copies
 from app.db.models import Item
 from app.db.schemas import ItemCreate, ItemListEntryRead, ItemRead, ItemSortDirection, ItemSortField, ItemUpdate, Page
+from app.db.schemas.parts import OwnedCopyCreate, OwnedCopyWrite
 from app.errors import NotFoundError, PayloadTooLargeError
 from app.media import remove_unused_image, store_cover, store_icon, store_icon_from_cover
 
@@ -85,6 +87,25 @@ def delete_item(item_id: int, session: Session = Depends(get_session)):
     for path in previous_images:
         remove_unused_image(session, path)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{item_id}/copies", response_model=ItemRead)
+def create_copy(item_id: int, payload: OwnedCopyCreate, session: Session = Depends(get_session)):
+    copies.create_copy(session, item_id, payload)
+    return crud.get_item(session, item_id)
+
+
+@router.put("/{item_id}/copies/{copy_id}", response_model=ItemRead)
+def update_copy(item_id: int, copy_id: int, payload: OwnedCopyWrite, session: Session = Depends(get_session)):
+    copies.update_copy(session, item_id, copy_id, payload)
+    return crud.get_item(session, item_id)
+
+
+@router.delete("/{item_id}/copies/{copy_id}", response_model=ItemRead)
+def delete_copy(item_id: int, copy_id: int, session: Session = Depends(get_session)):
+    for path in copies.delete_copy(session, item_id, copy_id):
+        remove_unused_image(session, path)
+    return crud.get_item(session, item_id)
 
 
 @router.post("/{item_id}/cover", response_model=ItemRead)

@@ -8,7 +8,7 @@ export function renderPage(loc: ExplorerLocation) {
     case "home":
       return <HomePage />;
     case "item":
-      return <ItemPage id={loc.id} />;
+      return <ItemPage key={loc.id} id={loc.id} />;
     case "error":
       return (
         <ErrorPage

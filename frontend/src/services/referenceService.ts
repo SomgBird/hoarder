@@ -1,7 +1,7 @@
 import type {
   AuthorRead, CompanyRead, LanguageRead, FormatRead, GenreRead, FranchiseRead,
   TagRead, ScaleRead, JournalRead, GamePlatformRead, BarcodeTypeRead,
-  AuthorRoleRead, CompanyRoleRead, ReferenceCreate,
+  AuthorRoleRead, CompanyRoleRead, ConditionTypeRead, ReferenceCreate,
 } from "@types";
 import { request } from "./client.ts";
 
@@ -27,6 +27,8 @@ export const REFERENCE_RESOURCES = [
 ] as const satisfies readonly ReferenceResource[];
 
 export const referenceService = {
+  conditionTypes: (signal?: AbortSignal) =>
+    request<ConditionTypeRead[]>("/reference/condition-types", { signal }),
   list: <R extends ReferenceResource>(resource: R, itemType?: string, signal?: AbortSignal) => {
     const query = itemType && (resource === "formats" || resource === "genres")
       ? `?item_type=${encodeURIComponent(itemType)}` : "";

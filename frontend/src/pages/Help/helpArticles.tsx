@@ -40,8 +40,9 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <h2>Filtering</h2>
       <p>Click <strong>Filter</strong> to choose a category, ownership state, and release or added date ranges. Blank values leave that condition unrestricted. The end date must be on or after the start date.</p>
       <p>Apply updates the list. Cancel closes the dialog without changing the filters. Reset filters clears the filter conditions and category.</p>
+      <p>Choose <strong>Owned</strong> to find items with a recorded copy or a checked Owned box. After you remove the last copy, the filter uses the item’s Owned box again. A clear or unset box then places it under <strong>Not owned</strong>.</p>
       <p>Search and filter conditions work together. If no items match, clear the search or loosen the filters.</p>
-    </>, related: ["collection"],
+    </>, related: ["collection", "explorer"],
   },
   explorer: {
     introduction: "Explorer shows an item’s titles, description, images, credits, and type-specific details.",
@@ -52,7 +53,11 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <h2>Working with a page</h2>
       <p>Use <strong>File → New page…</strong> to start a new item. When an item is open, <strong>Edit → Edit page…</strong> opens its editor and <strong>File → Delete item…</strong> asks for confirmation before deleting it.</p>
       <p>Explorer’s Help menu and toolbar open this topic. About Hoarder opens the application information page.</p>
-    </>, related: ["collection", "edit-item", "delete-item"],
+      <h2>Recording physical copies</h2>
+      <p>Open the item’s <strong>Owned copies</strong> section and select <strong>Add copy</strong>. Choose a condition grade, describe wear in Condition notes, and use Copy notes for details such as who gave it to you. Select <strong>Save copy</strong>. Repeat for each physical copy.</p>
+      <p>Use <strong>Edit copy</strong> beside the copy you want to change. Cancel discards your edits. If a save fails, your entries stay in the form so you can retry. <strong>Remove copy</strong> asks you to confirm the copy number and grade.</p>
+      <p>Find the item again in Collection Manager under <strong>Filter → Ownership → Owned</strong>.</p>
+    </>, related: ["collection", "filters", "edit-item", "delete-item"],
   },
   "new-item": {
     introduction: "The New page wizard starts an item page and then opens the full editor.",

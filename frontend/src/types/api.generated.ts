@@ -39,6 +39,41 @@ export interface paths {
         patch: operations["update_item_items__item_id__patch"];
         trace?: never;
     };
+    "/items/{item_id}/copies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Copy */
+        post: operations["create_copy_items__item_id__copies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/items/{item_id}/copies/{copy_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Copy */
+        put: operations["update_copy_items__item_id__copies__copy_id__put"];
+        post?: never;
+        /** Delete Copy */
+        delete: operations["delete_copy_items__item_id__copies__copy_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/items/{item_id}/cover": {
         parameters: {
             query?: never;
@@ -994,6 +1029,20 @@ export interface components {
             /** Width */
             width: number | null;
         };
+        /** OwnedCopyCreate */
+        OwnedCopyCreate: {
+            /** Condition Notes */
+            condition_notes?: string | null;
+            /** Condition Type Id */
+            condition_type_id?: number | null;
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+        };
         /** OwnedCopyRead */
         OwnedCopyRead: {
             condition: components["schemas"]["ConditionRead"] | null;
@@ -1003,6 +1052,15 @@ export interface components {
             notes: string | null;
             /** Photos */
             photos: components["schemas"]["CopyPhotoRead"][];
+        };
+        /** OwnedCopyWrite */
+        OwnedCopyWrite: {
+            /** Condition Notes */
+            condition_notes?: string | null;
+            /** Condition Type Id */
+            condition_type_id?: number | null;
+            /** Notes */
+            notes?: string | null;
         };
         /** Page[ItemListEntryRead] */
         Page_ItemListEntryRead_: {
@@ -1186,6 +1244,109 @@ export interface operations {
                 "application/json": components["schemas"]["ItemUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_copy_items__item_id__copies_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnedCopyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_copy_items__item_id__copies__copy_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                copy_id: number;
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnedCopyWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_copy_items__item_id__copies__copy_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                copy_id: number;
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

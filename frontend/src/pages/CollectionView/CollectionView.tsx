@@ -9,7 +9,7 @@ import { useSearchParams } from "react-router-dom";
 import { useState } from "react";
 
 function CollectionViewContent() {
-  const { current, navigate, revision } = useExplorer();
+  const { current, navigate, collectionRevision } = useExplorer();
   const [selection, setSelection] = useState({ location: current, id: current.page === "item" ? current.id : null });
   // Explorer navigation updates the selection; selecting a file leaves the open page alone.
   if (selection.location !== current) {
@@ -21,7 +21,7 @@ function CollectionViewContent() {
       <div className={styles.manager_column}>
         <CollectionManager
           selectedItemId={selection.id}
-          refreshKey={revision}
+          refreshKey={collectionRevision}
           onSelectItem={(id) => setSelection({ location: current, id })}
           onOpenItem={(id) => navigate({ page: "item", id })}
         />

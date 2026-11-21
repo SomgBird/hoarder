@@ -9,6 +9,7 @@ from app.db.models import (
     AuthorRoleItemLink,
     Barcode,
     CompanyRoleItemLink,
+    Condition,
     Item,
     ItemLanguageLink,
     ItemType,
@@ -33,7 +34,7 @@ _ITEM_RELATIONS = (
     selectinload(Item.tags),
     selectinload(Item.barcodes).joinedload(Barcode.barcode_type),
     selectinload(Item.owned_copies).options(
-        joinedload(OwnedCopy.condition),
+        joinedload(OwnedCopy.condition).joinedload(Condition.condition_type),
         selectinload(OwnedCopy.photos),
     ),
     selectinload(Item.author_credits).options(
@@ -100,7 +101,7 @@ def _list_query():
         type_name.label("item_type"),
         Item.release_date,
         Item.date_added,
-        func.coalesce(Item.is_owned, False).label("is_owned"),
+        or_(Item.is_owned.is_(True), Item.owned_copies.any()).label("is_owned"),
         Item.icon_image_path,
         Item.description,
     )
@@ -132,8 +133,7 @@ def get_item_list(
         type_id = select(ItemType.id).where(ItemType.name == item_type).scalar_subquery()
         filters.append(Item.item_type_id == type_id)
     if is_owned is not None:
-        # The list represents an unset ownership value as not owned, too.
-        filters.append(func.coalesce(Item.is_owned, False) == is_owned)
+        filters.append(query.selected_columns.is_owned == is_owned)
     for column, lower, upper in (
         (Item.release_date, release_date_from, release_date_to),
         (Item.date_added, date_added_from, date_added_to),

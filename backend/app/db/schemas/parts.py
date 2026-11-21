@@ -1,6 +1,7 @@
 """Titles, languages, credits, barcodes, and owned copy schemas."""
 from datetime import date
 from typing import List, Optional
+from uuid import UUID
 
 from pydantic import ConfigDict, Field as PField, model_validator
 
@@ -138,3 +139,13 @@ class OwnedCopyRead(_Read):
     notes: str | None = None
     condition: Optional[ConditionRead] = None
     photos: List[CopyPhotoRead]
+
+
+class OwnedCopyWrite(_Strict):
+    condition_type_id: int | None = PField(default=None, ge=1)
+    condition_notes: str | None = None
+    notes: str | None = None
+
+
+class OwnedCopyCreate(OwnedCopyWrite):
+    request_id: UUID
