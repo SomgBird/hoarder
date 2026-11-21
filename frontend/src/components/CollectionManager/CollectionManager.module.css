@@ -103,7 +103,7 @@
   z-index: 1;
   padding: 4px 6px;
   background: var(--r95-color-material, #c0c0c0);
-  box-shadow: inset 1px 1px var(--r95-color-borderLightest, #fff), inset -1px -1px var(--r95-color-borderDark, #808080);
+  box-shadow: inset -1px -1px var(--r95-color-borderDark, #808080);
   font-weight: normal;
   white-space: nowrap;
 }

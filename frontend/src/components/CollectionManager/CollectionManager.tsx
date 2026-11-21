@@ -163,7 +163,8 @@ function CollectionManager({ selectedItemId, onSelectItem, onOpenItem, refreshKe
             )}
           </nav>
         )}
-        <Frame className={styles.content} bgColor="$inputBackground" boxShadow="$in" padding="$2" aria-busy={loading}>
+        <Frame className={styles.content} bgColor="$inputBackground" boxShadow="$in"
+          padding={view === "table" && !showingFolders ? "1px 0 0 1px" : "$2"} aria-busy={loading}>
           {showingFolders ? (
             <CollectionCategories ordering={ordering} onOpenCategory={(next) => {
               setFolder(next);
