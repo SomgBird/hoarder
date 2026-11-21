@@ -8,6 +8,7 @@ import {
 import {
   ComputerFind,
   Defrag9,
+  Files,
   HelpBook,
   Inetcpl1319,
   MicrosoftExchange,
@@ -49,6 +50,14 @@ export const navigation: readonly NavEntry[] = [
           import("@pages").then(({ PageEditor }) => ({
             default: PageEditor,
           })),
+        ),
+      },
+      {
+        path: "/copy-editor",
+        label: "Copy Editor",
+        icon: <Files variant="32x32_4" />,
+        Component: lazy(() =>
+          import("@pages").then(({ CopyEditor }) => ({ default: CopyEditor })),
         ),
       },
       {

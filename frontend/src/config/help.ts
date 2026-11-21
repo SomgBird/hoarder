@@ -3,6 +3,7 @@ export const HELP_TOPICS = {
   collection: "Collection Manager",
   filters: "Searching and filtering",
   explorer: "Browsing item pages",
+  copies: "Copy Editor",
   "new-item": "Creating an item",
   "edit-item": "Editing an item",
   images: "Covers and icons",
@@ -26,7 +27,7 @@ export const HELP_GROUPS = [
   {
     id: "collection", label: "Collection",
     description: "Browse, search, and organize the items in your collection.",
-    topics: ["collection", "filters", "explorer"],
+    topics: ["collection", "filters", "explorer", "copies"],
   },
   {
     id: "item-pages", label: "Item pages",

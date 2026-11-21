@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { Button } from "@react95/core";
 import { itemService, referenceService } from "@services";
 import type { ConditionTypeRead, ItemRead, OwnedCopyRead } from "@types";
-import styles from "./ItemView.module.css";
+import styles from "./CopyEditor.module.css";
 
 interface Props {
   itemId: number;
@@ -10,7 +11,7 @@ interface Props {
   onCancel: () => void;
 }
 
-export function CopyEditor({ itemId, copy, onSaved, onCancel }: Props) {
+export function CopyForm({ itemId, copy, onSaved, onCancel }: Props) {
   const [grade, setGrade] = useState(String(copy?.condition?.condition_type?.id ?? ""));
   const [conditionNotes, setConditionNotes] = useState(copy?.condition?.notes ?? "");
   const [notes, setNotes] = useState(copy?.notes ?? "");
@@ -48,16 +49,18 @@ export function CopyEditor({ itemId, copy, onSaved, onCancel }: Props) {
     }
   }
 
-  return <form onSubmit={save} className={styles.copyEditor} aria-label={copy ? `Edit copy #${copy.id}` : "Add copy"}>
+  const title = copy ? `Edit copy #${copy.id}` : "Add copy";
+  return <form onSubmit={save} className={styles.form} aria-label={title}>
+    <h2>{title}</h2>
     <label>Condition grade
       <select autoFocus value={grade} disabled={busy || !grades} onChange={(event) => setGrade(event.target.value)}>
         <option value="">Ungraded</option>
         {grades?.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
       </select>
     </label>
-    {!grades && (loadError ? <div role="alert">{loadError} <button type="button" onClick={() => {
+    {!grades && (loadError ? <div role="alert">{loadError} <Button type="button" onClick={() => {
       setLoadError(""); setAttempt((value) => value + 1);
-    }}>Retry grades</button></div> : <p role="status">Loading condition grades…</p>)}
+    }}>Retry grades</Button></div> : <p role="status">Loading condition grades…</p>)}
     <label>Condition notes
       <textarea rows={2} value={conditionNotes} disabled={busy} onChange={(event) => setConditionNotes(event.target.value)} />
     </label>
@@ -65,9 +68,9 @@ export function CopyEditor({ itemId, copy, onSaved, onCancel }: Props) {
       <textarea rows={2} value={notes} disabled={busy} onChange={(event) => setNotes(event.target.value)} />
     </label>
     {saveError && <p role="alert">{saveError}</p>}
-    <div className={styles.copyActions}>
-      <button type="submit" disabled={busy || !grades}>{busy ? "Saving…" : "Save copy"}</button>
-      <button type="button" disabled={busy} onClick={onCancel}>Cancel</button>
+    <div className={styles.actions}>
+      <Button type="submit" disabled={busy || !grades}>{busy ? "Saving…" : "Save copy"}</Button>
+      <Button type="button" disabled={busy} onClick={onCancel}>Cancel</Button>
     </div>
   </form>;
 }

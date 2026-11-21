@@ -60,13 +60,13 @@ Version 0.4 delivered the display controls and Help system. The remaining ideas 
 
 ## 0.5 Owned copies
 
-**Outcome.** A collector with two copies of the same game can tell which box is worn and edit that copy. Explorer saves each copy’s grade, condition notes and copy notes on the item. Collection Manager includes it in the Owned filter while any copy remains.
+**Outcome.** A collector with two copies of the same game can read their grades and notes in Explorer and edit either copy in Copy Editor. Collection Manager includes the item in the Owned filter while any copy remains.
 
 **Record a copy**
 
-- [x] Expose the Owned copies section on an item with zero copies and offer **Add copy** there.
+- [x] Show the read-only **Owned copies** section even when an item has zero copies. Open **Copy Editor** from the Collection submenu to choose an item, or use Explorer’s **Edit → Edit copies…** or **Copies** toolbar button for the open item.
 - [x] Choose an existing condition grade, enter condition notes such as “split case,” and enter separate copy notes such as “gift from Ana.”
-- [x] Save the copy against the open item and show it immediately. Add a second copy with different details and reopen both after reload.
+- [x] Use **Add copy** in Copy Editor and show the saved copy immediately. Add a second copy with different details, reopen both after reload, and return to the item with **View in Explorer**.
 - [x] Keep draft values after a failed save. If the first save succeeded but its response was lost, retrying that submission yields one copy.
 
 **Edit, remove and filter**

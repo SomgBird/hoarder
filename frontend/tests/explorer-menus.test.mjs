@@ -58,6 +58,7 @@ const render = (element) => act(async () => { root.render(element); });
 const explorer = (path = "/collection-view") => h(MemoryRouter, { initialEntries: [path] }, h(Routes, null,
   h(Route, { path: "/collection-view", element: h(CollectionView) }),
   h(Route, { path: "/page-editor", element: h(Destination) }),
+  h(Route, { path: "/copy-editor", element: h(Destination) }),
   h(Route, { path: "/", element: h(Destination) })));
 const find = (selector, text, scope = container) => [...scope.querySelectorAll(selector)].find((node) => node.textContent.trim() === text);
 const menu = (text) => find('[role="menubar"] > [role="none"] > button', text);
@@ -88,6 +89,8 @@ test("menus expose available actions and disable item actions on the home page",
   assert.equal(dialog(), null);
   await click(menu("Edit"));
   assert.equal(command("Edit page…").disabled, true);
+  assert.equal(command("Edit copies…").disabled, true);
+  assert.equal(button("Copies").disabled, true);
   await click(menu("Go"));
   assert.equal(command("Back").disabled, true);
   assert.equal(command("Forward").disabled, true);
@@ -156,6 +159,16 @@ test("Edit and About menu commands open their existing destinations", async () =
   await render(h("div", { key: "about" }, explorer()));
   await run("Help", "About Hoarder…");
   assert.equal(container.querySelector("output").textContent, "/");
+});
+
+test("both copies commands open the displayed item even when a different collection row is selected", async () => {
+  for (const entry of ["menu", "toolbar"]) {
+    await render(h("div", { key: entry }, explorer("/collection-view?itemId=42")));
+    await click(itemButton(43));
+    if (entry === "menu") await run("Edit", "Edit copies…");
+    else await click(button("Copies"));
+    assert.equal(container.querySelector("output").textContent, "/copy-editor?itemId=42");
+  }
 });
 
 test("deletion requires confirmation, focuses Cancel, traps focus, and Escape cancels", async () => {

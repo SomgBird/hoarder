@@ -19,12 +19,7 @@ export function useExplorer(): ExplorerApi {
 export function useExplorerHistory(initial: ExplorerLocation) {
   const [h, setH] = useState({ stack: [initial], index: 0 });
   const [revision, setRevision] = useState(0);
-  const [collectionRevision, setCollectionRevision] = useState(0);
-  const refreshCollection = () => setCollectionRevision((value) => value + 1);
-  const refresh = () => {
-    setRevision((value) => value + 1);
-    refreshCollection();
-  };
+  const refresh = () => setRevision((value) => value + 1);
 
   const navigate = (loc: ExplorerLocation) =>
     setH(({ stack, index }) => ({
@@ -57,8 +52,6 @@ export function useExplorerHistory(initial: ExplorerLocation) {
     forward,
     refresh,
     revision,
-    collectionRevision,
-    refreshCollection,
     removeItem,
     canBack: h.index > 0,
     canForward: h.index < h.stack.length - 1,

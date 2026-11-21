@@ -3,6 +3,7 @@ import { Icon, Separator } from "@components";
 import { openHelp } from "@config/help";
 import { Toolbar } from "@components";
 import {
+  Files,
   Progman44,
   Progman45,
   Shell32134,
@@ -61,6 +62,16 @@ function ExplorerToolbar() {
           disabled={current.page !== "item"}
           onClick={() => {
             if (current.page === "item") navigateTo(`/page-editor?itemId=${current.id}`);
+          }}
+        />
+
+        <Toolbar.Button
+          icon={<Files variant="32x32_4" />}
+          label="Copies"
+          title="Edit copies of this item"
+          disabled={current.page !== "item"}
+          onClick={() => {
+            if (current.page === "item") navigateTo(`/copy-editor?itemId=${current.id}`);
           }}
         />
 

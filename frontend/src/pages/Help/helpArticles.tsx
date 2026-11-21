@@ -53,11 +53,20 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <h2>Working with a page</h2>
       <p>Use <strong>File → New page…</strong> to start a new item. When an item is open, <strong>Edit → Edit page…</strong> opens its editor and <strong>File → Delete item…</strong> asks for confirmation before deleting it.</p>
       <p>Explorer’s Help menu and toolbar open this topic. About Hoarder opens the application information page.</p>
-      <h2>Recording physical copies</h2>
-      <p>Open the item’s <strong>Owned copies</strong> section and select <strong>Add copy</strong>. Choose a condition grade, describe wear in Condition notes, and use Copy notes for details such as who gave it to you. Select <strong>Save copy</strong>. Repeat for each physical copy.</p>
+      <h2>Owned copies</h2>
+      <p>The item page shows the grade and notes for each recorded copy. To make changes, use <strong>Edit → Edit copies…</strong> or the <strong>Copies</strong> toolbar button. Both open Copy Editor for the item shown in Explorer.</p>
+    </>, related: ["copies", "collection", "filters", "edit-item", "delete-item"],
+  },
+  copies: {
+    introduction: "Use Copy Editor to record and maintain the individual copies of a catalog item.",
+    content: <>
+      <h2>Choose an item</h2>
+      <p>Open <strong>Collection → Copy Editor</strong>, select an item and choose <strong>Open copies</strong>. You can also double-click an item or press Enter. From an open Explorer item page, the <strong>Copies</strong> toolbar button takes you straight to that item.</p>
+      <h2>Record a copy</h2>
+      <p>Select <strong>Add copy</strong>. Choose a condition grade, describe wear in Condition notes, and use Copy notes for details such as who gave it to you. Select <strong>Save copy</strong>. Repeat for each physical copy.</p>
       <p>Use <strong>Edit copy</strong> beside the copy you want to change. Cancel discards your edits. If a save fails, your entries stay in the form so you can retry. <strong>Remove copy</strong> asks you to confirm the copy number and grade.</p>
-      <p>Find the item again in Collection Manager under <strong>Filter → Ownership → Owned</strong>.</p>
-    </>, related: ["collection", "filters", "edit-item", "delete-item"],
+      <p>Choose <strong>View in Explorer</strong> to read the saved item page. Find the item again in Collection Manager under <strong>Filter → Ownership → Owned</strong>.</p>
+    </>, related: ["explorer", "filters"],
   },
   "new-item": {
     introduction: "The New page wizard starts an item page and then opens the full editor.",

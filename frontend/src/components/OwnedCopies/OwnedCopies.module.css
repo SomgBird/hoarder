@@ -1,0 +1,8 @@
+.copy {
+  border-top: 1px solid var(--r95-color-borderDark, #b9b4a8);
+  padding: 8px 0;
+  overflow-wrap: anywhere;
+}
+
+.copy h3 { margin: 0 0 6px; }
+.copy p { white-space: pre-wrap; }

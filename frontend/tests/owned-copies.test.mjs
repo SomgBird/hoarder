@@ -2,29 +2,36 @@ import "./helpers/register-source-loader.mjs";
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import { JSDOM } from "jsdom";
-import { act, createElement as h, useState } from "react";
+import { act, createElement as h } from "react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { existingItem } from "./fixtures/item.mjs";
 
 const dom = new JSDOM("<body></body>", { url: "http://localhost" });
 for (const key of ["window", "document", "HTMLElement", "Event"]) globalThis[key] = dom.window[key];
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const { createRoot } = await import("react-dom/client");
-const { OwnedCopies } = await import("../src/components/Explorer/explorer_pages/ItemPage/OwnedCopies.tsx");
+const { CopyEditor } = await import("../src/pages/CopyEditor/CopyEditor.tsx");
+const { CollectionView } = await import("../src/pages/CollectionView/CollectionView.tsx");
+const { NavBar } = await import("../src/components/NavBar/NavBar.tsx");
 const { itemService, referenceService } = await import("../src/services/index.ts");
 const good = { id: 4, name: "Good" };
 const likeNew = { id: 2, name: "Like New" };
 const first = { id: 17, notes: "Gift", condition: { condition_type: good, notes: "Worn box" }, photos: [] };
 const second = { id: 21, notes: "Spare", condition: { condition_type: likeNew, notes: null }, photos: [] };
-let root, container;
+let root, container, item;
 
-function Page({ copies }) {
-  const [item, setItem] = useState({ ...existingItem, is_owned: false, owned_copies: copies });
-  return h(OwnedCopies, { item, onChanged: setItem });
-}
 beforeEach((t) => {
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
+  item = { ...existingItem, is_owned: false, owned_copies: [] };
+  t.mock.method(itemService, "get", async (id) => {
+    if (id !== item.id) throw new Error("Item not found");
+    return structuredClone(item);
+  });
+  t.mock.method(itemService, "list", async () => ({
+    items: [{ id: item.id, title: item.display_title }], total: 1, offset: 0, limit: 20,
+  }));
   t.mock.method(referenceService, "conditionTypes", async () => [good, likeNew]);
 });
 afterEach(async () => {
@@ -32,7 +39,13 @@ afterEach(async () => {
   container.remove();
 });
 
-const render = (copies) => act(async () => root.render(h(Page, { copies })));
+const render = (copies, path = "/copy-editor?itemId=42") => {
+  item.owned_copies = copies;
+  return act(async () => root.render(h(MemoryRouter, { initialEntries: [path] },
+    h(NavBar), h(Routes, null,
+      h(Route, { path: "/copy-editor", element: h(CopyEditor) }),
+      h(Route, { path: "/collection-view", element: h(CollectionView) })))));
+};
 const button = (name, scope = container) => [...scope.querySelectorAll("button")].find((node) => node.textContent === name);
 const click = (name, scope) => act(async () => { const node = button(name, scope); assert.ok(node, name); node.click(); });
 const dialog = () => container.querySelector('[role="alertdialog"]');
@@ -102,4 +115,37 @@ test("editing and removal address the chosen copy, and cancelling either action 
   await click("Remove copy", dialog());
   assert.equal(article(21), null);
   assert.match(article(17).textContent, /Worn box/);
+});
+
+test("Collection submenu opens the picker, saves to the chosen item, and returns to its read-only page", async (t) => {
+  const save = t.mock.method(itemService, "addCopy", async (id) => {
+    assert.equal(id, item.id);
+    item = { ...item, owned_copies: [first] };
+    return structuredClone(item);
+  });
+  await render([], "/collection-view?itemId=42");
+  const readOnly = () => container.querySelector('section[aria-label="Owned copies"]');
+  assert.match(readOnly().textContent, /No copies recorded/);
+  assert.equal(readOnly().querySelector("button, input, select, textarea"), null);
+  const nav = [...container.querySelectorAll("nav li")].find((entry) => entry.textContent === "Copy Editor");
+  await act(async () => nav.click());
+  assert.equal(button("Open copies").disabled, true);
+  await click(item.display_title);
+  await click("Open copies");
+  await click("Add copy");
+  await click("Save copy");
+  assert.equal(save.mock.callCount(), 1);
+  await click("View in Explorer");
+  assert.equal(container.querySelector("h1").textContent, item.display_title);
+  assert.match(readOnly().textContent, /Good.*Worn box.*Gift/);
+  assert.equal(readOnly().querySelector("button, input, select, textarea"), null);
+});
+
+test("an unavailable item in Copy Editor offers a route back to the picker", async () => {
+  await render([], "/copy-editor?itemId=999");
+  assert.match(container.querySelector('[role="alert"]').textContent, /Item not found/);
+  await click("Choose another item");
+  await click(item.display_title);
+  await click("Open copies");
+  assert.ok(button("Add copy"));
 });

@@ -22,23 +22,6 @@
   min-width: 0;
 }
 
-.copy {
-  border-top: 1px solid #b9b4a8;
-  padding: 8px 0;
-  overflow-wrap: anywhere;
-}
-
-.copy h3 { margin: 0 0 6px; }
-.copy p { white-space: pre-wrap; }
-.copyActions { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.copyEditor, .copyEditor label {
-  display: grid;
-  gap: 4px;
-}
-.copyEditor { gap: 8px; }
-.copyEditor textarea { resize: vertical; min-width: 0; }
-
 .section {
   padding: 8px;
   background: whitesmoke;
