@@ -56,7 +56,10 @@ class ItemLinkRead(_Read):
     item_title: str | None
 
 
-class ArticleRead(_Read):
+class ArticleSummary(_Read):
     id: int
     title: str
+
+
+class ArticleRead(ArticleSummary):
     blocks: list[TextBlockRead | ItemLinkRead]

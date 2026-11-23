@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { articleService, type ArticleRead } from "@services/articleService";
 import { ApiError } from "@services/client";
 import { ErrorPage } from "./ErrorPage";
-import { useExplorer } from "../ExplorerContext";
+import { ExplorerLink } from "../ExplorerLink";
 import styles from "./ExplorerMessage.module.css";
 
 export function ArticlePage({ id }: { id: number }) {
-  const { navigate } = useExplorer();
   const [article, setArticle] = useState<ArticleRead | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
@@ -31,11 +30,9 @@ export function ArticlePage({ id }: { id: number }) {
     {article.blocks.map((block) => {
       if (block.kind === "text") return <p key={block.id}>{block.text}</p>;
       if (block.item_title === null) return <p key={block.id}>Item #{block.item_id} is unavailable.</p>;
-      return <p key={block.id}><a href={`/collection-view?itemId=${block.item_id}`} onClick={(event) => {
-        if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-        event.preventDefault();
-        navigate({ page: "item", id: block.item_id });
-      }}>{block.item_title}</a></p>;
+      return <p key={block.id}><ExplorerLink to={{ page: "item", id: block.item_id }}>
+        {block.item_title}
+      </ExplorerLink></p>;
     })}
   </article>;
 }

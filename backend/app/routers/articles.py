@@ -3,9 +3,14 @@ from sqlmodel import Session
 
 from app.database import get_session
 from app.db.crud import articles
-from app.db.schemas.articles import ArticleCreate, ArticleRead, ArticleUpdate
+from app.db.schemas.articles import ArticleCreate, ArticleRead, ArticleSummary, ArticleUpdate
 
 router = APIRouter(prefix="/articles", tags=["articles"])
+
+
+@router.get("/", response_model=list[ArticleSummary])
+def list_articles(session: Session = Depends(get_session)):
+    return articles.list_articles(session)
 
 
 @router.post("/", response_model=ArticleRead, status_code=status.HTTP_201_CREATED)

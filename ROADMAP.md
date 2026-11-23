@@ -2,13 +2,13 @@
 
 Pre-alpha ends when a collector can catalog a game and a book from the same franchise, document individual copies, and build an illustrated exhibit that connects their items and authored pages. The exhibit must still work after restarting Hoarder. The owner chose this collection and authoring workflow on 2026-11-21. Marketplace tracking comes later.
 
-The next release is [0.6 Articles](#06-articles). [PLAN.md](PLAN.md) holds its active task and handoff. Checked boxes record implemented features. For new work, check a box when its described behavior works and record the verification in the handoff. Check off the release demo after completing it through the app.
+[0.6 Articles](#06-articles) is complete. The next release is [0.7 Photos and galleries](#07-photos-and-galleries). [PLAN.md](PLAN.md) holds its active task and handoff. Checked boxes record implemented features. For new work, check a box when its described behavior works and record the verification in the handoff. Check off the release demo after completing it through the app.
 
 | Baseline | Planned releases | Finish line |
 | --- | --- | --- |
-| [0.1 Book demo](#01-book-demo) · [0.2 Item catalog](#02-item-catalog) · [0.3 Collection browsing](#03-collection-browsing) · [0.4 Appearance and Help](#04-appearance-and-help) · [0.5 Owned copies](#05-owned-copies) | [0.6 Articles](#06-articles) · [0.7 Photos and galleries](#07-photos-and-galleries) · [0.8 Franchise pages](#08-franchise-pages) · [0.9 Custom pages and item layouts](#09-custom-pages-and-item-layouts) | [0.10 Vertical-slice demo](#010-vertical-slice-demo) · [Later backlog](#later-backlog) |
+| [0.1 Book demo](#01-book-demo) · [0.2 Item catalog](#02-item-catalog) · [0.3 Collection browsing](#03-collection-browsing) · [0.4 Appearance and Help](#04-appearance-and-help) · [0.5 Owned copies](#05-owned-copies) · [0.6 Articles](#06-articles) | [0.7 Photos and galleries](#07-photos-and-galleries) · [0.8 Franchise pages](#08-franchise-pages) · [0.9 Custom pages and item layouts](#09-custom-pages-and-item-layouts) | [0.10 Vertical-slice demo](#010-vertical-slice-demo) · [Later backlog](#later-backlog) |
 
-About reads the application version from [VERSION](VERSION). The [session handoff](PLAN.md#session-handoff) records the working branch and baseline. Versions 0.6–0.10 are proposed milestones. Revisit the schedule after the first article can be saved and reopened.
+About reads the application version from [VERSION](VERSION). The [session handoff](PLAN.md#session-handoff) records the working branch and baseline. Versions 0.7–0.10 are proposed milestones.
 
 ## 0.1 Book demo
 
@@ -93,10 +93,10 @@ Version 0.4 delivered the display controls and Help system. The remaining ideas 
 
 **Find and follow**
 
-- [ ] Add an authored-page list reachable from Explorer. Show article titles and a way to create the first page when the list is empty.
-- [ ] Open a saved article from the list and by its own stable Explorer address. Keep existing item and home addresses working.
+- [x] Add an authored-page list reachable from Explorer. Show article titles and a way to create the first page when the list is empty.
+- [x] Open a saved article from the list and by its own stable Explorer address. Keep existing item and home addresses working.
 - [x] Follow the article's item link and use Back to return. If a linked item has been deleted, identify the unavailable target and keep the article readable.
-- [ ] **Release demo.** Create an article linking to a game, reload it from the page list, rename the game and follow the link. Edit the article and verify its original address still opens the revised text.
+- [x] **Release demo.** Create an article linking to a game, reload it from the page list, rename the game and follow the link. Edit the article and verify its original address still opens the revised text.
 
 ## 0.7 Photos and galleries
 

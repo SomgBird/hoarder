@@ -10,7 +10,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List Articles */
+        get: operations["list_articles_articles__get"];
         put?: never;
         /** Create Article */
         post: operations["create_article_articles__post"];
@@ -499,6 +500,13 @@ export interface components {
         ArticleRead: {
             /** Blocks */
             blocks: (components["schemas"]["TextBlockRead"] | components["schemas"]["ItemLinkRead"])[];
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+        };
+        /** ArticleSummary */
+        ArticleSummary: {
             /** Id */
             id: number;
             /** Title */
@@ -1325,6 +1333,26 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_articles_articles__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleSummary"][];
+                };
+            };
+        };
+    };
     create_article_articles__post: {
         parameters: {
             query?: never;

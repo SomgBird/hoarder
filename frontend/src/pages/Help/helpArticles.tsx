@@ -52,6 +52,7 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <h2>Navigating</h2>
       <p>Use Back and Forward to revisit pages opened in Explorer. Home returns to the collection welcome page. Refresh reloads the current page and collection list.</p>
       <p>Copy the address shown while an item is open, for example <code>collection://item/42</code>. To revisit it, paste it into Explorer’s <strong>Address</strong> field and press Enter. Renaming the item keeps its address.</p>
+      <p>Choose <strong>Authored pages</strong> on Home or enter <code>collection://pages</code> to browse saved articles by title. Open a title to read the article, or choose <strong>Create an article…</strong> to start one.</p>
       <p>If Explorer says <strong>Cannot find page</strong>, check the address format. If it says <strong>Item not found</strong>, check the number or search Collection Manager by title. <strong>Home</strong> opens the collection welcome page, also available at <code>collection://home</code>.</p>
       <h2>Working with a page</h2>
       <p>Use <strong>File → New page…</strong> to start a new item. When an item is open, <strong>Edit → Edit page…</strong> opens its editor and <strong>File → Delete item…</strong> asks for confirmation before deleting it.</p>

@@ -13,21 +13,21 @@ import {
   TypeStep,
 } from "./PageEditorWizardSteps";
 
-const INITIAL_DATA: PageData = { pageType: "item", title: "", itemType: null };
-
 interface PageEditorWizardProps {
+  initialType?: "article" | "item";
   onFinish: (data: PageData) => void;
 }
 
-export function PageEditorWizard({ onFinish }: PageEditorWizardProps) {
+export function PageEditorWizard({ initialType = "item", onFinish }: PageEditorWizardProps) {
   const [open, setOpen] = useState(true);
-  const [data, setData] = useState<PageData>(INITIAL_DATA);
+  const initialData: PageData = { pageType: initialType, title: "", itemType: null };
+  const [data, setData] = useState<PageData>(initialData);
 
   const update = (changes: Partial<PageData>) =>
     setData((prev) => ({ ...prev, ...changes }));
 
   const cancelWizard = () => {
-    setData(INITIAL_DATA);
+    setData(initialData);
     setOpen(false);
   };
 

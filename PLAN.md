@@ -1,14 +1,15 @@
 # Current plan and handoff
 
-**In progress · Pre-alpha 0.6 · Articles**
+**Ready to start · Pre-alpha 0.7 · Photos and galleries**
 
-Collectors can write an article, link it to a game, and reopen or edit it at the same Explorer address. The next step is to find an article by title from an authored-page list after restarting Hoarder. See the [0.6 checklist and release demo](ROADMAP.md#06-articles).
+A collector can already photograph a game in Copy Editor and reopen the photos in Media Viewer. The next outcome is to reuse two of those images in an article. After restarting Hoarder, the article should show the images in saved order with their gallery captions, alongside its text and item link. See the [0.7 checklist and release demo](ROADMAP.md#07-photos-and-galleries).
 
 ## Implementation starting points
 
-1. Add an article title-list endpoint alongside [article create, read and update](backend/app/routers/articles.py). Give the list a location reachable from Explorer Home and show a way to create the first article when the collection has none.
-2. Open a list entry at its existing `collection://article/<id>` address. Check navigation from the list to the article, on to a linked game, and Back.
-3. Run the [0.6 release demo](ROADMAP.md#06-articles) from the list with a disposable game. Verify the renamed target and edited article after reload, then record the checks and prepare the 0.7 active card.
+1. Add gallery storage to the [article blocks](backend/app/db/models/articles.py) and extend the [article API](backend/app/db/schemas/articles.py). The first missing piece is an ordered gallery entry that references an existing collection image and stores its caption. On fresh SQLite and a disposable 0.6 collection, save and reopen two entries. Verify the original article address, text and link block IDs.
+2. Extend the [article editor](frontend/src/pages/PageEditor/ArticleEditor.tsx) to select existing photos from the [media listing](backend/app/routers/media.py). Let the collector edit the order and captions, cancel a draft and reopen the saved gallery in [Explorer](frontend/src/components/Explorer/explorer_pages/ArticlePage.tsx). The proposed starting layout appends the gallery after the existing blocks so older articles keep their arrangement.
+3. Extend [media cleanup](backend/app/media.py) to account for gallery references. Removing a gallery entry must preserve the copy’s photo. Removing a copy attachment first must preserve the image while a gallery still uses it. Verify each surviving reference opens the original file.
+4. Run the release demo with disposable front and back photos. Reload the article, remove the front from the gallery and the back from the copy, then open both surviving images. Run the backend, frontend, build and contract checks in [AGENTS.md](AGENTS.md).
 
 ## Decisions to carry forward
 
@@ -30,8 +31,10 @@ Collectors can write an article, link it to a game, and reopen or edit it at the
 
 | Field | Current checkpoint |
 | --- | --- |
-| Working branch and version | The article creation baseline is `6bfbc97` on `hoarder-pre-alpha-0.6`. The working tree adds links and editing. About reads `0.6.0-pre-alpha` from [VERSION](VERSION). |
-| Article creation and reopening | The first two **Write and edit** checks are complete. Save opens the article in Explorer at a bookmarkable browser URL. Its Explorer address also works from Home, so collectors can return to an article before the authored-page list ships. SQLite assigns each block an ID and stores its position and text. |
+| Working branch and version | On `hoarder-pre-alpha-0.6`, article creation landed in `6bfbc97` and links and editing landed in `f5ce371`. The working tree adds the authored-page list. About reads `0.6.0-pre-alpha` from [VERSION](VERSION). |
+| 0.6 release demo | Passed in Chrome with a disposable SQLite collection. From Explorer Home, opened the empty **Authored pages** list and created an article linking to a game. Restarted the backend, reloaded the list, opened the title with Enter and reloaded the article. Renamed the game in Page Editor, followed its updated link and used Back twice to return to the list. Edited the article’s title and text, found the new title in the list and reopened the revised paragraphs at its original Explorer address. |
+| 0.6 checks | 61 backend tests and 130 frontend tests passed, along with lint, the production build and the generated API contract check. The list returns IDs and titles in case-insensitive title order with stable ID ties. Its empty state, failed load, Refresh and Back/Forward navigation are covered. Vite still reports the existing chunk-size warning. |
+| Article creation and reopening | The first two **Write and edit** checks are complete. Save opens the article in Explorer at a bookmarkable browser URL. Collectors can also enter the article’s address directly in Explorer. SQLite assigns each block an ID and stores its position and text. |
 | Article verification | 58 backend tests and 128 frontend tests passed, along with lint, the production build and the API contract check. Storage tests reopened fresh and upgraded SQLite collections and checked article and block IDs, whitespace, save retries and existing copy notes. In Chrome with disposable data, checked blank-title validation, saved two paragraphs, restarted the backend and reloaded the page. Entering the article address from Home reopened the same title and paragraph break. Vite still reports the existing chunk-size warning. |
 | Article links and editing | All four **Write and edit** checks are complete. Search catalog titles or short titles, select a numbered result, and save the link after the text. Explorer Edit opens the saved article. Saving updates changed fields and retains block IDs when retargeting. Cancel returns to the saved article. |
 | Link and edit verification | 60 backend tests, 129 frontend tests, lint, production build and API contract checks passed. Coverage includes upgrading a text-only article database, retrying edits and rolling back an invalid target. In Chrome with disposable games, created a link, renamed its target, followed it and used Back. Edited title, text and target, cancelled another edit, restarted the server and reopened the original address. Deleting the linked game displayed its unavailable item number beneath the saved text. Vite retains its chunk-size warning. |
@@ -53,7 +56,7 @@ Collectors can write an article, link it to a game, and reopen or edit it at the
 | Review verification | 55 backend tests and 127 frontend tests passed, along with lint, the production build and the API contract check. In Chrome with disposable SQLite data, opened the wizard from Explorer, saved a title while preserving a description changed separately, tried malformed and retired addresses, returned Home and read Help. Checked desktop and 390 px layouts. Excluding unused React95 icons reduced the main production JavaScript from 5.11 MB to 553 kB. Vite still reports its 500 kB chunk warning. |
 | Restored window controls | Restored all eight buttons in their original positions. The 127 frontend tests and production build passed. Checked their visibility in Chrome at 1280 px and 390 px and opened the working Collection Manager search. |
 | Explorer page styling · owner request | Home and error pages use early-web document styling inside the React95 window. The error page’s Home link supports keyboard activation and Explorer Back. In Chrome at 1280 px and 390 px, checked Home, a long invalid address, a missing item and a failed request. All 127 frontend tests, lint and the production build passed. |
-| Next action | Add the authored-page list and its Explorer Home entry point. Check an empty collection and reopen a saved article by title. |
+| Next action | Implement gallery block persistence and round-trip two captioned references to existing collection images on a disposable 0.6 article. |
 
 Open the working branch on either computer and use this prompt in a fresh implementation chat.
 

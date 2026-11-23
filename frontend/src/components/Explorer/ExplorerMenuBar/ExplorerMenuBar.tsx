@@ -56,7 +56,6 @@ export function ExplorerMenuBar() {
       onDeleted={(id) => {
         removeItem(id);
         setDeleteId(null);
-        navigateTo("/collection-view", { replace: true });
       }} />}
     </>
   );

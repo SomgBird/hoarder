@@ -47,6 +47,18 @@ class ArticleTests(unittest.TestCase):
     def test_new_collection_reopens_article_and_replays_save(self):
         self.check_round_trip()
 
+    def test_list_reopens_titles_in_catalog_order_with_stable_ids(self):
+        with open_collection(self.path) as client:
+            self.assertEqual(client.get("/articles/").json(), [])
+            saved = []
+            for title in ("Zebra", "alpha", "Alpha"):
+                article = client.post("/articles/", json={"title": title, "blocks": self.payload["blocks"]}).json()
+                saved.append({"id": article["id"], "title": title})
+            self.assertEqual(client.get("/articles/").json(), [saved[1], saved[2], saved[0]])
+            client.patch(f"/articles/{saved[0]['id']}", json={"title": "Aardvark"})
+        with open_collection(self.path) as client:
+            self.assertEqual(client.get("/articles/").json(), [{**saved[0], "title": "Aardvark"}, *saved[1:]])
+
     def test_collection_with_item_and_copy_gains_articles_on_startup(self):
         engine = create_engine(f"sqlite:///{self.path}")
         tables = [table for table in SQLModel.metadata.sorted_tables if table.name not in ("article", "article_block")]

@@ -1,4 +1,4 @@
-import { parseRecordId } from "@components/Explorer/locations";
+import { parseRecordId, parseUrl } from "@components/Explorer/locations";
 import type { ExplorerLocation } from "@components/Explorer/locations";
 import {
   CollectionManager,
@@ -44,6 +44,8 @@ export function CollectionView() {
   let initial: ExplorerLocation = { page: "home" };
   if (itemId !== null) initial = { page: "item", id: itemId };
   else if (articleId !== null) initial = { page: "article", id: articleId };
+  else if (searchParams.get("page") === "pages") initial = { page: "pages" };
+  else if (searchParams.has("address")) initial = parseUrl(searchParams.get("address")!);
   return (
     <ExplorerProvider initial={initial}>
       <CollectionViewContent />

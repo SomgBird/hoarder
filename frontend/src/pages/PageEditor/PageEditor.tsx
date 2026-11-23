@@ -35,7 +35,7 @@ export function PageEditor() {
   }
 
   if (!pageData) {
-    return <PageEditorWizard onFinish={setPageData} />;
+    return <PageEditorWizard initialType={searchParams.get("new") === "article" ? "article" : "item"} onFinish={setPageData} />;
   }
 
   if (pageData.pageType === "article") {

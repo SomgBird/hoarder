@@ -1,12 +1,17 @@
-from sqlalchemy import text
+from sqlalchemy import func, text
 from sqlalchemy.dialects.sqlite import insert
 from sqlmodel import Session, select
 
 from app.db.models import Article, ArticleBlock, Item
-from app.db.schemas.articles import ArticleCreate, ArticleRead, ArticleUpdate, ItemLinkRead, TextBlockRead
+from app.db.schemas.articles import ArticleCreate, ArticleRead, ArticleSummary, ArticleUpdate, ItemLinkRead, TextBlockRead
 from app.errors import ConflictError, InvalidReferenceError, NotFoundError
 
 from .reads import display_title_column
+
+
+def list_articles(session: Session) -> list[ArticleSummary]:
+    rows = session.exec(select(Article.id, Article.title).order_by(func.hoarder_name_key(Article.title), Article.id))
+    return [ArticleSummary(id=id_, title=title) for id_, title in rows]
 
 
 def _load(session: Session, article_id: int) -> Article:
