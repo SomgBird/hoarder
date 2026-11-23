@@ -34,3 +34,9 @@
 .error h1 { color: #70251c; }
 .error hr { border: 0; border-top: 1px solid #867865; }
 .error code { font: 0.9em "Courier New", Courier, monospace; }
+
+.article {
+  composes: page;
+  background: #fffdf4;
+}
+.article p { white-space: pre-wrap; }

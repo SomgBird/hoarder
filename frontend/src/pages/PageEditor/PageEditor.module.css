@@ -12,3 +12,6 @@
 .launch { display: inline-flex; align-items: center; gap: 6px; }
 
 .caption { background-image: var(--editor-caption); }
+.articleFields { min-width: 0; margin: 10px 8px; padding: 6px 10px 12px; }
+.articleFields label { display: block; margin: 6px 0 3px; }
+.articleFields input { width: 100%; box-sizing: border-box; }

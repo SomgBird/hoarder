@@ -1,4 +1,4 @@
-import { parseItemId } from "@components/Explorer/locations";
+import { parseRecordId } from "@components/Explorer/locations";
 import { useEffect, useState } from "react";
 import { FileFind, FileText } from "@react95/icons";
 import { PageEditorWindow } from "./PageEditorWindow";
@@ -9,6 +9,7 @@ import { itemService } from "@services";
 import { ITEM_TYPES, type ItemRead } from "@types";
 import { PageEditorWizard } from "./PageEditorWizard/PageEditorWizard";
 import { PageEditorWorkspace } from "./PageEditorWorkspace/PageEditorWorkspace";
+import { ArticleEditor } from "./ArticleEditor";
 import type { PageData } from "./pageTypes";
 
 export function PageEditor() {
@@ -19,7 +20,7 @@ export function PageEditor() {
   const [pageData, setPageData] = useState<PageData | null>(null);
 
   if (itemIdParam !== null) {
-    const itemId = parseItemId(itemIdParam);
+    const itemId = parseRecordId(itemIdParam);
     if (itemId === null) {
       const back = () => navigate("/collection-view");
       return <PageEditorWindow editing onClose={back}>
@@ -33,6 +34,11 @@ export function PageEditor() {
 
   if (!pageData) {
     return <PageEditorWizard onFinish={setPageData} />;
+  }
+
+  if (pageData.pageType === "article") {
+    return <ArticleEditor initialTitle={pageData.title.trim()} onClose={() => setPageData(null)}
+      onSaved={(id) => navigate(`/collection-view?articleId=${id}`)} />;
   }
 
   return (

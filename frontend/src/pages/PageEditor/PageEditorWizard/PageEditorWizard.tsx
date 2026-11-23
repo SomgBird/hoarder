@@ -35,14 +35,14 @@ export function PageEditorWizard({ onFinish }: PageEditorWizardProps) {
 
   const steps: WizardStep[] = [
     { title: "Page type", content: <TypeStep {...stepProps} /> },
-    ...(data.pageType === "item"
+    ...(data.pageType === "item" || data.pageType === "article"
       ? [
           {
             title: "Details",
             content: <DetailsStep {...stepProps} />,
             validate: () => {
               if (!data.title.trim()) return "Title is required.";
-              if (!data.itemType) return "Item type is required.";
+              if (data.pageType === "item" && !data.itemType) return "Item type is required.";
               return null;
             },
           },

@@ -1,4 +1,4 @@
-import { parseItemId } from "@components/Explorer/locations";
+import { parseRecordId } from "@components/Explorer/locations";
 import { useEffect, useState } from "react";
 import { Button, Frame, TitleBar } from "@react95/core";
 import { Files, Warning } from "@react95/icons";
@@ -16,7 +16,7 @@ export function CopyEditor() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const param = params.get("itemId");
-  const routeItem = parseItemId(param);
+  const routeItem = parseRecordId(param);
   const [revision, setRevision] = useState(0);
   // Keep the draft mounted if browser history requests a different item.
   const [guard, setGuard] = useState<{ id: number; state: "dirty" | "busy" } | null>(null);

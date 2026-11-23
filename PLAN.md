@@ -1,14 +1,14 @@
 # Current plan and handoff
 
-**Ready to start · Pre-alpha 0.6 · Articles**
+**In progress · Pre-alpha 0.6 · Articles**
 
-Let a collector write an article about a game, close the app, then reopen the article in Explorer and follow its link to the same game. Start by saving the article title and one multiline text block in SQLite. The article’s ordered blocks will also support galleries and custom pages in later releases. See the [0.6 checklist and release demo](ROADMAP.md#06-articles).
+Collectors can now write a titled article with one plain-text block and reopen it in Explorer after restarting Hoarder. The next step is to add a link to a cataloged game and reopen the text and link in order. See the [0.6 checklist and release demo](ROADMAP.md#06-articles).
 
 ## Implementation starting points
 
-1. Add article create and read operations. Store a title and an ordered sequence of blocks. Give each block a stable ID, a kind and content appropriate to that kind. Start with one text block. Reopen SQLite and read the article by ID. Check the title, block ID and paragraph breaks on both an empty collection and a disposable collection with existing items and copies.
-2. The [New page wizard](frontend/src/pages/PageEditor/PageEditorWizard/PageEditorWizard.tsx) already offers Article. Route that choice to an article editor alongside the [existing item editor](frontend/src/pages/PageEditor/PageEditor.tsx). Validate the title and save edits to the same article and text block. Verify that cancelling an edit keeps the saved text.
-3. Extend [Explorer locations](frontend/src/components/Explorer/locations.ts) with a stable article address and an authored-page list. Provide an entry point when the list is empty. Use the [existing title search](frontend/src/services/itemService.ts) to add an item-link block after the text. Render both in saved order. Resolve the link by item ID so a rename updates the displayed title and deletion leaves the article readable.
+1. Extend the [article schemas](backend/app/db/schemas/articles.py) and [block storage](backend/app/db/models/articles.py) with an item-link block. In the [article editor](frontend/src/pages/PageEditor/ArticleEditor.tsx), use the [existing title search](frontend/src/services/itemService.ts) to choose its target. Reopen the text and link in saved order. Resolve the link by item ID so a rename updates the displayed title and deletion leaves the article readable.
+2. Open a saved article in Page Editor. Save title, text and link edits to the same article and blocks. Verify that cancelling an edit keeps the saved version.
+3. Add an authored-page list to Explorer with a way to start the first page. Open each result at its existing `collection://article/<id>` address. Follow an article’s item link and use Back to return.
 4. Run the roadmap demo with a disposable game. Reload the article from the list, rename the game, follow the link and use Back. Edit the article and reopen its original address. Run the API, frontend and contract checks in [AGENTS.md](AGENTS.md).
 
 ## Decisions to carry forward
@@ -31,7 +31,9 @@ Let a collector write an article about a game, close the app, then reopen the ar
 
 | Field | Current checkpoint |
 | --- | --- |
-| Working branch and version | `hoarder-pre-alpha-0.6` starts at `ed0b294`. About reads `0.6.0-pre-alpha` from [VERSION](VERSION). Article implementation is the next task. |
+| Working branch and version | Article work is on `hoarder-pre-alpha-0.6` over `ac58a0c`. About reads `0.6.0-pre-alpha` from [VERSION](VERSION). |
+| Article creation and reopening | The first two **Write and edit** checks are complete. Save opens the article in Explorer at a bookmarkable browser URL. Its Explorer address also works from Home, so collectors can return to an article before the authored-page list ships. SQLite assigns each block an ID and stores its position and text. |
+| Article verification | 58 backend tests and 128 frontend tests passed, along with lint, the production build and the API contract check. Storage tests reopened fresh and upgraded SQLite collections and checked article and block IDs, whitespace, save retries and existing copy notes. In Chrome with disposable data, checked blank-title validation, saved two paragraphs, restarted the backend and reloaded the page. Entering the article address from Home reopened the same title and paragraph break. Vite still reports the existing chunk-size warning. |
 | Completed | All [0.5 owned-copy checks](ROADMAP.md#05-owned-copies) and the copy attachment portion of [0.7 Photos and galleries](ROADMAP.md#07-photos-and-galleries). Copy Editor saves notes, image files and descriptions together. Explorer and Media Viewer open the saved originals. |
 | Copy-photo verification | 53 backend tests, 122 frontend tests, lint, the production build and the API contract check passed. Coverage includes retrying uploads, rolling back invalid batches, protecting drafts and preserving photos shared by older records. |
 | Page Editor | The New Page Wizard and the item editor use Windows-style controls and React95 icons. General, Catalog, Languages, Credits and Images group the existing fields. Each tab keeps its draft while the collector visits another tab. |
@@ -50,7 +52,7 @@ Let a collector write an article about a game, close the app, then reopen the ar
 | Review verification | 55 backend tests and 127 frontend tests passed, along with lint, the production build and the API contract check. In Chrome with disposable SQLite data, opened the wizard from Explorer, saved a title while preserving a description changed separately, tried malformed and retired addresses, returned Home and read Help. Checked desktop and 390 px layouts. Excluding unused React95 icons reduced the main production JavaScript from 5.11 MB to 553 kB. Vite still reports its 500 kB chunk warning. |
 | Restored window controls | Restored all eight buttons in their original positions. The 127 frontend tests and production build passed. Checked their visibility in Chrome at 1280 px and 390 px and opened the working Collection Manager search. |
 | Explorer page styling · owner request | Home and error pages use early-web document styling inside the React95 window. The error page’s Home link supports keyboard activation and Explorer Back. In Chrome at 1280 px and 390 px, checked Home, a long invalid address, a missing item and a failed request. All 127 frontend tests, lint and the production build passed. |
-| Next action | Implement article create and read with one text block. Reopen the database and verify the article ID, title, block ID and multiline text against the submitted record. |
+| Next action | Add the item-link block and title picker. Save an article with text followed by a link, rename the game and check the reopened link’s title and destination. |
 
 Open the working branch on either computer and use this prompt in a fresh implementation chat.
 

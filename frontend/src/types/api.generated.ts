@@ -3,6 +3,40 @@
  * Regenerate with: npm run generate:types
  */
 export interface paths {
+    "/articles/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Article */
+        post: operations["create_article_articles__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{article_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Article */
+        get: operations["get_article_articles__article_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/items/": {
         parameters: {
             query?: never;
@@ -448,6 +482,27 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ArticleCreate */
+        ArticleCreate: {
+            /** Blocks */
+            blocks: components["schemas"]["TextBlockCreate"][];
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id?: string;
+            /** Title */
+            title: string;
+        };
+        /** ArticleRead */
+        ArticleRead: {
+            /** Blocks */
+            blocks: components["schemas"]["TextBlockRead"][];
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+        };
         /** AuthorCreditCreate */
         AuthorCreditCreate: {
             /** Author Id */
@@ -1170,6 +1225,28 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** TextBlockCreate */
+        TextBlockCreate: {
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "text";
+            /** Text */
+            text: string;
+        };
+        /** TextBlockRead */
+        TextBlockRead: {
+            /** Id */
+            id: number;
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "text";
+            /** Text */
+            text: string;
+        };
         /** TitleCreate */
         TitleCreate: {
             /** Language Code */
@@ -1211,6 +1288,70 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    create_article_articles__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArticleCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_article_articles__article_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                article_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_item_items__post: {
         parameters: {
             query?: never;

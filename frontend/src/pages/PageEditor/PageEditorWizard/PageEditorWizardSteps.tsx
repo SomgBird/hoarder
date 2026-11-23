@@ -26,7 +26,7 @@ export function TypeStep({ data, update }: StepProps) {
         </RadioButton>
       ))}
     </div>
-    <p className={styles.availability}>Item pages are available in this release.</p>
+    <p className={styles.availability}>Item pages and articles are available in this release.</p>
   </>;
 }
 
@@ -34,25 +34,27 @@ export function DetailsStep({ data, update }: StepProps) {
   return <div className={styles.fields}>
     <label htmlFor="new-page-title">Title</label>
     <Input id="new-page-title" autoFocus value={data.title} onChange={(e) => update({ title: e.target.value })} />
-    <label htmlFor="new-item-type">Item type</label>
-    <Dropdown id="new-item-type" options={["", ...ITEM_TYPE_LABEL_LIST]}
-      value={data.itemType ? ITEM_TYPE_LABELS[data.itemType] : ""}
-      onChange={(e) => update({ itemType: itemTypeFromLabel(e.currentTarget.value) })} />
+    {data.pageType === "item" && <>
+      <label htmlFor="new-item-type">Item type</label>
+      <Dropdown id="new-item-type" options={["", ...ITEM_TYPE_LABEL_LIST]}
+        value={data.itemType ? ITEM_TYPE_LABELS[data.itemType] : ""}
+        onChange={(e) => update({ itemType: itemTypeFromLabel(e.currentTarget.value) })} />
+    </>}
   </div>;
 }
 
 export function ReviewStep({ data }: StepProps) {
   return <>
-    <p className={styles.prompt}>Choose Finish to open this item in Page Editor.</p>
+    <p className={styles.prompt}>Choose Finish to open this {data.pageType} in Page Editor.</p>
     <dl className={styles.review}>
-      <dt>Page type</dt><dd>Item page</dd>
-      <dt>Title</dt><dd>{data.title}</dd>
-      <dt>Item type</dt><dd>{data.itemType && ITEM_TYPE_LABELS[data.itemType]}</dd>
+      <dt>Page type</dt><dd>{data.pageType === "article" ? "Article" : "Item page"}</dd>
+      <dt>Title</dt><dd>{data.title.trim()}</dd>
+      {data.pageType === "item" && <><dt>Item type</dt><dd>{data.itemType && ITEM_TYPE_LABELS[data.itemType]}</dd></>}
     </dl>
   </>;
 }
 
 export function NotImplementedStep({ data }: StepProps) {
   const label = pageTypes.find((type) => type.value === data.pageType)?.label;
-  return <p>{label} is planned for a future release. Choose Back to select Item page.</p>;
+  return <p>{label} is planned for a future release. Choose Back to select Item page or Article.</p>;
 }

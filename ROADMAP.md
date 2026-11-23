@@ -82,12 +82,12 @@ Version 0.4 delivered the display controls and Help system. The remaining ideas 
 
 ## 0.6 Articles
 
-**Outcome.** A collector can write an article about a cataloged item, find it again in Explorer and follow its item link. The existing wizard offers Article but ends at “Not available.”
+**Outcome.** A collector can write an article about a cataloged item, find it again in Explorer and follow its item link.
 
 **Write and edit**
 
-- [ ] Choose **Article** in the New page wizard, enter a title and open the article editor. Show a useful validation message for a blank title.
-- [ ] Write two paragraphs in one plain-text block and save the article. After restarting, reopen it and check the title, text and paragraph break.
+- [x] Choose **Article** in the New page wizard, enter a title and open the article editor. Show a useful validation message for a blank title.
+- [x] Write two paragraphs in one plain-text block and save the article. After restarting, reopen it and check the title, text and paragraph break.
 - [ ] Add an item-link block after the text by choosing an existing catalog item by title. Reopen the blocks in their saved order. Resolve the target by item ID so renaming it preserves the destination.
 - [ ] Reopen the article in Page Editor, change its title, text or link target, and save to the same page. Canceling an edit restores the saved version.
 
