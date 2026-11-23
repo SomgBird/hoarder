@@ -43,16 +43,6 @@ export const navigation: readonly NavEntry[] = [
         ),
       },
       {
-        path: "/page-editor",
-        label: "Page Editor",
-        icon: <FilePen variant="32x32_4" />,
-        Component: lazy(() =>
-          import("@pages").then(({ PageEditor }) => ({
-            default: PageEditor,
-          })),
-        ),
-      },
-      {
         path: "/copy-editor",
         label: "Copy Editor",
         icon: <Files variant="32x32_4" />,
@@ -69,6 +59,14 @@ export const navigation: readonly NavEntry[] = [
         ),
       },
     ],
+  },
+  {
+    path: "/page-editor",
+    label: "Page Editor",
+    icon: <FilePen variant="32x32_4" />,
+    Component: lazy(() =>
+      import("@pages").then(({ PageEditor }) => ({ default: PageEditor })),
+    ),
   },
   {
     label: "Tracker",

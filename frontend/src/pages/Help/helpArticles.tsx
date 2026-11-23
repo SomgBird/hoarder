@@ -79,7 +79,7 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
     introduction: "The New page wizard opens Page Editor for a new item or article.",
     content: <>
       <h2>Creating a page</h2>
-      <ol><li>Open <strong>Collection → Page Editor</strong> or choose <strong>File → New page…</strong> in Explorer.</li><li>Choose Item page.</li><li>Enter a title and select an item type. Both are required.</li><li>Review the details and click Finish.</li><li>Complete the editor and click Create to save the item.</li></ol>
+      <ol><li>Open <strong>Page Editor</strong> from the main menu or choose <strong>File → New page…</strong> in Explorer.</li><li>Choose Item page.</li><li>Enter a title and select an item type. Both are required.</li><li>Review the details and click Finish.</li><li>Complete the editor and click Create to save the item.</li></ol>
       <p>To write an article, choose <strong>Article</strong>, enter its title and finish the wizard. Write in the Text field and choose <strong>Save article</strong>. Explorer shows the saved article. Bookmark the browser page or enter its <code>collection://article/</code> address with the article number in Explorer to reopen it.</p>
       <p>To link a catalog item after the text, choose <strong>Add item link…</strong>, search by title and select the item. The number beside each result distinguishes items with the same title. The saved link displays the item’s current title.</p>
       <p>Finish opens the editor; it does not save an item by itself. Back returns to an earlier wizard step. Cancel asks before discarding the wizard’s entered data.</p>

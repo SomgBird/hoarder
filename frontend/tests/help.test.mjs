@@ -305,7 +305,11 @@ test("Help links target the relevant sections from Settings, the color dialog, A
   assert.equal(window.location.pathname, "/settings");
   await remountAt("/");
   assertHelpLink("about");
-  await remountAt("/page-editor");
+  const [collection, pageEditor] = container.querySelectorAll('nav[aria-label="Main navigation"] > ul > li');
+  assert.match(collection.textContent, /^Collection/);
+  assert.equal(pageEditor.textContent, "Page Editor");
+  await click(pageEditor);
+  assert.equal(window.location.pathname, "/page-editor");
   assertHelpLink("new-item");
 });
 
