@@ -270,6 +270,55 @@ test("Article wizard validates the title, retains a failed draft and opens the s
   assert.ok([...container.querySelectorAll("input")].some((node) => node.value === "collection://article/7"));
 });
 
+test("article edits can be cancelled or retarget a link while preserving independently edited text", async () => {
+  const article = { id: 7, title: "Catalog notes", blocks: [
+    { kind: "text", id: 11, text: "Saved text" },
+    { kind: "item-link", id: 12, item_id: 17, item_title: "Former target" },
+  ] };
+  const edits = [];
+  const searches = [];
+  const fetchOther = globalThis.fetch;
+  globalThis.fetch = async (url, options) => {
+    const location = new URL(url);
+    if (location.pathname === "/articles/7") {
+      if (options?.method === "PATCH") {
+        const changes = JSON.parse(options.body);
+        edits.push(changes);
+        article.title = changes.title;
+        Object.assign(article.blocks[1], { item_id: changes.item_id, item_title: storedItem.display_title });
+      }
+      return Response.json(article);
+    }
+    if (location.pathname === "/items/itemlist") searches.push(location.searchParams.get("q"));
+    return fetchOther(url, options);
+  };
+  await render(routed("/collection-view?articleId=7"));
+  await click(editButton());
+  await type(container.querySelector("textarea"), "Discard this");
+  await click(button("Remove link"));
+  await click(button("Cancel"));
+  assert.equal(edits.length, 0);
+  assert.equal(container.querySelector("article p").textContent, "Saved text");
+  assert.equal(container.querySelector("article a").textContent, "Former target");
+
+  await click(editButton());
+  article.blocks[0].text = "Updated elsewhere";
+  await type(container.querySelector("#article-title"), "Revised title");
+  await click(button("Change linked item…"));
+  await type(container.querySelector("#article-item-search"), "Original");
+  await act(async () => new Promise((resolve) => setTimeout(resolve, 250)));
+  assert.ok(searches.includes("Original"));
+  await click(button("Original title (#42)"));
+  await click(button("Save article"));
+  assert.deepEqual(edits, [{ title: "Revised title", item_id: 42 }]);
+  assert.equal(container.querySelector("article p").textContent, "Updated elsewhere");
+  assert.equal(container.querySelector("article a").getAttribute("href"), "/collection-view?itemId=42");
+  await click(container.querySelector("article a"));
+  assert.equal(container.querySelector("h1").textContent, "Original title");
+  await click(button("Back"));
+  assert.equal(container.querySelector("article h1").textContent, "Revised title");
+});
+
 test("explorer enables Edit for an item, loads the full form, and displays saved changes", async () => {
   await render(routed("/collection-view"));
   assert.equal(editButton().disabled, true);

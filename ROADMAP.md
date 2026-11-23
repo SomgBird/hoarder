@@ -88,14 +88,14 @@ Version 0.4 delivered the display controls and Help system. The remaining ideas 
 
 - [x] Choose **Article** in the New page wizard, enter a title and open the article editor. Show a useful validation message for a blank title.
 - [x] Write two paragraphs in one plain-text block and save the article. After restarting, reopen it and check the title, text and paragraph break.
-- [ ] Add an item-link block after the text by choosing an existing catalog item by title. Reopen the blocks in their saved order. Resolve the target by item ID so renaming it preserves the destination.
-- [ ] Reopen the article in Page Editor, change its title, text or link target, and save to the same page. Canceling an edit restores the saved version.
+- [x] Add an item-link block after the text by choosing an existing catalog item by title. Reopen the blocks in their saved order. Resolve the target by item ID so renaming it preserves the destination.
+- [x] Reopen the article in Page Editor, change its title, text or link target, and save to the same page. Canceling an edit restores the saved version.
 
 **Find and follow**
 
 - [ ] Add an authored-page list reachable from Explorer. Show article titles and a way to create the first page when the list is empty.
 - [ ] Open a saved article from the list and by its own stable Explorer address. Keep existing item and home addresses working.
-- [ ] Follow the article's item link and use Back to return. If a linked item has been deleted, identify the unavailable target and keep the article readable.
+- [x] Follow the article's item link and use Back to return. If a linked item has been deleted, identify the unavailable target and keep the article readable.
 - [ ] **Release demo.** Create an article linking to a game, reload it from the page list, rename the game and follow the link. Edit the article and verify its original address still opens the revised text.
 
 ## 0.7 Photos and galleries

@@ -12,11 +12,13 @@ import {
 } from "@react95/icons";
 import { useNavigate } from "react-router-dom";
 import { useExplorer } from "../ExplorerContext";
+import { pageEditorPath } from "../locations";
 import styles from "./ExplorerToolbar.module.css";
 
 function ExplorerToolbar() {
   const { back, forward, canBack, canForward, navigate, current, refresh } = useExplorer();
   const navigateTo = useNavigate();
+  const editorPath = pageEditorPath(current);
 
   return (
     <div className={styles.container}>
@@ -53,9 +55,9 @@ function ExplorerToolbar() {
         <Toolbar.Button
           icon={<Write1 variant="32x32_4" />}
           label="Edit"
-          disabled={current.page !== "item"}
+          disabled={!editorPath}
           onClick={() => {
-            if (current.page === "item") navigateTo(`/page-editor?itemId=${current.id}`);
+            if (editorPath) navigateTo(editorPath);
           }}
         />
 

@@ -27,6 +27,9 @@ def create_db_and_tables() -> None:
     SQLModel.metadata.create_all(engine)
     # create_all does not add columns to existing SQLite tables.
     with engine.begin() as connection:
+        block_columns = inspect(connection).get_columns("article_block")
+        if "item_id" not in {column["name"] for column in block_columns}:
+            connection.exec_driver_sql("ALTER TABLE article_block ADD COLUMN item_id INTEGER")
         columns = {column["name"] for column in inspect(connection).get_columns("item")}
         if "date_added" not in columns:
             connection.exec_driver_sql("ALTER TABLE item ADD COLUMN date_added DATE")

@@ -76,8 +76,8 @@ def get_item(session: Session, item_id: int) -> ItemRead:
     return _to_read(session, _load_item(session, item_id))
 
 
-def _list_query():
-    """One row per item: title in the selected language, else any title."""
+def display_title_column():
+    """Catalog title in the selected language, falling back to the first title."""
     in_selected_language = (
         select(Title.title_text)
         .where(Title.item_id == Item.id, Title.language_id == Item.selected_language_id, func.hoarder_name_key(Title.title_text) != "")
@@ -92,6 +92,10 @@ def _list_query():
         .limit(1)
         .scalar_subquery()
     )
+    return func.coalesce(in_selected_language, any_language, "Untitled").label("title")
+
+
+def _list_query():
     type_name = (
         select(ItemType.name).where(ItemType.id == Item.item_type_id).scalar_subquery()
     )
@@ -100,7 +104,7 @@ def _list_query():
     )
     return select(
         Item.id,
-        func.coalesce(in_selected_language, any_language, "Untitled").label("title"),
+        display_title_column(),
         type_name.label("item_type"),
         Item.release_date,
         Item.date_added,

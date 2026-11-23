@@ -75,22 +75,24 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
     </>, related: ["explorer", "filters"],
   },
   "new-item": {
-    introduction: "The New page wizard starts an item page and then opens the full editor.",
+    introduction: "The New page wizard opens Page Editor for a new item or article.",
     content: <>
       <h2>Creating a page</h2>
       <ol><li>Open <strong>Collection → Page Editor</strong> or choose <strong>File → New page…</strong> in Explorer.</li><li>Choose Item page.</li><li>Enter a title and select an item type. Both are required.</li><li>Review the details and click Finish.</li><li>Complete the editor and click Create to save the item.</li></ol>
       <p>To write an article, choose <strong>Article</strong>, enter its title and finish the wizard. Write in the Text field and choose <strong>Save article</strong>. Explorer shows the saved article. Bookmark the browser page or enter its <code>collection://article/</code> address with the article number in Explorer to reopen it.</p>
+      <p>To link a catalog item after the text, choose <strong>Add item link…</strong>, search by title and select the item. The number beside each result distinguishes items with the same title. The saved link displays the item’s current title.</p>
       <p>Finish opens the editor; it does not save an item by itself. Back returns to an earlier wizard step. Cancel asks before discarding the wizard’s entered data.</p>
       <h2>Adding details</h2>
       <p>Use <strong>General</strong> for the title, description and item details. <strong>Catalog</strong> holds classifications and barcodes. The other tabs contain languages and alternative titles, credits, and images. You can switch tabs while editing and save them together.</p>
     </>, related: ["edit-item", "images", "collection"],
   },
   "edit-item": {
-    introduction: "Edit an existing item from its open page in Explorer.",
+    introduction: "Open an item or article in Explorer and choose Edit to revise it.",
     content: <>
       <h2>Saving changes</h2>
       <ol><li>Open the item and choose <strong>Edit → Edit page…</strong> or click Edit in the toolbar.</li><li>Update its title, description, references, credits, languages, barcodes, or other details.</li><li>Click Save to update that item. Cancel returns without saving.</li></ol>
       <p>The item keeps its type and Explorer address. Save applies the fields you changed. When you edit a list such as alternative titles or credits, Save replaces that list with the rows shown in the editor.</p>
+      <p>For an article, edit the title or text, or choose <strong>Change linked item…</strong> to select a different target. <strong>Save article</strong> reopens the revised page at its original address. <strong>Cancel</strong> returns to the saved version.</p>
       <h2>If saving fails</h2>
       <p>The editor keeps your entered values so you can correct an error and retry. If the item saved but an image failed, retrying continues the image save without creating another item or repeating the completed item update.</p>
     </>, related: ["images", "explorer"],

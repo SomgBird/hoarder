@@ -23,4 +23,6 @@ class ArticleBlock(SQLModel, table=True):
     article_id: int = Field(foreign_key="article.id", ondelete="CASCADE")
     position: int
     kind: str
-    text: str
+    text: str = ""
+    # Item numbers are never reassigned. Keep the address when its item is deleted.
+    item_id: int | None = None

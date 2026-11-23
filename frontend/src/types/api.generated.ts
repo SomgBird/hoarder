@@ -34,7 +34,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update Article */
+        patch: operations["update_article_articles__article_id__patch"];
         trace?: never;
     };
     "/items/": {
@@ -485,7 +486,7 @@ export interface components {
         /** ArticleCreate */
         ArticleCreate: {
             /** Blocks */
-            blocks: components["schemas"]["TextBlockCreate"][];
+            blocks: (components["schemas"]["TextBlockCreate"] | components["schemas"]["ItemLinkCreate"])[];
             /**
              * Request Id
              * Format: uuid
@@ -497,11 +498,23 @@ export interface components {
         /** ArticleRead */
         ArticleRead: {
             /** Blocks */
-            blocks: components["schemas"]["TextBlockRead"][];
+            blocks: (components["schemas"]["TextBlockRead"] | components["schemas"]["ItemLinkRead"])[];
             /** Id */
             id: number;
             /** Title */
             title: string;
+        };
+        /** ArticleUpdate */
+        ArticleUpdate: {
+            /**
+             * Item Id
+             * @description Omit to keep the link, null to remove it.
+             */
+            item_id?: number | null;
+            /** Text */
+            text?: string;
+            /** Title */
+            title?: string;
         };
         /** AuthorCreditCreate */
         AuthorCreditCreate: {
@@ -919,6 +932,30 @@ export interface components {
             /** Voice */
             voice: boolean | null;
         };
+        /** ItemLinkCreate */
+        ItemLinkCreate: {
+            /** Item Id */
+            item_id: number;
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "item-link";
+        };
+        /** ItemLinkRead */
+        ItemLinkRead: {
+            /** Id */
+            id: number;
+            /** Item Id */
+            item_id: number;
+            /** Item Title */
+            item_title: string | null;
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "item-link";
+        };
         /** ItemListEntryRead */
         ItemListEntryRead: {
             /** Date Added */
@@ -1331,6 +1368,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArticleRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_article_articles__article_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                article_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArticleUpdate"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

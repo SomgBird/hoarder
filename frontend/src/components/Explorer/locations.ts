@@ -19,6 +19,10 @@ export function parseRecordId(value: string | null): number | null {
   return Number.isSafeInteger(id) && id > 0 ? id : null;
 }
 
+export function pageEditorPath(loc: ExplorerLocation): string | null {
+  return loc.page === "item" || loc.page === "article" ? `/page-editor?${loc.page}Id=${loc.id}` : null;
+}
+
 export function parseUrl(url: string): ExplorerLocation {
   const address = url.trim();
   if (address === "collection://home") return { page: "home" };
