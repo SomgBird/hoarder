@@ -6,6 +6,7 @@ import { Icon } from "@components/Icon/Icon";
 import MenuBar from "@components/MenuBar/MenuBar";
 import Separator from "@components/Separator";
 import { useExplorer } from "../ExplorerContext";
+import { pageEditorPath } from "../locations";
 import { DeleteItemDialog } from "./DeleteItemDialog";
 import styles from "./ExplorerMenuBar.module.css";
 
@@ -14,6 +15,7 @@ export function ExplorerMenuBar() {
   const navigateTo = useNavigate();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const isItem = current.page === "item";
+  const editorPath = pageEditorPath(current);
 
   return (
     <>
@@ -28,8 +30,8 @@ export function ExplorerMenuBar() {
               onClick: () => { if (current.page === "item") setDeleteId(current.id); } },
           ] },
           { label: "Edit", mnemonicIndex: 0, entries: [
-            { label: "Edit page…", mnemonicIndex: 0, icon: <Write1 variant="16x16_4" />, disabled: !isItem,
-              onClick: () => { if (current.page === "item") navigateTo(`/page-editor?itemId=${current.id}`); } },
+            { label: "Edit page…", mnemonicIndex: 0, icon: <Write1 variant="16x16_4" />, disabled: !editorPath,
+              onClick: () => { if (editorPath) navigateTo(editorPath); } },
             { label: "Edit copies…", mnemonicIndex: 5, icon: <Files variant="16x16_4" />, disabled: !isItem,
               onClick: () => { if (current.page === "item") navigateTo(`/copy-editor?itemId=${current.id}`); } },
           ] },
@@ -54,7 +56,6 @@ export function ExplorerMenuBar() {
       onDeleted={(id) => {
         removeItem(id);
         setDeleteId(null);
-        navigateTo("/collection-view", { replace: true });
       }} />}
     </>
   );

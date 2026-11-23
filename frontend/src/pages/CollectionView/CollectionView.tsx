@@ -1,4 +1,5 @@
-import { parseItemId } from "@components/Explorer/locations";
+import { parseRecordId, parseUrl } from "@components/Explorer/locations";
+import type { ExplorerLocation } from "@components/Explorer/locations";
 import {
   CollectionManager,
   Explorer,
@@ -38,9 +39,15 @@ function CollectionViewContent() {
 
 export function CollectionView() {
   const [searchParams] = useSearchParams();
-  const itemId = parseItemId(searchParams.get("itemId"));
+  const itemId = parseRecordId(searchParams.get("itemId"));
+  const articleId = parseRecordId(searchParams.get("articleId"));
+  let initial: ExplorerLocation = { page: "home" };
+  if (itemId !== null) initial = { page: "item", id: itemId };
+  else if (articleId !== null) initial = { page: "article", id: articleId };
+  else if (searchParams.get("page") === "pages") initial = { page: "pages" };
+  else if (searchParams.has("address")) initial = parseUrl(searchParams.get("address")!);
   return (
-    <ExplorerProvider initial={itemId !== null ? { page: "item", id: itemId } : { page: "home" }}>
+    <ExplorerProvider initial={initial}>
       <CollectionViewContent />
     </ExplorerProvider>
   );

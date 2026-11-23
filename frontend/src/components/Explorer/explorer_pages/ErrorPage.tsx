@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useExplorer } from "../ExplorerContext";
+import { ExplorerLink } from "../ExplorerLink";
 import styles from "./ExplorerMessage.module.css";
 
 interface Props {
@@ -9,7 +9,6 @@ interface Props {
 }
 
 export function ErrorPage({ heading, message, hint }: Props) {
-  const { navigate } = useExplorer();
   return (
     <section className={styles.error}>
       <h1>{heading}</h1>
@@ -17,11 +16,7 @@ export function ErrorPage({ heading, message, hint }: Props) {
       <p>{message}</p>
       {hint && <p>{hint}</p>}
       <p>
-        <a href="/collection-view" onClick={(event) => {
-          if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-          event.preventDefault();
-          navigate({ page: "home" });
-        }}>Go to the home page</a>
+        <ExplorerLink to={{ page: "home" }}>Go to the home page</ExplorerLink>
       </p>
     </section>
   );

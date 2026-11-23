@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { helpUrl } from "@config/help";
+import { ExplorerLink } from "../ExplorerLink";
 import styles from "./ExplorerMessage.module.css";
 
 export function HomePage() {
@@ -10,6 +11,7 @@ export function HomePage() {
       <p>Double-click an item in Collection Manager or select it and press Enter to read its page here.</p>
       <ul>
         <li><Link to="/page-editor">Create an item page…</Link></li>
+        <li><ExplorerLink to={{ page: "pages" }}>Authored pages</ExplorerLink></li>
         <li><a href={helpUrl("collection", true)} target="hoarder-help">Collection Manager Help</a></li>
       </ul>
     </section>

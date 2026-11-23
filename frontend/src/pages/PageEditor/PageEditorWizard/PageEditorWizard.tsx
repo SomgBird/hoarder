@@ -13,21 +13,21 @@ import {
   TypeStep,
 } from "./PageEditorWizardSteps";
 
-const INITIAL_DATA: PageData = { pageType: "item", title: "", itemType: null };
-
 interface PageEditorWizardProps {
+  initialType?: "article" | "item";
   onFinish: (data: PageData) => void;
 }
 
-export function PageEditorWizard({ onFinish }: PageEditorWizardProps) {
+export function PageEditorWizard({ initialType = "item", onFinish }: PageEditorWizardProps) {
   const [open, setOpen] = useState(true);
-  const [data, setData] = useState<PageData>(INITIAL_DATA);
+  const initialData: PageData = { pageType: initialType, title: "", itemType: null };
+  const [data, setData] = useState<PageData>(initialData);
 
   const update = (changes: Partial<PageData>) =>
     setData((prev) => ({ ...prev, ...changes }));
 
   const cancelWizard = () => {
-    setData(INITIAL_DATA);
+    setData(initialData);
     setOpen(false);
   };
 
@@ -35,14 +35,14 @@ export function PageEditorWizard({ onFinish }: PageEditorWizardProps) {
 
   const steps: WizardStep[] = [
     { title: "Page type", content: <TypeStep {...stepProps} /> },
-    ...(data.pageType === "item"
+    ...(data.pageType === "item" || data.pageType === "article"
       ? [
           {
             title: "Details",
             content: <DetailsStep {...stepProps} />,
             validate: () => {
               if (!data.title.trim()) return "Title is required.";
-              if (!data.itemType) return "Item type is required.";
+              if (data.pageType === "item" && !data.itemType) return "Item type is required.";
               return null;
             },
           },

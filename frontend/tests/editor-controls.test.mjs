@@ -109,7 +109,8 @@ const choose = (node, value) => act(async () => {
   node.dispatchEvent(new Event("change", { bubbles: true }));
 });
 const type = (node, value) => act(async () => {
-  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(node, value);
+  const prototype = node instanceof dom.window.HTMLTextAreaElement ? dom.window.HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+  Object.getOwnPropertyDescriptor(prototype, "value").set.call(node, value);
   node.dispatchEvent(new Event("input", { bubbles: true }));
 });
 const section = (title) => [...container.querySelectorAll("fieldset")].find((node) => node.querySelector(":scope > legend")?.textContent === title);
@@ -228,6 +229,95 @@ const routed = (path) => createElement(MemoryRouter, { initialEntries: [path] },
     createElement(Route, { path: "/collection-view", element: createElement(CollectionView) }),
     createElement(Route, { path: "/page-editor", element: createElement(PageEditor) })));
 const editButton = () => [...container.querySelectorAll('[role="toolbar"] button')].find((node) => node.textContent.trim() === "Edit");
+
+test("Article wizard validates the title, retains a failed draft and opens the saved plain text in Explorer", async () => {
+  const fetchOther = globalThis.fetch;
+  const submissions = [];
+  let article;
+  globalThis.fetch = async (url, options) => {
+    if (new URL(url).pathname === "/articles/") {
+      const payload = JSON.parse(options.body);
+      submissions.push(payload);
+      if (submissions.length === 1) throw new Error("Connection lost");
+      article = { id: 7, title: payload.title, blocks: [{ id: 11, ...payload.blocks[0] }] };
+      return Response.json(article);
+    }
+    if (new URL(url).pathname === "/articles/7") return Response.json(article);
+    return fetchOther(url, options);
+  };
+  await render(routed("/page-editor"));
+  await click([...container.querySelectorAll("label")].find((label) => label.textContent.trim() === "Article"));
+  await click(button("Next >"));
+  assert.equal(container.querySelector("#new-item-type"), null);
+  await type(container.querySelector("#new-page-title"), "   ");
+  await click(button("Next >"));
+  assert.equal(container.querySelector('[role="alert"]').textContent, "Title is required.");
+  await type(container.querySelector("#new-page-title"), "  Field notes  ");
+  await click(button("Next >"));
+  await click(button("Finish"));
+  assert.equal(container.querySelector("#article-title").value, "Field notes");
+  const body = "First paragraph.\n\nSecond <em>paragraph</em>.";
+  await type(container.querySelector("textarea"), body);
+  await click(button("Save article"));
+  assert.match(container.querySelector('[role="alert"]').textContent, /Connection lost/);
+  assert.equal(container.querySelector("textarea").value, body);
+  await click(button("Save article"));
+  assert.deepEqual(submissions[1], submissions[0]);
+  assert.deepEqual(submissions[1].blocks, [{ kind: "text", text: body }]);
+  assert.equal(container.querySelector("article h1").textContent, "Field notes");
+  assert.equal(container.querySelector("article p").textContent, body);
+  assert.equal(container.querySelector("article em"), null);
+  assert.ok([...container.querySelectorAll("input")].some((node) => node.value === "collection://article/7"));
+});
+
+test("article edits can be cancelled or retarget a link while preserving independently edited text", async () => {
+  const article = { id: 7, title: "Catalog notes", blocks: [
+    { kind: "text", id: 11, text: "Saved text" },
+    { kind: "item-link", id: 12, item_id: 17, item_title: "Former target" },
+  ] };
+  const edits = [];
+  const searches = [];
+  const fetchOther = globalThis.fetch;
+  globalThis.fetch = async (url, options) => {
+    const location = new URL(url);
+    if (location.pathname === "/articles/7") {
+      if (options?.method === "PATCH") {
+        const changes = JSON.parse(options.body);
+        edits.push(changes);
+        article.title = changes.title;
+        Object.assign(article.blocks[1], { item_id: changes.item_id, item_title: storedItem.display_title });
+      }
+      return Response.json(article);
+    }
+    if (location.pathname === "/items/itemlist") searches.push(location.searchParams.get("q"));
+    return fetchOther(url, options);
+  };
+  await render(routed("/collection-view?articleId=7"));
+  await click(editButton());
+  await type(container.querySelector("textarea"), "Discard this");
+  await click(button("Remove link"));
+  await click(button("Cancel"));
+  assert.equal(edits.length, 0);
+  assert.equal(container.querySelector("article p").textContent, "Saved text");
+  assert.equal(container.querySelector("article a").textContent, "Former target");
+
+  await click(editButton());
+  article.blocks[0].text = "Updated elsewhere";
+  await type(container.querySelector("#article-title"), "Revised title");
+  await click(button("Change linked item…"));
+  await type(container.querySelector("#article-item-search"), "Original");
+  await act(async () => new Promise((resolve) => setTimeout(resolve, 250)));
+  assert.ok(searches.includes("Original"));
+  await click(button("Original title (#42)"));
+  await click(button("Save article"));
+  assert.deepEqual(edits, [{ title: "Revised title", item_id: 42 }]);
+  assert.equal(container.querySelector("article p").textContent, "Updated elsewhere");
+  assert.equal(container.querySelector("article a").getAttribute("href"), "/collection-view?itemId=42");
+  await click(container.querySelector("article a"));
+  assert.equal(container.querySelector("h1").textContent, "Original title");
+  await click(button("Back"));
+  assert.equal(container.querySelector("article h1").textContent, "Revised title");
+});
 
 test("explorer enables Edit for an item, loads the full form, and displays saved changes", async () => {
   await render(routed("/collection-view"));

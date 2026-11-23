@@ -80,6 +80,36 @@ const deletes = () => calls.filter((call) => call.method === "DELETE");
 const itemButton = (id) => [...container.querySelectorAll('button[aria-current]')].find((node) => node.textContent.startsWith(items.get(id).display_title));
 const openItem = (id) => doubleClick(itemButton(id));
 
+test("authored pages recover on Refresh, offer creation when empty and reopen articles by ID", async () => {
+  const fetchOther = globalThis.fetch;
+  let list = null;
+  globalThis.fetch = async (url, options) => {
+    const path = new URL(url).pathname;
+    if (path === "/articles/") return list === null
+      ? Response.json({ detail: "Try again" }, { status: 503 }) : Response.json(list);
+    if (path === "/articles/7") return Response.json({ id: 7, title: "Catalog notes", blocks: [] });
+    return fetchOther(url, options);
+  };
+  await render(explorer());
+  await click(find("a", "Authored pages"));
+  assert.equal(container.querySelector("h1").textContent, "Could not load authored pages");
+  list = [];
+  await run("View", "Refresh");
+  assert.ok(find("p", "No articles yet."));
+  assert.equal(find("a", "Create an article…").getAttribute("href"), "/page-editor?new=article");
+  list.push({ id: 7, title: "Catalog notes" });
+  await run("View", "Refresh");
+  const link = find("a", "Catalog notes");
+  assert.equal(link.getAttribute("href"), "/collection-view?articleId=7");
+  await click(link);
+  const address = container.querySelector("label[for]").control;
+  assert.equal(address.value, "collection://article/7");
+  await run("Go", "Back");
+  assert.equal(address.value, "collection://pages");
+  await run("Go", "Forward");
+  assert.equal(container.querySelector("h1").textContent, "Catalog notes");
+});
+
 test("an invalid address stays editable and never loads a rounded or zero item number", async () => {
   await render(explorer());
   const address = container.querySelector("label[for]").control;
