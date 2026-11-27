@@ -70,10 +70,12 @@ export function CopyForm({ itemId, copy, onSaved, onCancel, onEditState }: Props
     const data = { condition_type_id: grade ? Number(grade) : null, condition_notes: conditionNotes || null, notes: notes || null };
     try {
       const changes: NonNullable<CopyWithPhotosWrite["changes"]> = [];
+      const descriptions = new Map(photos.filter((photo) => photo.saved !== undefined)
+        .map((photo) => [photo.saved.id, photo.description]));
       for (const saved of copy?.photos ?? []) {
-        const edited = photos.find((photo) => photo.saved?.id === saved.id);
-        if (!edited || edited.description !== (saved.description ?? "")) {
-          changes.push({ id: saved.id, file_path: saved.file_path, remove: !edited, description: edited?.description || null });
+        const description = descriptions.get(saved.id);
+        if (description !== (saved.description ?? "")) {
+          changes.push({ id: saved.id, file_path: saved.file_path, remove: description === undefined, description: description || null });
         }
       }
       const uploads = photos.filter((photo) => photo.file !== undefined);

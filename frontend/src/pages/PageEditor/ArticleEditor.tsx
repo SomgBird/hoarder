@@ -1,7 +1,7 @@
 import { Button, Fieldset, Input } from "@react95/core";
 import { useRef, useState, type FormEvent } from "react";
-import { articleService, type ArticleCreate, type ArticleRead, type ArticleUpdate, type GalleryEntry } from "@services/articleService";
-import { coverUrl } from "@services/utils";
+import { articleService, type ArticleCreate, type ArticleRead, type ArticleUpdate } from "@services/articleService";
+import { GalleryEntryList, type DraftImage } from "./GalleryEntryList";
 import { ArticleImagePicker } from "./ArticleImagePicker";
 import { ArticleItemPicker, type LinkTarget } from "./ArticleItemPicker";
 import { PageEditorWindow } from "./PageEditorWindow";
@@ -14,8 +14,6 @@ interface Props {
   onClose: () => void;
   onSaved: (id: number) => void;
 }
-
-type DraftImage = GalleryEntry & { key: string };
 
 export function ArticleEditor({ initialTitle, existing, onClose, onSaved }: Props) {
   const savedText = existing?.blocks.find((block) => block.kind === "text")?.text ?? "";
@@ -36,12 +34,6 @@ export function ArticleEditor({ initialTitle, existing, onClose, onSaved }: Prop
   function closeImagePicker() {
     setPicker(null);
     addImages.current?.focus();
-  }
-
-  function moveImage(index: number, delta: number) {
-    const reordered = [...gallery];
-    [reordered[index], reordered[index + delta]] = [reordered[index + delta], reordered[index]];
-    setGallery(reordered);
   }
 
   async function save(event: FormEvent) {
@@ -102,27 +94,7 @@ export function ArticleEditor({ initialTitle, existing, onClose, onSaved }: Prop
           setGallery((previous) => [...previous, ...additions]);
           closeImagePicker();
         }} />}
-        {gallery.length > 0 && <ol aria-label="Gallery images" className={styles.galleryEntries}>
-          {gallery.map(({ key, path, caption }, index) => <li key={key} className={styles.galleryEntry}>
-            <img src={coverUrl(path) ?? undefined} alt={`Gallery image ${index + 1}`} width={64} height={60} loading="lazy" />
-            <div>
-              <label className={styles.galleryLabel} htmlFor={key}>Caption</label>
-              <textarea id={key} aria-label={`Caption for image ${index + 1}`}
-                className={`${fields.textarea} ${styles.captionInput}`} rows={2} value={caption}
-                onChange={(event) => setGallery(gallery.map((entry) =>
-                  entry.key === key ? { ...entry, caption: event.target.value } : entry
-                ))} />
-              <div className={fields.inline_actions}>
-                <Button type="button" aria-label={`Move image ${index + 1} up`} disabled={index === 0}
-                  onClick={() => moveImage(index, -1)}>Move up</Button>
-                <Button type="button" aria-label={`Move image ${index + 1} down`} disabled={index === gallery.length - 1}
-                  onClick={() => moveImage(index, 1)}>Move down</Button>
-                <Button type="button" aria-label={`Remove image ${index + 1}`}
-                  onClick={() => setGallery(gallery.filter((entry) => entry.key !== key))}>Remove</Button>
-              </div>
-            </div>
-          </li>)}
-        </ol>}
+        <GalleryEntryList gallery={gallery} onChange={setGallery} />
       </Fieldset>
       {error && <p className={styles.message} role="alert">{error}</p>}
       <div className={styles.actions}>

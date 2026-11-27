@@ -330,7 +330,10 @@ test("article edits can be cancelled or retarget a link while preserving indepen
 const galleryMedia = [
   {
     name: "stored-front.png", relative_path: "copies/stored-front.png", path: "/media/copies/stored-front.png",
-    size_bytes: 1024, copy_photos: [{ copy_id: 14, name: "Front.png", description: "Corner wear" }],
+    size_bytes: 1024, copy_photos: [
+      { copy_id: 14, name: "Front.png", description: "Corner wear" },
+      { copy_id: 15, name: "Jacket.png", description: null },
+    ],
   },
   {
     name: "Back.png", relative_path: "photos/Back.png", path: "/media/photos/Back.png",
@@ -391,6 +394,8 @@ test("an existing article can save, reopen, cancel and remove a gallery of colle
   assert.match(container.textContent, /No matching images/);
   await search("copy #14");
   assert.equal(imageOption("Back.png"), undefined);
+  assert.ok(imageOption("Front.png"));
+  await search("jacket.png");
   await click(imageOption("Front.png"));
   await search("back.png");
   await click(imageOption("Back.png"));

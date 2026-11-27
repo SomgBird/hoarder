@@ -18,8 +18,8 @@ from app.main import app
 
 
 @contextmanager
-def open_collection(path):
-    engine = create_engine(f"sqlite:///{path}")
+def open_collection(path, **engine_options):
+    engine = create_engine(f"sqlite:///{path}", **engine_options)
     try:
         with patch("app.database.engine", engine), patch("app.main.engine", engine), TestClient(app) as client:
             yield client
@@ -182,6 +182,58 @@ class ArticleTests(unittest.TestCase):
                     self.assertEqual(response.json()["code"], "invalid_reference")
                     self.assertEqual(client.get(address).json(), edited)
             self.assertEqual(client.get(front["path"]).content, (self.media / "Front #1.png").read_bytes())
+
+    def test_clearing_a_shared_cover_and_gallery_uses_one_database_connection(self):
+        covers = self.media / "covers"
+        covers.mkdir()
+        image = BytesIO()
+        Image.new("RGB", (2, 2), "red").save(image, format="PNG")
+        with patch("app.media.COVERS_DIR", covers), open_collection(
+            self.path, pool_size=1, max_overflow=0, pool_timeout=0.1,
+        ) as client:
+            game = self.create_game(client, "Game")
+            item_url = f"/items/{game}"
+            cover = client.post(f"{item_url}/cover", files={"file": ("box.png", image.getvalue(), "image/png")})
+            path = cover.json()["cover_image_path"]
+            self.payload["blocks"].append({"kind": "gallery", "entries": [{"path": path}]})
+            article = client.post("/articles/", json=self.payload).json()
+            directory, name = path.rsplit("/", 1)
+            alias = f"{directory}/{name.upper()}"
+            response = client.patch(f"/articles/{article['id']}", json={"gallery": [{"path": alias}]})
+            self.assertEqual(response.status_code, 422, response.text)
+            self.assertEqual(client.patch(item_url, json={"cover_image_path": None}).status_code, 200)
+            self.assertEqual(client.get(path).status_code, 200)
+            # Older copy and item paths can have alternate casing. Preserve
+            # the original only on volumes where that spelling opens it.
+            self.assertEqual(client.patch(item_url, json={"cover_image_path": alias}).status_code, 200)
+            alias_opens_original = (covers / name.upper()).is_file()
+            self.assertEqual(client.patch(f"/articles/{article['id']}", json={"gallery": []}).status_code, 200)
+            self.assertEqual(client.get(path).status_code, 200 if alias_opens_original else 404)
+            self.assertEqual(client.patch(item_url, json={"cover_image_path": None}).status_code, 200)
+            self.assertEqual(client.get(path).status_code, 404)
+
+    def test_gallery_accepts_listed_mixed_case_import_and_preserves_the_file(self):
+        name = f"1-{'A' * 32}.PNG"
+        source = self.media / "copies" / name
+        Image.new("RGB", (2, 2), "blue").save(source)
+        original = source.read_bytes()
+        with open_collection(self.path) as client:
+            listed, = client.get("/media/").json()
+            path = listed["path"]
+            self.payload["blocks"].append({"kind": "gallery", "entries": [{"path": path}]})
+            response = client.post("/articles/", json=self.payload)
+            self.assertEqual(response.status_code, 201, response.text)
+            article = response.json()
+            self.assertEqual(article["blocks"][-1]["entries"][0]["path"], path)
+
+            # Older catalog records can contain a different spelling on a
+            # case-insensitive volume. Clearing one must preserve the import.
+            item_url = f"/items/{self.create_game(client, 'Game')}"
+            self.assertEqual(client.patch(item_url, json={"cover_image_path": path.lower()}).status_code, 200)
+            self.assertEqual(client.patch(item_url, json={"cover_image_path": None}).status_code, 200)
+            self.assertEqual(client.get(path).content, original)
+            self.assertEqual(client.patch(f"/articles/{article['id']}", json={"gallery": []}).status_code, 200)
+            self.assertEqual(client.get(path).content, original)
 
     def test_upgrade_existing_article_with_link_and_keep_each_photo_until_its_last_reference(self):
         with open_collection(self.path) as client:

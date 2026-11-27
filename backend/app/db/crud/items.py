@@ -6,6 +6,7 @@ from app.db.models import Franchise, Item
 from app.db.models.items import ItemNumber
 from app.db.schemas import ItemCreate, ItemRead, ItemUpdate
 from app.errors import ConflictError, NotFoundError
+from app.media import remove_unused_images
 
 from .details import _SUBTYPES, _detail_values
 from .lookups import (
@@ -72,6 +73,7 @@ def update_item(session: Session, item_id: int, data: ItemUpdate) -> ItemRead:
     item = _load_item(session, item_id)
     item_type = item.item_type
     sent = data.model_fields_set  # tells "omitted" apart from "explicit null"
+    previous_images = {getattr(item, field) for field in ("cover_image_path", "icon_image_path") if field in sent}
     try:
         for name in ("release_date", "cover_image_path", "icon_image_path", "is_owned", "description"):
             if name in sent:
@@ -115,6 +117,7 @@ def update_item(session: Session, item_id: int, data: ItemUpdate) -> ItemRead:
     except Exception:
         session.rollback()
         raise
+    remove_unused_images(session, previous_images)
     return get_item(session, item_id)
 
 
@@ -123,6 +126,10 @@ def delete_item(session: Session, item_id: int) -> None:
     item = session.get(Item, item_id)
     if item is None:
         raise NotFoundError("item", item_id)
+    previous_images = {
+        item.cover_image_path, item.icon_image_path,
+        *(photo.file_path for copy in item.owned_copies for photo in copy.photos),
+    }
     try:
         # Subtype rows have no ORM link back to the item, so clear them explicitly.
         for spec in _SUBTYPES.values():
@@ -134,3 +141,4 @@ def delete_item(session: Session, item_id: int) -> None:
     except Exception:
         session.rollback()
         raise
+    remove_unused_images(session, previous_images)

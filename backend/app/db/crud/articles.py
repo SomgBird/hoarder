@@ -8,7 +8,7 @@ from app.db.schemas.articles import (
     ItemLinkRead, TextBlockRead,
 )
 from app.errors import ConflictError, InvalidReferenceError, NotFoundError
-from app.media import is_collection_image, remove_unused_image
+from app.media import is_collection_image, remove_unused_images
 
 from .reads import display_title_column
 
@@ -44,13 +44,22 @@ def _require_item(session: Session, item_id: int) -> None:
         raise InvalidReferenceError("item", item_id, f"Item #{item_id} is no longer available. Choose another item.")
 
 
-def _write_gallery(block: ArticleBlock, entries: list[GalleryEntryWrite]) -> set[str]:
-    previous = {entry.path for entry in block.entries}
+def _set_gallery(article: Article, entries: list[GalleryEntryWrite]) -> set[str]:
+    block = next((block for block in article.blocks if block.kind == "gallery"), None)
+    previous = {entry.path for entry in block.entries} if block is not None else set()
+    if not entries:
+        if block is not None:
+            article.blocks.remove(block)
+        return previous
     paths = {entry.path for entry in entries}
     for path in paths - previous:
         if not is_collection_image(path):
             raise InvalidReferenceError("media", path, f"Image {path} is no longer available. Choose another image.")
 
+    if block is None:
+        # Leave position 1 available for the optional item link.
+        block = ArticleBlock(position=2, kind="gallery")
+        article.blocks.append(block)
     for position, entry in enumerate(entries):
         if position < len(block.entries):
             block.entries[position].path = entry.path
@@ -64,26 +73,24 @@ def _write_gallery(block: ArticleBlock, entries: list[GalleryEntryWrite]) -> set
 def create_article(session: Session, payload: ArticleCreate) -> ArticleRead:
     with session.begin():
         statement = insert(Article).values(title=payload.title, request_id=payload.request_id)
-        article_id = session.execute(statement.on_conflict_do_nothing(
+        article = session.execute(statement.on_conflict_do_nothing(
             index_elements=[Article.request_id]
-        ).returning(Article.id)).scalar_one_or_none()
-        if article_id is None:
+        ).returning(Article)).scalar_one_or_none()
+        if article is None:
             saved_id = session.exec(select(Article.id).where(Article.request_id == payload.request_id)).one()
             saved = get_article(session, saved_id)
             previous = [block.model_dump(exclude={"id", "item_title"}) for block in saved.blocks]
             if saved.title != payload.title or previous != [block.model_dump() for block in payload.blocks]:
                 raise ConflictError(f"This draft was already saved at collection://article/{saved.id}.")
             return saved
+        article_id = article.id
         for position, block in enumerate(payload.blocks):
-            if block.kind == "item-link":
-                _require_item(session, block.item_id)
             if block.kind == "gallery":
-                # Keep position 1 available for a link added to this article later.
-                gallery = ArticleBlock(article_id=article_id, position=2, kind="gallery")
-                _write_gallery(gallery, block.entries)
-                session.add(gallery)
+                _set_gallery(article, block.entries)
             else:
-                session.add(ArticleBlock(article_id=article_id, position=position, **block.model_dump()))
+                if block.kind == "item-link":
+                    _require_item(session, block.item_id)
+                article.blocks.append(ArticleBlock(position=position, **block.model_dump()))
     return get_article(session, article_id)
 
 
@@ -109,14 +116,6 @@ def update_article(session: Session, article_id: int, payload: ArticleUpdate) ->
                 else:
                     link.item_id = payload.item_id
         if "gallery" in payload.model_fields_set:
-            gallery = next((block for block in article.blocks if block.kind == "gallery"), None)
-            if gallery is None and payload.gallery:
-                gallery = ArticleBlock(position=2, kind="gallery")
-                article.blocks.append(gallery)
-            if gallery is not None:
-                removed_paths = _write_gallery(gallery, payload.gallery)
-                if not payload.gallery:
-                    article.blocks.remove(gallery)
-    for path in removed_paths:
-        remove_unused_image(session, path)
+            removed_paths = _set_gallery(article, payload.gallery)
+    remove_unused_images(session, removed_paths)
     return get_article(session, article_id)
