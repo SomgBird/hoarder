@@ -1,3 +1,5 @@
+from io import BytesIO
+import json
 import sqlite3
 import unittest
 from contextlib import closing, contextmanager
@@ -7,9 +9,11 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
+from PIL import Image
 from sqlmodel import Session, SQLModel, create_engine
+from starlette.routing import Mount
 
-from app.db.models import Item, ItemType, OwnedCopy, Title
+from app.db.models import ArticleGalleryEntry, Item, ItemType, OwnedCopy, Title
 from app.main import app
 
 
@@ -26,6 +30,14 @@ def open_collection(path):
 class ArticleTests(unittest.TestCase):
     def setUp(self):
         self.path = Path(self.enterContext(TemporaryDirectory())) / "collection.db"
+        self.media = self.path.parent / "media"
+        photos = self.media / "copies"
+        photos.mkdir(parents=True)
+        self.enterContext(patch("app.media.MEDIA_DIR", self.media))
+        self.enterContext(patch("app.media.COPY_PHOTOS_DIR", photos))
+        self.enterContext(patch("app.routers.media.MEDIA_DIR", self.media))
+        static_files = next(route.app for route in app.routes if isinstance(route, Mount) and route.name == "media")
+        self.enterContext(patch.object(static_files, "all_directories", [self.media]))
         self.body = "  First paragraph.\n\nSecond paragraph with <markup>.  "
         self.payload = {"title": " Field notes ", "blocks": [{"kind": "text", "text": self.body}],
                         "request_id": str(uuid4())}
@@ -61,7 +73,7 @@ class ArticleTests(unittest.TestCase):
 
     def test_collection_with_item_and_copy_gains_articles_on_startup(self):
         engine = create_engine(f"sqlite:///{self.path}")
-        tables = [table for table in SQLModel.metadata.sorted_tables if table.name not in ("article", "article_block")]
+        tables = [table for table in SQLModel.metadata.sorted_tables if not table.name.startswith("article")]
         SQLModel.metadata.create_all(engine, tables=tables)
         with Session(engine) as session:
             item = Item(item_type=ItemType(name="book"), titles=[Title(title_text="Existing book")],
@@ -138,3 +150,86 @@ class ArticleTests(unittest.TestCase):
             self.assertEqual(updated["blocks"][1]["item_id"], game)
             for invalid in ({"title": " "}, {"title": None}, {"text": None}, {"item_id": 0}):
                 self.assertEqual(client.patch("/articles/5", json=invalid).status_code, 422)
+
+    def test_gallery_creation_reopens_and_replays_in_a_fresh_collection(self):
+        Image.new("RGB", (2, 2), "red").save(self.media / "Front #1.png")
+        Image.new("RGB", (2, 2), "blue").save(self.media / "Back.png")
+        with open_collection(self.path) as client:
+            back, front = client.get("/media/").json()
+            entries = [{"path": front["path"], "caption": "Front\nBox wear"}, {"path": back["path"]}]
+            self.payload["blocks"].append({"kind": "gallery", "entries": entries})
+            response = client.post("/articles/", json=self.payload)
+            self.assertEqual(response.status_code, 201, response.text)
+            saved = response.json()
+            text, gallery = saved["blocks"]
+            self.assertEqual(gallery["entries"], [entries[0], {**entries[1], "caption": ""}])
+        with open_collection(self.path) as client:
+            address = f"/articles/{saved['id']}"
+            self.assertEqual(client.get(address).json(), saved)
+            self.assertEqual(client.post("/articles/", json=self.payload).json(), saved)
+            entries.reverse()
+            self.assertEqual(client.post("/articles/", json=self.payload).status_code, 409)
+            game = self.create_game(client, "Game")
+            edited = client.patch(address, json={"item_id": game, "gallery": entries}).json()
+            self.assertEqual([block["kind"] for block in edited["blocks"]], ["text", "item-link", "gallery"])
+            self.assertEqual(edited["blocks"][0], text)
+            self.assertEqual(edited["blocks"][2], {**gallery, "entries": gallery["entries"][::-1]})
+            for invalid_path in ("/media/missing.png", "/media/%2E%2E/Back.png", "https://example.com/Back.png"):
+                with self.subTest(path=invalid_path):
+                    invalid = {"title": "Invalid edit", "gallery": [{"path": invalid_path}]}
+                    response = client.patch(address, json=invalid)
+                    self.assertEqual(response.status_code, 422)
+                    self.assertEqual(response.json()["code"], "invalid_reference")
+                    self.assertEqual(client.get(address).json(), edited)
+            self.assertEqual(client.get(front["path"]).content, (self.media / "Front #1.png").read_bytes())
+
+    def test_upgrade_existing_article_with_link_and_keep_each_photo_until_its_last_reference(self):
+        with open_collection(self.path) as client:
+            game = self.create_game(client, "Game")
+            self.payload["blocks"].append({"kind": "item-link", "item_id": game})
+            saved = client.post("/articles/", json=self.payload).json()
+            photo_files = []
+            for name, color in (("front.png", "red"), ("back.png", "blue")):
+                image = BytesIO()
+                Image.new("RGB", (2, 2), color).save(image, format="PNG")
+                photo_files.append(("files", (name, image.getvalue(), "image/png")))
+            photos_address = f"/items/{game}/copies/with-photos"
+            draft = {"request_id": str(uuid4()), "descriptions": ["Copy front", "Copy back"]}
+            response = client.post(photos_address, data={"draft": json.dumps(draft)}, files=photo_files)
+            self.assertEqual(response.status_code, 200, response.text)
+            copy, = response.json()["owned_copies"]
+            front, back = copy["photos"]
+            entries = [{"path": photo["file_path"], "caption": caption}
+                       for photo, caption in [(back, "Gallery back"), (front, "Gallery front")]]
+            originals = [client.get(entry["path"]) for entry in entries]
+            for original in originals:
+                self.assertEqual(original.status_code, 200)
+
+        # Reproduce the 0.6 schema, which has the same article and copy tables.
+        with closing(sqlite3.connect(self.path)) as db, db:
+            db.execute(f"DROP TABLE {ArticleGalleryEntry.__tablename__}")
+        address = f"/articles/{saved['id']}"
+        with open_collection(self.path) as client:
+            self.assertEqual(client.get(address).json(), saved)
+            response = client.patch(address, json={"gallery": entries})
+            self.assertEqual(response.status_code, 200, response.text)
+            edited = response.json()
+            self.assertEqual(edited["id"], saved["id"])
+            self.assertEqual(edited["blocks"][:2], saved["blocks"])
+            self.assertEqual(edited["blocks"][2]["entries"], entries)
+
+        with open_collection(self.path) as client:
+            self.assertEqual(client.get(address).json(), edited)
+            self.assertEqual(client.patch(address, json={"gallery": entries}).json(), edited)
+            remaining = client.patch(address, json={"gallery": entries[:1]}).json()
+            self.assertEqual(remaining["blocks"], [*saved["blocks"], {**edited["blocks"][2], "entries": entries[:1]}])
+            remove_back = {"copy_id": copy["id"], "request_id": str(uuid4()),
+                           "changes": [{"id": back["id"], "file_path": back["file_path"], "remove": True}]}
+            response = client.post(photos_address, data={"draft": json.dumps(remove_back)})
+            self.assertEqual(response.status_code, 200, response.text)
+            self.assertEqual(response.json()["owned_copies"][0]["photos"], [front])
+            self.assertEqual(client.get(front["file_path"]).content, originals[1].content)
+            self.assertEqual(client.get(back["file_path"]).content, originals[0].content)
+            self.assertEqual(client.patch(address, json={"gallery": []}).json(), saved)
+            self.assertEqual(client.get(back["file_path"]).status_code, 404)
+            self.assertEqual(client.get(front["file_path"]).content, originals[1].content)

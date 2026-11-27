@@ -1,7 +1,7 @@
 """Database tables and metadata registration."""
 
 # Import every table so SQLModel metadata and string relationships are registered.
-from .articles import Article, ArticleBlock
+from .articles import Article, ArticleBlock, ArticleGalleryEntry
 from .links import (
     ItemLanguageLink,
     ItemFranchiseLink,
@@ -57,6 +57,7 @@ from .ownership import (
 __all__ = [
     "Article",
     "ArticleBlock",
+    "ArticleGalleryEntry",
     "Author",
     "AuthorRole",
     "AuthorRoleItemLink",

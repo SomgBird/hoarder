@@ -2,13 +2,13 @@
 
 Pre-alpha ends when a collector can catalog a game and a book from the same franchise, document individual copies, and build an illustrated exhibit that connects their items and authored pages. The exhibit must still work after restarting Hoarder. The owner chose this collection and authoring workflow on 2026-11-21. Marketplace tracking comes later.
 
-[0.6 Articles](#06-articles) is complete. The next release is [0.7 Photos and galleries](#07-photos-and-galleries). [PLAN.md](PLAN.md) holds its active task and handoff. Checked boxes record implemented features. For new work, check a box when its described behavior works and record the verification in the handoff. Check off the release demo after completing it through the app.
+[0.6 Articles](#06-articles) is complete. [0.7 Photos and galleries](#07-photos-and-galleries) is in progress. [PLAN.md](PLAN.md) holds its active task and handoff. Checked boxes record implemented features. For new work, check a box when its described behavior works and record the verification in the handoff. Check off the release demo after completing it through the app.
 
-| Baseline | Planned releases | Finish line |
+| Baseline | Current and planned releases | Finish line |
 | --- | --- | --- |
 | [0.1 Book demo](#01-book-demo) · [0.2 Item catalog](#02-item-catalog) · [0.3 Collection browsing](#03-collection-browsing) · [0.4 Appearance and Help](#04-appearance-and-help) · [0.5 Owned copies](#05-owned-copies) · [0.6 Articles](#06-articles) | [0.7 Photos and galleries](#07-photos-and-galleries) · [0.8 Franchise pages](#08-franchise-pages) · [0.9 Custom pages and item layouts](#09-custom-pages-and-item-layouts) | [0.10 Vertical-slice demo](#010-vertical-slice-demo) · [Later backlog](#later-backlog) |
 
-About reads the application version from [VERSION](VERSION). The [session handoff](PLAN.md#session-handoff) records the working branch and baseline. Versions 0.7–0.10 are proposed milestones.
+About reads the application version from [VERSION](VERSION). The [session handoff](PLAN.md#session-handoff) records the working branch and baseline. Versions 0.8–0.10 are proposed milestones.
 
 ## 0.1 Book demo
 
@@ -111,9 +111,9 @@ Version 0.4 delivered the display controls and Help system. The remaining ideas 
 
 **Use collection images on a page**
 
-- [ ] Add a gallery to an existing article’s block sequence and reopen it alongside the original text and link. Show existing collection images in the picker so a copy photo can be reused.
-- [ ] Add multiple images and save their display order and captions. Reopen the article and display the gallery in that order.
-- [ ] Remove one gallery entry while retaining the source copy's photo. If a copy attachment is removed first, preserve the file while a gallery still uses it.
+- [x] Save an ordered gallery of existing images and captions through the article API. Reopen it in Explorer alongside the original text and link. Keep the original image while a copy or gallery still uses it.
+- [x] In Page Editor, add a gallery to an existing article by choosing copy photos or other existing images from the collection.
+- [x] In Page Editor, add multiple images, change their order and captions, and remove an entry. Save and reopen the gallery in Explorer, or cancel and keep the saved version.
 - [ ] **Release demo.** Photograph a game's front and back, add both to an article and reload. Remove the front from the gallery and the back from the copy. Open each photo from its surviving location.
 
 ## 0.8 Franchise pages

@@ -487,7 +487,7 @@ export interface components {
         /** ArticleCreate */
         ArticleCreate: {
             /** Blocks */
-            blocks: (components["schemas"]["TextBlockCreate"] | components["schemas"]["ItemLinkCreate"])[];
+            blocks: (components["schemas"]["TextBlockCreate"] | components["schemas"]["ItemLinkCreate"] | components["schemas"]["GalleryBlockCreate"])[];
             /**
              * Request Id
              * Format: uuid
@@ -499,7 +499,7 @@ export interface components {
         /** ArticleRead */
         ArticleRead: {
             /** Blocks */
-            blocks: (components["schemas"]["TextBlockRead"] | components["schemas"]["ItemLinkRead"])[];
+            blocks: (components["schemas"]["TextBlockRead"] | components["schemas"]["ItemLinkRead"] | components["schemas"]["GalleryBlockRead"])[];
             /** Id */
             id: number;
             /** Title */
@@ -514,6 +514,11 @@ export interface components {
         };
         /** ArticleUpdate */
         ArticleUpdate: {
+            /**
+             * Gallery
+             * @description Omit to keep the saved gallery, or send an empty list to remove it.
+             */
+            gallery?: components["schemas"]["GalleryEntryWrite"][];
             /**
              * Item Id
              * @description Omit to keep the link, null to remove it.
@@ -815,6 +820,48 @@ export interface components {
             name: string;
             /** Parent Franchise Id */
             parent_franchise_id: number | null;
+        };
+        /** GalleryBlockCreate */
+        GalleryBlockCreate: {
+            /** Entries */
+            entries: components["schemas"]["GalleryEntryWrite"][];
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "gallery";
+        };
+        /** GalleryBlockRead */
+        GalleryBlockRead: {
+            /** Entries */
+            entries: components["schemas"]["GalleryEntryRead"][];
+            /** Id */
+            id: number;
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "gallery";
+        };
+        /** GalleryEntryRead */
+        GalleryEntryRead: {
+            /** Caption */
+            caption: string;
+            /** Path */
+            path: string;
+        };
+        /** GalleryEntryWrite */
+        GalleryEntryWrite: {
+            /**
+             * Caption
+             * @default
+             */
+            caption?: string;
+            /**
+             * Path
+             * @description The path of an existing image returned by GET /media/.
+             */
+            path: string;
         };
         /** GameDetailsCreate */
         GameDetailsCreate: {

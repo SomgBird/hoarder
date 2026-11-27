@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { articleService, type ArticleRead } from "@services/articleService";
-import { ApiError } from "@services/client";
+import { API_BASE, ApiError } from "@services/client";
 import { ErrorPage } from "./ErrorPage";
 import { ExplorerLink } from "../ExplorerLink";
 import styles from "./ExplorerMessage.module.css";
@@ -29,6 +29,18 @@ export function ArticlePage({ id }: { id: number }) {
     <h1>{article.title}</h1>
     {article.blocks.map((block) => {
       if (block.kind === "text") return <p key={block.id}>{block.text}</p>;
+      if (block.kind === "gallery") return <div key={block.id} className={styles.gallery}>
+        {block.entries.map((entry, index) => {
+          const src = `${API_BASE}${entry.path}`;
+          const name = decodeURIComponent(entry.path.slice(entry.path.lastIndexOf("/") + 1));
+          return <figure key={`${entry.path}-${index}`}>
+            <a href={src} target="_blank" rel="noreferrer" aria-label={`Open ${entry.caption || name}`}>
+              <img src={src} alt={entry.caption || name} loading="lazy" />
+            </a>
+            {entry.caption && <figcaption>{entry.caption}</figcaption>}
+          </figure>;
+        })}
+      </div>;
       if (block.item_title === null) return <p key={block.id}>Item #{block.item_id} is unavailable.</p>;
       return <p key={block.id}><ExplorerLink to={{ page: "item", id: block.item_id }}>
         {block.item_title}

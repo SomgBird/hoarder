@@ -40,3 +40,14 @@
   background: #fffdf4;
 }
 .article p { white-space: pre-wrap; }
+
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 1em 0;
+}
+
+.gallery figure { width: min(220px, 100%); margin: 0; }
+.gallery img { display: block; max-width: 100%; max-height: 160px; }
+.gallery figcaption { white-space: pre-wrap; }

@@ -3,23 +3,54 @@ from io import BytesIO
 import logging
 from pathlib import Path
 import re
+from urllib.parse import quote, unquote
 from uuid import uuid4
 import warnings
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 from sqlalchemy import or_
+from sqlalchemy.exc import OperationalError
 from sqlmodel import Session, select
 
 from app.config import (
     ALLOWED_IMAGE_TYPES, COVERS_DIR, COVERS_URL_PREFIX, COPY_PHOTOS_DIR, COPY_PHOTOS_URL_PREFIX,
-    ICONS_DIR, ICONS_URL_PREFIX, MAX_COVER_PIXELS, MEDIA_URL_PREFIX,
+    ICONS_DIR, ICONS_URL_PREFIX, MAX_COVER_PIXELS, MEDIA_DIR, MEDIA_URL_PREFIX,
 )
-from app.db.models import CopyPhoto, Item
+from app.db.models import ArticleGalleryEntry, CopyPhoto, Item
 from app.errors import AppError
 
 logger = logging.getLogger(__name__)
 IMAGE_FILENAME = r"\d+-[0-9a-f]{32}\.(jpg|png|webp|ico)"
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".ico", ".gif", ".bmp", ".svg", ".avif"}
 ICON_SIZES = [(16, 16), (32, 32), (64, 64)]
+
+
+def collection_image(root: Path, relative: str) -> Path | None:
+    parts = relative.split("/")
+    if "\\" in relative or any(not part or part.startswith(".") for part in parts):
+        return None
+    source = root.joinpath(*parts)
+    if not source.is_relative_to(root) or source.suffix.lower() not in IMAGE_EXTENSIONS:
+        return None
+    try:
+        if source.is_file() and source.resolve() == root.resolve().joinpath(*parts):
+            return source
+    except (OSError, ValueError):
+        pass
+    return None
+
+
+def is_collection_image(path: str) -> bool:
+    prefix = f"{MEDIA_URL_PREFIX}/"
+    if not path.isascii() or not path.startswith(prefix):
+        return False
+    encoded = path.removeprefix(prefix)
+    relative = unquote(encoded)
+    # Cleanup identifies generated images by their lowercase names, including on
+    # filesystems that also accept a different casing for the same file.
+    if path != path.lower() and _image_location(path.lower()) is not None:
+        return False
+    return encoded == quote(relative) and collection_image(MEDIA_DIR, relative) is not None
 
 
 def store_cover(item_id: int, content: bytes, content_type: str | None) -> str:
@@ -113,20 +144,27 @@ def _image_location(path: str | None) -> Path | None:
 
 
 def remove_unused_image(session: Session, path: str | None) -> None:
-    """Never delete arbitrary user paths or an image still used by an item or photo."""
+    """Remove a generated image only after its last collection reference is gone."""
     if path and not path.startswith("/"):
         path = f"{MEDIA_URL_PREFIX}/{path}"
     source = _image_location(path)
     if source is None:
         return
     aliases = (path, path.removeprefix(f"{MEDIA_URL_PREFIX}/"))
-    if session.exec(select(Item.id).where(or_(Item.cover_image_path.in_(aliases), Item.icon_image_path.in_(aliases))).limit(1)).first() is not None:
-        return
-    if session.exec(select(CopyPhoto.id).where(CopyPhoto.file_path.in_(aliases)).limit(1)).first() is not None:
-        return
     try:
-        source.unlink(missing_ok=True)
-    except OSError:
+        with session.get_bind().begin() as connection:
+            # Share the SQLite write lock with gallery saves across the existence
+            # check and unlink, so a new reference cannot race with cleanup.
+            connection.exec_driver_sql("BEGIN IMMEDIATE")
+            for reference in (
+                select(Item.id).where(or_(Item.cover_image_path.in_(aliases), Item.icon_image_path.in_(aliases))),
+                select(CopyPhoto.id).where(CopyPhoto.file_path.in_(aliases)),
+                select(ArticleGalleryEntry.id).where(ArticleGalleryEntry.path == path),
+            ):
+                if connection.execute(reference.limit(1)).first() is not None:
+                    return
+            source.unlink(missing_ok=True)
+    except (OSError, OperationalError):
         # A cleanup failure must not turn a committed upload into a failed request.
         logger.warning("Could not remove unused image %s", source.name, exc_info=True)
 
