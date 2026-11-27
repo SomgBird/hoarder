@@ -2,13 +2,13 @@
 
 Pre-alpha ends when a collector can catalog a game and a book from the same franchise, document individual copies, and build an illustrated exhibit that connects their items and authored pages. The exhibit must still work after restarting Hoarder. The owner chose this collection and authoring workflow on 2026-11-21. Marketplace tracking comes later.
 
-[0.7 Photos and galleries](#07-photos-and-galleries) is complete. The next release is [0.8 Franchise pages](#08-franchise-pages). [PLAN.md](PLAN.md) holds the active task and handoff. Checked boxes record implemented features. For new work, check a box when its described behavior works and record the verification in the handoff. Check off the release demo after completing it through the app.
+[0.7 Photos and galleries](#07-photos-and-galleries) is complete. Preparation for [0.8 Franchise pages](#08-franchise-pages) is complete and implementation is next. [PLAN.md](PLAN.md) holds the active task and handoff. Checked boxes record implemented features. For new work, check a box when its described behavior works and record the verification in the handoff. Check off the release demo after completing it through the app.
 
 | Baseline | Planned releases | Finish line |
 | --- | --- | --- |
 | [0.1 Book demo](#01-book-demo) · [0.2 Item catalog](#02-item-catalog) · [0.3 Collection browsing](#03-collection-browsing) · [0.4 Appearance and Help](#04-appearance-and-help) · [0.5 Owned copies](#05-owned-copies) · [0.6 Articles](#06-articles) · [0.7 Photos and galleries](#07-photos-and-galleries) | [0.8 Franchise pages](#08-franchise-pages) · [0.9 Custom pages and item layouts](#09-custom-pages-and-item-layouts) | [0.10 Vertical-slice demo](#010-vertical-slice-demo) · [Later backlog](#later-backlog) |
 
-About reads the application version from [VERSION](VERSION). The [session handoff](PLAN.md#session-handoff) records the working branch and baseline. Versions 0.8–0.10 are proposed milestones.
+About reads the application version from [VERSION](VERSION). The [session handoff](PLAN.md#session-handoff) records the working branch and baseline. Versions 0.9 and 0.10 are proposed milestones.
 
 ## 0.1 Book demo
 
@@ -120,12 +120,12 @@ Version 0.4 delivered the display controls and Help system. The remaining ideas 
 
 **Outcome.** A game and a book assigned to one franchise lead to the same page. A collector writes the introduction once and the catalog supplies the member list.
 
-- [ ] Choose **Franchise** in Page Editor and select an existing franchise by name. Reuse its catalog identity, including associations created before this release.
+- [ ] Choose **Franchise page** in the New Page Wizard and select an existing franchise by name. Reuse its catalog identity, including associations created before this release.
 - [ ] Give the franchise a page with an editable introduction. Reopening the same franchise for authoring finds its existing page.
 - [ ] Expose the franchise page in the authored-page list and make it reachable from the franchise name on a member item's Explorer page.
 - [ ] Display each associated item's title and type. Open a member from the list and use Back to return to the franchise.
 - [ ] Refresh membership when a collector adds or removes an item's franchise association. With no members, retain the introduction and show an empty list.
-- [ ] **Release demo.** Open the same franchise from a game and a book, edit its introduction and reload. Remove the book's association. Confirm only the game remains on the franchise page and the book still opens in the catalog.
+- [ ] **Release demo.** Open the same franchise from a game and a book, edit its introduction and reopen its original address after restarting Hoarder. Remove the book's association. Confirm only the game remains on the franchise page and the book still opens in the catalog. Remove the final association and reopen the introduction from **Authored pages**.
 
 ## 0.9 Custom pages and item layouts
 
