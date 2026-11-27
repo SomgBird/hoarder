@@ -94,6 +94,7 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <ol><li>Open the item and choose <strong>Edit → Edit page…</strong> or click Edit in the toolbar.</li><li>Update its title, description, references, credits, languages, barcodes, or other details.</li><li>Click Save to update that item. Cancel returns without saving.</li></ol>
       <p>The item keeps its type and Explorer address. Save applies the fields you changed. When you edit a list such as alternative titles or credits, Save replaces that list with the rows shown in the editor.</p>
       <p>For an article, edit the title or text, or choose <strong>Change linked item…</strong> to select a different target. <strong>Save article</strong> reopens the revised page at its original address. <strong>Cancel</strong> returns to the saved version.</p>
+      <p>Under <strong>Gallery</strong>, choose <strong>Add images…</strong>, select photos from your collection, and choose <strong>Add selected</strong>. Give each image its own caption. Use <strong>Move up</strong>, <strong>Move down</strong>, or <strong>Remove</strong> to arrange the gallery before saving.</p>
       <h2>If saving fails</h2>
       <p>The editor keeps your entered values so you can correct an error and retry. If the item saved but an image failed, retrying continues the image save without creating another item or repeating the completed item update.</p>
     </>, related: ["images", "explorer"],

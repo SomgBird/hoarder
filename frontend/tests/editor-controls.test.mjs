@@ -274,6 +274,10 @@ test("article edits can be cancelled or retarget a link while preserving indepen
   const article = { id: 7, title: "Catalog notes", blocks: [
     { kind: "text", id: 11, text: "Saved text" },
     { kind: "item-link", id: 12, item_id: 17, item_title: "Former target" },
+    { kind: "gallery", id: 13, entries: [
+      { path: "/media/copies/back.png", caption: "Back of box" },
+      { path: "/media/copies/front.png", caption: "Front of box" },
+    ] },
   ] };
   const edits = [];
   const searches = [];
@@ -300,6 +304,9 @@ test("article edits can be cancelled or retarget a link while preserving indepen
   assert.equal(edits.length, 0);
   assert.equal(container.querySelector("article p").textContent, "Saved text");
   assert.equal(container.querySelector("article a").textContent, "Former target");
+  assert.deepEqual([...container.querySelectorAll("article figcaption")].map((caption) => caption.textContent),
+    ["Back of box", "Front of box"]);
+  assert.match(container.querySelector("article figure a").href, /\/media\/copies\/back\.png$/);
 
   await click(editButton());
   article.blocks[0].text = "Updated elsewhere";
@@ -317,6 +324,149 @@ test("article edits can be cancelled or retarget a link while preserving indepen
   assert.equal(container.querySelector("h1").textContent, "Original title");
   await click(button("Back"));
   assert.equal(container.querySelector("article h1").textContent, "Revised title");
+  assert.equal(container.querySelectorAll("article figure").length, 2);
+});
+
+const galleryMedia = [
+  {
+    name: "stored-front.png", relative_path: "copies/stored-front.png", path: "/media/copies/stored-front.png",
+    size_bytes: 1024, copy_photos: [
+      { copy_id: 14, name: "Front.png", description: "Corner wear" },
+      { copy_id: 15, name: "Jacket.png", description: null },
+    ],
+  },
+  {
+    name: "Back.png", relative_path: "photos/Back.png", path: "/media/photos/Back.png",
+    size_bytes: 1024, copy_photos: [],
+  },
+];
+const imageOption = (name) => [...container.querySelectorAll('[aria-label="Collection images"] input')].find((node) =>
+  node.getAttribute("aria-label").startsWith(name),
+);
+const captionInputs = () => [...container.querySelectorAll('[aria-label="Gallery images"] textarea')];
+const galleryCaptions = () => [...container.querySelectorAll("article figcaption")].map((node) => node.textContent);
+
+test("an existing article can save, reopen, cancel and remove a gallery of collection images", async () => {
+  const originalBlocks = [
+    { kind: "text", id: 11, text: "Saved text" },
+    { kind: "item-link", id: 12, item_id: 42, item_title: "Original title" },
+  ];
+  const article = { id: 7, title: "Catalog notes", blocks: originalBlocks };
+  const edits = [];
+  let mediaLoads = 0;
+  const fetchOther = globalThis.fetch;
+  globalThis.fetch = async (url, options) => {
+    const { pathname } = new URL(url);
+    if (pathname === "/media/") {
+      if (++mediaLoads === 1) return Response.json({ detail: "Media unavailable" }, { status: 503 });
+      return Response.json(galleryMedia);
+    }
+    if (pathname === "/articles/7") {
+      if (options?.method === "PATCH") {
+        const changes = JSON.parse(options.body);
+        edits.push(changes);
+        if (edits.length === 1) return Response.json({ detail: "Save failed" }, { status: 503 });
+        article.blocks = [...originalBlocks, ...(changes.gallery.length
+          ? [{ kind: "gallery", id: 13, entries: changes.gallery }] : [])];
+      }
+      return Response.json(article);
+    }
+    return fetchOther(url, options);
+  };
+  const openImages = () => click(button("Add images…"));
+  const command = (label) => container.querySelector(`button[aria-label="${label}"]`);
+  const search = (value) => type(container.querySelector("#article-image-search"), value);
+
+  await render(routed("/collection-view?articleId=7"));
+  await click(editButton());
+  assert.equal(mediaLoads, 0);
+  await openImages();
+  assert.equal(button("Save article").disabled, true);
+  assert.match(container.querySelector('[role="alert"]').textContent, /Media unavailable/);
+  await click(button("Retry"));
+  await click(imageOption("Front.png"));
+  await click(button("Cancel selection"));
+  assert.equal(captionInputs().length, 0);
+  assert.equal(document.activeElement, button("Add images…"));
+
+  await openImages();
+  await search("absent");
+  assert.match(container.textContent, /No matching images/);
+  await search("copy #14");
+  assert.equal(imageOption("Back.png"), undefined);
+  assert.ok(imageOption("Front.png"));
+  await search("jacket.png");
+  await click(imageOption("Front.png"));
+  await search("back.png");
+  await click(imageOption("Back.png"));
+  await click(button("Add selected"));
+  await type(captionInputs()[0], "Front\nCorner wear");
+  await type(captionInputs()[1], "Back of box");
+  await click(command("Move image 2 up"));
+  assert.deepEqual(captionInputs().map((node) => node.value), ["Back of box", "Front\nCorner wear"]);
+  await click(button("Save article"));
+  assert.match(container.querySelector('[role="alert"]').textContent, /Save failed/);
+  await click(button("Save article"));
+  const ordered = [
+    { path: galleryMedia[1].path, caption: "Back of box" },
+    { path: galleryMedia[0].path, caption: "Front\nCorner wear" },
+  ];
+  assert.deepEqual(edits, [{ gallery: ordered }, { gallery: ordered }]);
+  assert.equal(container.querySelector("article p").textContent, "Saved text");
+  assert.equal(container.querySelector("article a").textContent, "Original title");
+  assert.deepEqual(galleryCaptions(), ordered.map((entry) => entry.caption));
+
+  await click(editButton());
+  assert.deepEqual(captionInputs().map((node) => node.value), ordered.map((entry) => entry.caption));
+  await click(command("Remove image 1"));
+  await type(captionInputs()[0], "Discard this caption");
+  await click(button("Cancel"));
+  assert.equal(edits.length, 2);
+  assert.deepEqual(galleryCaptions(), ordered.map((entry) => entry.caption));
+
+  await click(editButton());
+  await click(command("Remove image 1"));
+  await click(button("Save article"));
+  assert.deepEqual(edits.at(-1), { gallery: ordered.slice(1) });
+  assert.deepEqual(galleryCaptions(), ["Front\nCorner wear"]);
+  await click(editButton());
+  await click(command("Remove image 1"));
+  await click(button("Save article"));
+  assert.deepEqual(edits.at(-1), { gallery: [] });
+  assert.equal(container.querySelector("article figure"), null);
+});
+
+test("a new article includes its selected images on the first save", async () => {
+  const fetchOther = globalThis.fetch;
+  let article;
+  let created;
+  globalThis.fetch = async (url, options) => {
+    const { pathname } = new URL(url);
+    if (pathname === "/media/") return Response.json(galleryMedia);
+    if (pathname === "/articles/") {
+      created = JSON.parse(options.body);
+      article = { id: 7, title: created.title, blocks: created.blocks.map((block, index) => ({ ...block, id: index + 11 })) };
+      return Response.json(article, { status: 201 });
+    }
+    if (pathname === "/articles/7") return Response.json(article);
+    return fetchOther(url, options);
+  };
+  await render(routed("/page-editor?new=article"));
+  await click(button("Next >"));
+  await type(container.querySelector("#new-page-title"), "Photo notes");
+  await click(button("Next >"));
+  await click(button("Finish"));
+  await click(button("Add images…"));
+  await click(imageOption("Front.png"));
+  await click(button("Add selected"));
+  await type(captionInputs()[0], "Front of copy");
+  await click(button("Save article"));
+  assert.deepEqual(created.blocks, [
+    { kind: "text", text: "" },
+    { kind: "gallery", entries: [{ path: galleryMedia[0].path, caption: "Front of copy" }] },
+  ]);
+  assert.equal(container.querySelector("article h1").textContent, "Photo notes");
+  assert.deepEqual(galleryCaptions(), ["Front of copy"]);
 });
 
 test("explorer enables Edit for an item, loads the full form, and displays saved changes", async () => {

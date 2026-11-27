@@ -16,7 +16,7 @@ from app.db.models import CopyPhoto, Item
 from app.db.schemas import ItemCreate, ItemListEntryRead, ItemRead, ItemSortDirection, ItemSortField, ItemUpdate, Page
 from app.db.schemas.parts import CopyWithPhotosWrite, OwnedCopyCreate, OwnedCopyWrite
 from app.errors import AppError, NotFoundError, PayloadTooLargeError
-from app.media import remove_unused_image, store_copy_photo, store_cover, store_icon, store_icon_from_cover
+from app.media import remove_unused_images, store_copy_photo, store_cover, store_icon, store_icon_from_cover
 
 router = APIRouter(prefix="/items", tags=["items"])
 
@@ -69,27 +69,12 @@ def create_item(payload: ItemCreate, session: Session = Depends(get_session)):
 
 @router.patch("/{item_id}", response_model=ItemRead)
 def update_item(item_id: int, payload: ItemUpdate, session: Session = Depends(get_session)):
-    item = session.get(Item, item_id)
-    previous_images = {
-        getattr(item, field) for field in ("cover_image_path", "icon_image_path")
-        if item is not None and field in payload.model_fields_set
-    }
-    updated = crud.update_item(session, item_id, payload)
-    for path in previous_images:
-        remove_unused_image(session, path)
-    return updated
+    return crud.update_item(session, item_id, payload)
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_item(item_id: int, session: Session = Depends(get_session)):
-    item = session.get(Item, item_id)
-    previous_images = {
-        item.cover_image_path, item.icon_image_path,
-        *(photo.file_path for copy in item.owned_copies for photo in copy.photos),
-    } if item else set()
     crud.delete_item(session, item_id)
-    for path in previous_images:
-        remove_unused_image(session, path)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -124,11 +109,9 @@ def save_copy_with_photos(
         unused = copies.save_copy_with_photos(session, item_id, draft, uploads, fingerprint.hexdigest())
     except Exception:
         session.rollback()
-        for photo in uploads:
-            remove_unused_image(session, photo.file_path)
+        remove_unused_images(session, (photo.file_path for photo in uploads))
         raise
-    for path in unused:
-        remove_unused_image(session, path)
+    remove_unused_images(session, unused)
     return crud.get_item(session, item_id)
 
 
@@ -140,8 +123,8 @@ def update_copy(item_id: int, copy_id: int, payload: OwnedCopyWrite, session: Se
 
 @router.delete("/{item_id}/copies/{copy_id}", response_model=ItemRead)
 def delete_copy(item_id: int, copy_id: int, session: Session = Depends(get_session)):
-    for path in copies.delete_copy(session, item_id, copy_id):
-        remove_unused_image(session, path)
+    unused = copies.delete_copy(session, item_id, copy_id)
+    remove_unused_images(session, unused)
     return crud.get_item(session, item_id)
 
 
@@ -160,19 +143,16 @@ def generate_icon_from_cover(item_id: int, session: Session = Depends(get_sessio
     item = session.get(Item, item_id)
     if item is None:
         raise NotFoundError("item", item_id)
-    previous_icon = item.icon_image_path
     path = store_icon_from_cover(item_id, item.cover_image_path)
-    return _replace_image(item_id, path, previous_icon, session, "icon")
+    return _replace_image(item_id, path, session, "icon")
 
 
 def _upload_image(item_id: int, file: UploadFile, session: Session, kind: str):
     item = session.get(Item, item_id)
     if item is None:
         raise NotFoundError("item", item_id)
-    field = f"{kind}_image_path"
-    previous_cover = getattr(item, field)
     path = (store_cover if kind == "cover" else store_icon)(item_id, _read_image(file), file.content_type)
-    return _replace_image(item_id, path, previous_cover, session, kind)
+    return _replace_image(item_id, path, session, kind)
 
 
 def _read_image(file: UploadFile) -> bytes:
@@ -182,13 +162,11 @@ def _read_image(file: UploadFile) -> bytes:
     return content
 
 
-def _replace_image(item_id: int, path: str, previous_path: str | None, session: Session, kind: str):
+def _replace_image(item_id: int, path: str, session: Session, kind: str):
     field = f"{kind}_image_path"
     try:
-        updated = crud.update_item(session, item_id, ItemUpdate(**{field: path}))
+        return crud.update_item(session, item_id, ItemUpdate(**{field: path}))
     except Exception:
         session.rollback()
-        remove_unused_image(session, path)
+        remove_unused_images(session, [path])
         raise
-    remove_unused_image(session, previous_path)
-    return updated

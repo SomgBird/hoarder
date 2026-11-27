@@ -60,6 +60,7 @@ def _new_copy(session: Session, item_id: int, payload: OwnedCopyCreate, fingerpr
         raise ConflictError("This submission was already saved. Refresh Explorer to edit the saved copy.")
     if session.get(OwnedCopy, receipt.copy_id) is None:
         raise ConflictError("The saved copy has since been removed. Start a new copy to add another.")
+    session.rollback()  # End the receipt lookup before cleaning up any replayed uploads.
     return None
 
 
@@ -93,6 +94,7 @@ def save_copy_with_photos(session: Session, item_id: int, payload: CopyWithPhoto
             previous = session.get(CopyPhotoEditSubmission, payload.request_id)
             if previous is None or previous.copy_id != payload.copy_id or previous.payload_hash != fingerprint:
                 raise ConflictError("This submission was already used for a different copy edit.")
+            session.rollback()
             return {photo.file_path for photo in uploads}
         _apply(session, copy, payload)
 
