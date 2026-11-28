@@ -72,6 +72,13 @@ class Franchise(SQLModel, table=True):
     items: list["Item"] = Relationship(back_populates="franchises", link_model=ItemFranchiseLink)
 
 
+class FranchisePage(SQLModel, table=True):
+    __tablename__ = "franchise_page"
+
+    franchise_id: int = Field(primary_key=True, foreign_key="franchise.id", ondelete="CASCADE")
+    introduction: str
+
+
 class Genre(SQLModel, table=True):
     """One genre table for every item type; applicability is stored in ItemTypeGenreLink."""
     id: int | None = Field(default=None, primary_key=True)

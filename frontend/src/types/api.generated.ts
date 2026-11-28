@@ -39,6 +39,41 @@ export interface paths {
         patch: operations["update_article_articles__article_id__patch"];
         trace?: never;
     };
+    "/franchise-pages/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Franchise Pages */
+        get: operations["list_franchise_pages_franchise_pages__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/franchise-pages/{franchise_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Franchise Page */
+        get: operations["get_franchise_page_franchise_pages__franchise_id__get"];
+        /** Save Franchise Page */
+        put: operations["save_franchise_page_franchise_pages__franchise_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/items/": {
         parameters: {
             query?: never;
@@ -810,6 +845,38 @@ export interface components {
             /** Short Name */
             short_name: string | null;
         };
+        /** FranchiseMemberRead */
+        FranchiseMemberRead: {
+            /** Id */
+            id: number;
+            /** Item Type */
+            item_type: string;
+            /** Title */
+            title: string;
+        };
+        /** FranchisePageRead */
+        FranchisePageRead: {
+            /** Id */
+            id: number;
+            /** Introduction */
+            introduction: string | null;
+            /** Members */
+            members: components["schemas"]["FranchiseMemberRead"][];
+            /** Title */
+            title: string;
+        };
+        /** FranchisePageSummary */
+        FranchisePageSummary: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+        };
+        /** FranchisePageWrite */
+        FranchisePageWrite: {
+            /** Introduction */
+            introduction: string;
+        };
         /** FranchiseRead */
         FranchiseRead: {
             /** Description */
@@ -1486,6 +1553,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArticleRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_franchise_pages_franchise_pages__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FranchisePageSummary"][];
+                };
+            };
+        };
+    };
+    get_franchise_page_franchise_pages__franchise_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                franchise_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FranchisePageRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_franchise_page_franchise_pages__franchise_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                franchise_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FranchisePageWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FranchisePageRead"];
                 };
             };
             /** @description Validation Error */

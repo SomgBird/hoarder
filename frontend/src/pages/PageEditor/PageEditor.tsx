@@ -1,4 +1,4 @@
-import { parseRecordId } from "@components/Explorer/locations";
+import { collectionPath, parseRecordId, RECORD_PAGES, type RecordPage } from "@components/Explorer/locations";
 import { useEffect, useState } from "react";
 import { FileFind, FileText } from "@react95/icons";
 import { PageEditorWindow } from "./PageEditorWindow";
@@ -7,22 +7,23 @@ import { Button } from "@react95/core";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { itemService } from "@services";
 import { articleService, type ArticleRead } from "@services/articleService";
+import { franchisePageService, type FranchisePageRead } from "@services/franchisePageService";
 import { ITEM_TYPES, type ItemRead } from "@types";
 import { PageEditorWizard } from "./PageEditorWizard/PageEditorWizard";
 import { PageEditorWorkspace } from "./PageEditorWorkspace/PageEditorWorkspace";
 import { ArticleEditor } from "./ArticleEditor";
+import { FranchiseEditor } from "./FranchiseEditor";
 import type { PageData } from "./pageTypes";
 
 export function PageEditor() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const kind = searchParams.has("itemId") ? "item" : "article";
-  const idParam = searchParams.get(`${kind}Id`);
+  const kind = RECORD_PAGES.find((page) => searchParams.has(`${page}Id`));
   // null = still in the wizard, otherwise the wizard's result
   const [pageData, setPageData] = useState<PageData | null>(null);
 
-  if (idParam !== null) {
-    const id = parseRecordId(idParam);
+  if (kind) {
+    const id = parseRecordId(searchParams.get(`${kind}Id`));
     if (id === null) {
       const back = () => navigate("/collection-view");
       return <PageEditorWindow editing onClose={back}>
@@ -31,16 +32,23 @@ export function PageEditor() {
       </PageEditorWindow>;
     }
     return <ExistingPageEditor key={`${kind}-${id}`} kind={kind} id={id}
-      onClose={() => navigate(`/collection-view?${kind}Id=${id}`)} />;
+      onClose={() => navigate(collectionPath({ page: kind, id }))} />;
   }
 
   if (!pageData) {
-    return <PageEditorWizard initialType={searchParams.get("new") === "article" ? "article" : "item"} onFinish={setPageData} />;
+    const initialType = RECORD_PAGES.find((page) => page === searchParams.get("new"));
+    return <PageEditorWizard initialType={initialType} onFinish={setPageData} />;
   }
 
   if (pageData.pageType === "article") {
     return <ArticleEditor initialTitle={pageData.title.trim()} onClose={() => setPageData(null)}
       onSaved={(id) => navigate(`/collection-view?articleId=${id}`)} />;
+  }
+
+  if (pageData.pageType === "franchise" && pageData.franchise) {
+    const { id } = pageData.franchise;
+    return <ExistingPageEditor kind="franchise" id={id} onClose={() => setPageData(null)}
+      onSaved={() => navigate(collectionPath({ page: "franchise", id }))} />;
   }
 
   return (
@@ -51,14 +59,16 @@ export function PageEditor() {
   );
 }
 
-function ExistingPageEditor({ kind, id, onClose }: { kind: "article" | "item"; id: number; onClose: () => void }) {
-  const [page, setPage] = useState<ItemRead | ArticleRead | null>(null);
+function ExistingPageEditor({ kind, id, onClose, onSaved = onClose }: {
+  kind: RecordPage; id: number; onClose: () => void; onSaved?: () => void;
+}) {
+  const [page, setPage] = useState<ItemRead | ArticleRead | FranchisePageRead | null>(null);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
-    const load = kind === "article" ? articleService.get : itemService.get;
+    const load = { article: articleService.get, item: itemService.get, franchise: franchisePageService.get }[kind];
     load(id, controller.signal).then((loaded) => {
       if (controller.signal.aborted) return;
       if ("item_type" in loaded && !ITEM_TYPES.some((type) => type === loaded.item_type.name)) {
@@ -71,8 +81,9 @@ function ExistingPageEditor({ kind, id, onClose }: { kind: "article" | "item"; i
     return () => controller.abort();
   }, [kind, id, attempt]);
 
-  if (page && "blocks" in page) return <ArticleEditor initialTitle={page.title} existing={page} onClose={onClose} onSaved={onClose} />;
-  if (page) return <PageEditorWorkspace existingItem={page} onClose={onClose} onSaved={onClose} />;
+  if (page && "introduction" in page) return <FranchiseEditor franchise={page} onClose={onClose} onSaved={onSaved} />;
+  if (page && "blocks" in page) return <ArticleEditor initialTitle={page.title} existing={page} onClose={onClose} onSaved={onSaved} />;
+  if (page) return <PageEditorWorkspace existingItem={page} onClose={onClose} onSaved={onSaved} />;
 
   return <PageEditorWindow editing onClose={onClose}>
     <div className={styles.message}>

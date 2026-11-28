@@ -26,7 +26,6 @@ export function TypeStep({ data, update }: StepProps) {
         </RadioButton>
       ))}
     </div>
-    <p className={styles.availability}>Item pages and articles are available in this release.</p>
   </>;
 }
 
@@ -44,11 +43,13 @@ export function DetailsStep({ data, update }: StepProps) {
 }
 
 export function ReviewStep({ data }: StepProps) {
+  const label = pageTypes.find((type) => type.value === data.pageType)?.label;
   return <>
-    <p className={styles.prompt}>Choose Finish to open this {data.pageType} in Page Editor.</p>
+    <p className={styles.prompt}>Choose Finish to open the page in Page Editor.</p>
     <dl className={styles.review}>
-      <dt>Page type</dt><dd>{data.pageType === "article" ? "Article" : "Item page"}</dd>
-      <dt>Title</dt><dd>{data.title.trim()}</dd>
+      <dt>Page type</dt><dd>{label}</dd>
+      {data.pageType === "franchise" ? <><dt>Franchise</dt><dd>{data.franchise?.name}</dd></>
+        : <><dt>Title</dt><dd>{data.title.trim()}</dd></>}
       {data.pageType === "item" && <><dt>Item type</dt><dd>{data.itemType && ITEM_TYPE_LABELS[data.itemType]}</dd></>}
     </dl>
   </>;
@@ -56,5 +57,5 @@ export function ReviewStep({ data }: StepProps) {
 
 export function NotImplementedStep({ data }: StepProps) {
   const label = pageTypes.find((type) => type.value === data.pageType)?.label;
-  return <p>{label} is planned for a future release. Choose Back to select Item page or Article.</p>;
+  return <p>{label} is planned for a future release. Choose Back to select another page type.</p>;
 }

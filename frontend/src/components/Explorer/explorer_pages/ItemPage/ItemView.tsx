@@ -3,6 +3,8 @@ import type { ItemRead } from "@types";
 import { coverUrl } from "@services";
 import { detailRows } from "./details";
 import { OwnedCopies } from "@components/OwnedCopies/OwnedCopies";
+import { Fragment } from "react";
+import { ExplorerLink } from "../../ExplorerLink";
 import { groupByRole, isEmpty, type Row } from "./rows";
 
 interface Props {
@@ -29,7 +31,9 @@ function ItemView({ item }: Props) {
     { label: "Genres", value: item.genres.map((g) => g.name).join(", ") },
     {
       label: "Franchises",
-      value: item.franchises.map((f) => f.name).join(", "),
+      value: item.franchises.map(({ id, name }, index) => <Fragment key={id}>
+        {index > 0 && ", "}<ExplorerLink to={{ page: "franchise", id }}>{name}</ExplorerLink>
+      </Fragment>),
     },
   ].filter((row) => !isEmpty(row.value));
 

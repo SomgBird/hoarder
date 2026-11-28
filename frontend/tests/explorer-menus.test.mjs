@@ -87,6 +87,11 @@ test("authored pages recover on Refresh, offer creation when empty and reopen ar
     const path = new URL(url).pathname;
     if (path === "/articles/") return list === null
       ? Response.json({ detail: "Try again" }, { status: 503 }) : Response.json(list);
+    if (path === "/franchise-pages/") return Response.json([{ id: 7, title: "Existing franchise" }]);
+    if (path === "/franchise-pages/7") return Response.json({
+      id: 7, title: "Existing franchise", introduction: "Field guide.",
+      members: [{ id: 42, title: items.get(42).display_title, item_type: "book" }],
+    });
     if (path === "/articles/7") return Response.json({ id: 7, title: "Catalog notes", blocks: [] });
     return fetchOther(url, options);
   };
@@ -108,6 +113,19 @@ test("authored pages recover on Refresh, offer creation when empty and reopen ar
   assert.equal(address.value, "collection://pages");
   await run("Go", "Forward");
   assert.equal(container.querySelector("h1").textContent, "Catalog notes");
+  await run("Go", "Back");
+  const franchise = find("a", "Existing franchise");
+  assert.equal(franchise.getAttribute("href"), "/collection-view?franchiseId=7");
+  await click(franchise);
+  assert.equal(address.value, "collection://franchise/7");
+  const member = find("a", items.get(42).display_title, container.querySelector("article"));
+  assert.match(member.closest("li").textContent, /\(Book\)/);
+  await click(member);
+  assert.equal(address.value, "collection://item/42");
+  assert.equal(find("a", "Existing franchise").getAttribute("href"), "/collection-view?franchiseId=7");
+  await run("Go", "Back");
+  assert.equal(address.value, "collection://franchise/7");
+  assert.ok(find("p", "Field guide."));
 });
 
 test("an invalid address stays editable and never loads a rounded or zero item number", async () => {

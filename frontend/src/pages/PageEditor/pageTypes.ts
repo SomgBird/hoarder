@@ -6,4 +6,5 @@ export interface PageData {
   pageType: PageType;
   title: string;
   itemType: ItemType | null;
+  franchise: { id: number; name: string } | null;
 }

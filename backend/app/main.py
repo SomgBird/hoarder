@@ -10,7 +10,7 @@ from app.config import CORS_ORIGINS, MEDIA_DIR, MEDIA_URL_PREFIX
 from app.db.seed import seed_builtin
 from app.errors import register_exception_handlers
 from app.media import migrate_icons
-from app.routers import articles, items, media, reference
+from app.routers import articles, franchise_pages, items, media, reference
 
 
 @asynccontextmanager
@@ -34,6 +34,7 @@ app.add_middleware(
 )
 register_exception_handlers(app)
 app.include_router(articles.router)
+app.include_router(franchise_pages.router)
 app.include_router(items.router)
 app.include_router(reference.router)
 app.include_router(media.router)

@@ -4,6 +4,7 @@ import { ErrorPage } from "./ErrorPage";
 import { ItemPage } from "./ItemPage";
 import { ArticlePage } from "./ArticlePage";
 import { AuthoredPages } from "./AuthoredPages";
+import { FranchisePage } from "./FranchisePage";
 
 export function renderPage(loc: ExplorerLocation) {
   switch (loc.page) {
@@ -15,6 +16,8 @@ export function renderPage(loc: ExplorerLocation) {
       return <ItemPage key={loc.id} id={loc.id} />;
     case "article":
       return <ArticlePage key={loc.id} id={loc.id} />;
+    case "franchise":
+      return <FranchisePage key={loc.id} id={loc.id} />;
     case "error":
       return (
         <ErrorPage

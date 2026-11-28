@@ -52,7 +52,8 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
       <h2>Navigating</h2>
       <p>Use Back and Forward to revisit pages opened in Explorer. Home returns to the collection welcome page. Refresh reloads the current page and collection list.</p>
       <p>Copy the address shown while an item is open, for example <code>collection://item/42</code>. To revisit it, paste it into Explorer’s <strong>Address</strong> field and press Enter. Renaming the item keeps its address.</p>
-      <p>Choose <strong>Authored pages</strong> on Home or enter <code>collection://pages</code> to browse saved articles by title. Open a title to read the article, or choose <strong>Create an article…</strong> to start one.</p>
+      <p>Choose <strong>Authored pages</strong> on Home or enter <code>collection://pages</code> to browse saved articles and franchise pages.</p>
+      <p>On an item page, select a franchise name to open its page with the introduction and current member list. Select a member to open its item page, then choose Back to return.</p>
       <p>If Explorer says <strong>Cannot find page</strong>, check the address format. If it says <strong>Item not found</strong>, check the number or search Collection Manager by title. <strong>Home</strong> opens the collection welcome page, also available at <code>collection://home</code>.</p>
       <h2>Working with a page</h2>
       <p>Use <strong>File → New page…</strong> to start a new item. When an item is open, <strong>Edit → Edit page…</strong> opens its editor and <strong>File → Delete item…</strong> asks for confirmation before deleting it.</p>
@@ -76,25 +77,27 @@ export const helpArticles: Record<HelpTopicId, { introduction: string; content: 
     </>, related: ["explorer", "filters"],
   },
   "new-item": {
-    introduction: "The New page wizard opens Page Editor for a new item or article.",
+    introduction: "The New Page Wizard opens Page Editor for an item, article, or franchise page.",
     content: <>
       <h2>Creating a page</h2>
       <ol><li>Open <strong>Page Editor</strong> from the main menu or choose <strong>File → New page…</strong> in Explorer.</li><li>Choose Item page.</li><li>Enter a title and select an item type. Both are required.</li><li>Review the details and click Finish.</li><li>Complete the editor and click Create to save the item.</li></ol>
       <p>To write an article, choose <strong>Article</strong>, enter its title and finish the wizard. Write in the Text field and choose <strong>Save article</strong>. Explorer shows the saved article. Bookmark the browser page or enter its <code>collection://article/</code> address with the article number in Explorer to reopen it.</p>
       <p>To link a catalog item after the text, choose <strong>Add item link…</strong>, search by title and select the item. The number beside each result distinguishes items with the same title. The saved link displays the item’s current title.</p>
+      <p>To write a franchise introduction, choose <strong>Franchise page</strong> and select an existing franchise by name. Choose <strong>Finish</strong>, write the introduction, and select <strong>Save franchise page</strong>. To assign items to the franchise, use their <strong>Catalog</strong> tab in Page Editor.</p>
       <p>Finish opens the editor; it does not save an item by itself. Back returns to an earlier wizard step. Cancel asks before discarding the wizard’s entered data.</p>
       <h2>Adding details</h2>
       <p>Use <strong>General</strong> for the title, description and item details. <strong>Catalog</strong> holds classifications and barcodes. The other tabs contain languages and alternative titles, credits, and images. You can switch tabs while editing and save them together.</p>
     </>, related: ["edit-item", "images", "collection"],
   },
   "edit-item": {
-    introduction: "Open an item or article in Explorer and choose Edit to revise it.",
+    introduction: "Open an item, article, or franchise page in Explorer and choose Edit to revise it.",
     content: <>
       <h2>Saving changes</h2>
       <ol><li>Open the item and choose <strong>Edit → Edit page…</strong> or click Edit in the toolbar.</li><li>Update its title, description, references, credits, languages, barcodes, or other details.</li><li>Click Save to update that item. Cancel returns without saving.</li></ol>
       <p>The item keeps its type and Explorer address. Save applies the fields you changed. When you edit a list such as alternative titles or credits, Save replaces that list with the rows shown in the editor.</p>
       <p>For an article, edit the title or text, or choose <strong>Change linked item…</strong> to select a different target. <strong>Save article</strong> reopens the revised page at its original address. <strong>Cancel</strong> returns to the saved version.</p>
       <p>Under <strong>Gallery</strong>, choose <strong>Add images…</strong>, select photos from your collection, and choose <strong>Add selected</strong>. Give each image its own caption. Use <strong>Move up</strong>, <strong>Move down</strong>, or <strong>Remove</strong> to arrange the gallery before saving.</p>
+      <p>For a franchise page, edit the <strong>Introduction</strong> and choose <strong>Save franchise page</strong>. The member list follows the franchise assignments on the items.</p>
       <h2>If saving fails</h2>
       <p>The editor keeps your entered values so you can correct an error and retry. If the item saved but an image failed, retrying continues the image save without creating another item or repeating the completed item update.</p>
     </>, related: ["images", "explorer"],

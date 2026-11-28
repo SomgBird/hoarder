@@ -1,4 +1,5 @@
 import type { WizardStep } from "@components/Wizard/wizardTypes";
+import type { RecordPage } from "@components/Explorer/locations";
 import { Wizard } from "@components/Wizard/Wizard";
 import { Button } from "@react95/core";
 import { FilePen } from "@react95/icons";
@@ -6,6 +7,7 @@ import { useState } from "react";
 import { PageEditorWindow } from "../PageEditorWindow";
 import styles from "../PageEditor.module.css";
 import type { PageData } from "../pageTypes";
+import { FranchiseStep } from "./FranchiseStep";
 import {
   DetailsStep,
   NotImplementedStep,
@@ -14,13 +16,13 @@ import {
 } from "./PageEditorWizardSteps";
 
 interface PageEditorWizardProps {
-  initialType?: "article" | "item";
+  initialType?: RecordPage;
   onFinish: (data: PageData) => void;
 }
 
 export function PageEditorWizard({ initialType = "item", onFinish }: PageEditorWizardProps) {
   const [open, setOpen] = useState(true);
-  const initialData: PageData = { pageType: initialType, title: "", itemType: null };
+  const initialData: PageData = { pageType: initialType, title: "", itemType: null, franchise: null };
   const [data, setData] = useState<PageData>(initialData);
 
   const update = (changes: Partial<PageData>) =>
@@ -35,12 +37,13 @@ export function PageEditorWizard({ initialType = "item", onFinish }: PageEditorW
 
   const steps: WizardStep[] = [
     { title: "Page type", content: <TypeStep {...stepProps} /> },
-    ...(data.pageType === "item" || data.pageType === "article"
+    ...(data.pageType !== "custom"
       ? [
           {
-            title: "Details",
-            content: <DetailsStep {...stepProps} />,
+            title: data.pageType === "franchise" ? "Franchise" : "Details",
+            content: data.pageType === "franchise" ? <FranchiseStep {...stepProps} /> : <DetailsStep {...stepProps} />,
             validate: () => {
+              if (data.pageType === "franchise") return data.franchise ? null : "Choose a franchise.";
               if (!data.title.trim()) return "Title is required.";
               if (data.pageType === "item" && !data.itemType) return "Item type is required.";
               return null;

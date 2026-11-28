@@ -1,16 +1,17 @@
+export const RECORD_PAGES = ["item", "article", "franchise"] as const;
+export type RecordPage = (typeof RECORD_PAGES)[number];
+
 export type ExplorerLocation =
   | { page: "home" }
   | { page: "pages" }
-  | { page: "item"; id: number }
-  | { page: "article"; id: number }
+  | { page: RecordPage; id: number }
   | { page: "error"; kind: "bad-address"; url: string };
 
 export function toUrl(loc: ExplorerLocation): string {
   switch (loc.page) {
     case "home": return "collection://home";
     case "pages": return "collection://pages";
-    case "item": return `collection://item/${loc.id}`;
-    case "article": return `collection://article/${loc.id}`;
+    case "item": case "article": case "franchise": return `collection://${loc.page}/${loc.id}`;
     case "error": return loc.url;
   }
 }
@@ -19,7 +20,7 @@ export function collectionPath(loc: ExplorerLocation): string {
   switch (loc.page) {
     case "home": return "/collection-view";
     case "pages": return "/collection-view?page=pages";
-    case "article": case "item": return `/collection-view?${loc.page}Id=${loc.id}`;
+    case "item": case "article": case "franchise": return `/collection-view?${loc.page}Id=${loc.id}`;
     case "error": return `/collection-view?${new URLSearchParams({ address: loc.url })}`;
   }
 }
@@ -31,15 +32,16 @@ export function parseRecordId(value: string | null): number | null {
 }
 
 export function pageEditorPath(loc: ExplorerLocation): string | null {
-  return loc.page === "item" || loc.page === "article" ? `/page-editor?${loc.page}Id=${loc.id}` : null;
+  return "id" in loc ? `/page-editor?${loc.page}Id=${loc.id}` : null;
 }
 
 export function parseUrl(url: string): ExplorerLocation {
   const address = url.trim();
   if (address === "collection://home") return { page: "home" };
   if (address === "collection://pages") return { page: "pages" };
-  const match = /^collection:\/\/(item|article)\/(\d+)$/.exec(address);
+  const match = /^collection:\/\/([a-z]+)\/(\d+)$/.exec(address);
+  const page = RECORD_PAGES.find((kind) => kind === match?.[1]);
   const id = parseRecordId(match?.[2] ?? null);
-  if (!match || id === null) return { page: "error", kind: "bad-address", url };
-  return { page: match[1] === "article" ? "article" : "item", id };
+  if (!page || id === null) return { page: "error", kind: "bad-address", url };
+  return { page, id };
 }

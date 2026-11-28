@@ -230,6 +230,60 @@ const routed = (path) => createElement(MemoryRouter, { initialEntries: [path] },
     createElement(Route, { path: "/page-editor", element: createElement(PageEditor) })));
 const editButton = () => [...container.querySelectorAll('[role="toolbar"] button')].find((node) => node.textContent.trim() === "Edit");
 
+test("franchise wizard selects an existing franchise and retains an introduction through retry and cancel", async () => {
+  const fetchOther = globalThis.fetch;
+  const submissions = [];
+  const franchise = { id: 7, title: "Existing franchise", introduction: null, members: [] };
+  globalThis.fetch = async (url, options = {}) => {
+    const { pathname } = new URL(url);
+    if (pathname === "/reference/franchises") return Response.json([
+      { id: 7, name: franchise.title }, { id: 8, name: "Another franchise" },
+    ]);
+    if (pathname !== "/franchise-pages/7") return fetchOther(url, options);
+    if (options.method === "PUT") {
+      const payload = JSON.parse(options.body);
+      submissions.push(payload);
+      if (submissions.length === 1) throw new Error("Connection lost");
+      franchise.introduction = payload.introduction;
+    }
+    return Response.json(franchise);
+  };
+  await render(routed("/page-editor"));
+  await click([...container.querySelectorAll("label")].find((label) => label.textContent.trim() === "Franchise page"));
+  await click(button("Next >"));
+  await click(button("Next >"));
+  assert.equal(container.querySelector('[role="alert"]').textContent, "Choose a franchise.");
+  const search = container.querySelector("#franchise-search");
+  const picker = container.querySelector("#franchise-choice");
+  const visibleNames = () => [...picker.options].filter((option) => !option.hidden).map((option) => option.text);
+  assert.ok(picker.size > 1);
+  assert.deepEqual(visibleNames(), ["Another franchise", "Existing franchise"]);
+  await type(search, "missing");
+  assert.deepEqual(visibleNames(), []);
+  assert.equal(container.querySelector('[role="status"]').textContent, "No matching franchises.");
+  await type(search, "EXISTING");
+  assert.deepEqual(visibleNames(), ["Existing franchise"]);
+  await choose(picker, "7");
+  await click(button("Next >"));
+  await click(button("Finish"));
+  const introduction = () => container.querySelector("#franchise-introduction");
+  const body = "First paragraph.\n\nSecond paragraph.";
+  await type(introduction(), body);
+  await click(button("Save franchise page"));
+  assert.match(container.querySelector('[role="alert"]').textContent, /Connection lost/);
+  assert.equal(introduction().value, body);
+  await click(button("Save franchise page"));
+  assert.deepEqual(submissions, [{ introduction: body }, { introduction: body }]);
+  assert.equal(container.querySelector("article p").textContent, body);
+  assert.match(container.querySelector("article").textContent, /No items are assigned/);
+  await click(editButton());
+  assert.equal(introduction().value, body);
+  await type(introduction(), "Discard this draft.");
+  await click(button("Cancel"));
+  assert.equal(container.querySelector("article p").textContent, body);
+  assert.equal(submissions.length, 2);
+});
+
 test("Article wizard validates the title, retains a failed draft and opens the saved plain text in Explorer", async () => {
   const fetchOther = globalThis.fetch;
   const submissions = [];
